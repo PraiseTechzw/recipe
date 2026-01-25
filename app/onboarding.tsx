@@ -1,0 +1,220 @@
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useStore } from '../store/useStore';
+
+export default function UserInfoScreen() {
+  const router = useRouter();
+  const { setUserProfile, setHasOnboarded } = useStore();
+  
+  const [name, setName] = useState('');
+  const [level, setLevel] = useState<'Beginner' | 'Home Cook' | 'Pro'>('Beginner');
+  const [diet, setDiet] = useState<string[]>([]);
+
+  const toggleDiet = (item: string) => {
+    if (diet.includes(item)) {
+        setDiet(diet.filter(i => i !== item));
+    } else {
+        setDiet([...diet, item]);
+    }
+  };
+
+  const handleNext = () => {
+    if (name.trim().length === 0) {
+        // Show error or shake
+        return;
+    }
+    
+    setUserProfile({
+        name: name.trim(),
+        chefLevel: level,
+        dietaryPreferences: diet
+    });
+    
+    // Go to Pantry Check next, instead of straight to tabs
+    router.replace('/pantry-check');
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+            <Text style={styles.title}>Tell us about you</Text>
+            <Text style={styles.subtitle}>We'll personalize your recipe recommendations.</Text>
+        </View>
+
+        {/* Name Input */}
+        <View style={styles.section}>
+            <Text style={styles.label}>What should we call you?</Text>
+            <TextInput 
+                style={styles.input}
+                placeholder="Enter your name"
+                value={name}
+                onChangeText={setName}
+            />
+        </View>
+
+        {/* Chef Level */}
+        <View style={styles.section}>
+            <Text style={styles.label}>Cooking Experience</Text>
+            <View style={styles.optionsRow}>
+                {['Beginner', 'Home Cook', 'Pro'].map((l) => (
+                    <TouchableOpacity 
+                        key={l} 
+                        style={[styles.optionCard, level === l && styles.optionSelected]}
+                        onPress={() => setLevel(l as any)}
+                    >
+                        <Text style={[styles.optionText, level === l && styles.optionTextSelected]}>{l}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+
+        {/* Dietary Preferences */}
+        <View style={styles.section}>
+            <Text style={styles.label}>Dietary Preferences</Text>
+            <View style={styles.chipsContainer}>
+                {['Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'None'].map((d) => (
+                    <TouchableOpacity 
+                        key={d} 
+                        style={[styles.chip, diet.includes(d) && styles.chipSelected]}
+                        onPress={() => toggleDiet(d)}
+                    >
+                        <Text style={[styles.chipText, diet.includes(d) && styles.chipTextSelected]}>{d}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+        </View>
+
+      </ScrollView>
+
+      <View style={styles.footer}>
+        <TouchableOpacity 
+            style={[styles.button, name.length === 0 && styles.buttonDisabled]} 
+            onPress={handleNext}
+            disabled={name.length === 0}
+        >
+            <Text style={styles.buttonText}>Continue</Text>
+            <Ionicons name="arrow-forward" size={20} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    padding: 24,
+  },
+  header: {
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#757575',
+    lineHeight: 24,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 12,
+  },
+  input: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#E0E0E0',
+    fontSize: 20,
+    paddingVertical: 8,
+    color: '#1a1a1a',
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  optionCard: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+  },
+  optionSelected: {
+    backgroundColor: '#FFF3E0',
+    borderColor: '#E65100',
+  },
+  optionText: {
+    color: '#757575',
+    fontWeight: '500',
+  },
+  optionTextSelected: {
+    color: '#E65100',
+    fontWeight: 'bold',
+  },
+  chipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  chip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+  },
+  chipSelected: {
+    backgroundColor: '#E65100',
+  },
+  chipText: {
+    color: '#666',
+  },
+  chipTextSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  footer: {
+    padding: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  button: {
+    backgroundColor: '#E65100',
+    height: 56,
+    borderRadius: 28,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  buttonDisabled: {
+    backgroundColor: '#FFCCBC',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+});

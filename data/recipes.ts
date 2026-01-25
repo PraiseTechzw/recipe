@@ -64,11 +64,33 @@ export const RECIPES: Recipe[] = [
       }
     ],
     steps: [
-        { instruction: 'Brown the chicken in a pot.' },
-        { instruction: 'Add onions, garlic, and tomatoes.' },
-        { instruction: 'Mix peanut butter with warm water and add to the pot.' },
-        { instruction: 'Simmer until chicken is cooked and sauce is thick.' },
-        { instruction: 'Add greens in the last 5 minutes.' }
+        { 
+          instruction: 'Brown the chicken pieces in a large pot with oil until golden brown.',
+          description: 'Searing the chicken seals in the juices and adds flavor to the stew.',
+          image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?q=80&w=1000&auto=format&fit=crop'
+        },
+        { 
+          instruction: 'Add onions, garlic, and tomatoes to the pot.',
+          description: 'Sauté the vegetables until the onions are soft and the tomatoes have broken down into a paste.',
+          tip: 'Add a pinch of salt to help the onions sweat and release their moisture faster.'
+        },
+        { 
+           instruction: 'Stir in the peanut butter until the sauce thickens',
+           highlightedWord: 'thickens',
+           description: 'Ensure the peanut butter is fully incorporated into the broth to create a smooth, creamy base.',
+           tip: 'Use smooth peanut butter for a velvety texture, or crunchy if you prefer a bit of texture in your Dovi.',
+           image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1000&auto=format&fit=crop'
+         },
+        { 
+          instruction: 'Simmer gently until the chicken is fully cooked.',
+          description: 'Let the stew bubble on low heat. The sauce should coat the back of a spoon.',
+          image: 'https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=1000&auto=format&fit=crop'
+        },
+        { 
+          instruction: 'Add the greens in the last 5 minutes of cooking.',
+          description: 'This ensures the greens remain vibrant and retain their nutrients.',
+          tip: 'Do not overcook the greens; they should be just wilted.'
+        }
     ]
   },
   {

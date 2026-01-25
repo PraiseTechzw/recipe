@@ -4,14 +4,26 @@ import { Link, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Logo from '../../components/Logo';
 import { CATEGORIES, RECIPES } from '../../data/recipes';
 import { getRecipeOfTheDay, getRecommendedRecipes } from '../../services/recommendations';
 import { useStore } from '../../store/useStore';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { viewHistory, categoryScores } = useStore();
+  const { viewHistory, categoryScores, hasOnboarded, shoppingList, userProfile } = useStore();
   
+  // Onboarding Check
+  useEffect(() => {
+    if (!hasOnboarded) {
+        // Redirect to Onboarding Flow instead of just Pantry Check
+        const timer = setTimeout(() => {
+            router.replace('/onboarding');
+        }, 100);
+        return () => clearTimeout(timer);
+    }
+  }, [hasOnboarded]);
+
   // Smart Algorithms
   const [featuredRecipes, setFeaturedRecipes] = useState(RECIPES.slice(0, 3));
   const [dailyPick, setDailyPick] = useState(RECIPES[1]);
@@ -33,26 +45,30 @@ export default function HomeScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-                <View style={styles.avatarContainer}>
+          <Logo size="medium" />
+          <View style={styles.headerRight}>
+              <TouchableOpacity 
+                  style={styles.iconButton} 
+                  onPress={() => router.push('/shopping-list')}
+              >
+                  <Ionicons name="basket-outline" size={24} color="#333" />
+                  {shoppingList.length > 0 && <View style={styles.badge} />}
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
+                  <View style={styles.avatarContainer}>
                     <Image source={{ uri: 'https://i.pravatar.cc/150?img=12' }} style={styles.avatar} />
-                    <View style={styles.onlineDot} />
-                </View>
-            </TouchableOpacity>
-            <View style={styles.userInfo}>
-                <Text style={styles.welcomeText}>WELCOME BACK</Text>
-                <Text style={styles.userName}>Tariro</Text>
+                    <View style={styles.levelBadge}>
+                        <Text style={styles.levelText}>{userProfile.chefLevel.charAt(0)}</Text>
+                    </View>
+                  </View>
+              </TouchableOpacity>
             </View>
-          </View>
-          <TouchableOpacity style={styles.bellButton}>
-            <Ionicons name="notifications" size={24} color="#333" />
-          </TouchableOpacity>
         </View>
 
         {/* Greeting & Search */}
         <View style={styles.greetingSection}>
-            <Text style={styles.mainGreeting}>Mhoro!</Text>
+            <Text style={styles.mainGreeting}>Mhoro, {userProfile.name}!</Text>
             <Text style={styles.subGreeting}>What are we cooking today?</Text>
             
             <Link href="/(tabs)/explore" asChild>
@@ -151,42 +167,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  avatarContainer: {
-    position: 'relative',
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#eee',
-  },
-  onlineDot: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#E65100',
-    borderWidth: 2,
-    borderColor: '#FAFAFA',
-  },
-  userInfo: {
-    justifyContent: 'center',
-  },
-  welcomeText: {
-    fontSize: 10,
-    color: '#8D6E63', // Brownish
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    marginBottom: 2,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  bellButton: {
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -198,6 +184,24 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#E65100',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#eee',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   greetingSection: {
     marginBottom: 32,

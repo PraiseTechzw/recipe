@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import { useEffect, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RECIPES } from '../../data/recipes';
 import { useStore } from '../../store/useStore';
@@ -20,7 +20,7 @@ export default function RecipeDetailScreen() {
   const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients');
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
   
-  const { isFavorite, toggleFavorite, logRecipeView } = useStore();
+  const { isFavorite, toggleFavorite, logRecipeView, addToShoppingList } = useStore();
   const favorite = recipe ? isFavorite(recipe.id) : false;
 
   useEffect(() => {
@@ -43,6 +43,13 @@ export default function RecipeDetailScreen() {
            console.log('Requesting review...');
        }
     }
+  };
+
+  const handleAddToShoppingList = () => {
+    if (!recipe) return;
+    const allIngredients = recipe.ingredients.flatMap(s => s.data);
+    addToShoppingList(allIngredients);
+    Alert.alert("Success", "Ingredients added to your shopping list.");
   };
 
   const toggleIngredient = (name: string) => {
@@ -171,6 +178,11 @@ export default function RecipeDetailScreen() {
                                 ))}
                             </View>
                         ))}
+                        
+                        <TouchableOpacity style={styles.secondaryButton} onPress={handleAddToShoppingList}>
+                            <Ionicons name="basket-outline" size={20} color="#E65100" />
+                            <Text style={styles.secondaryButtonText}>Add All to Shopping List</Text>
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     <View>
@@ -190,7 +202,10 @@ export default function RecipeDetailScreen() {
 
       {/* Footer Button */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-          <TouchableOpacity style={styles.startButton}>
+          <TouchableOpacity 
+            style={styles.startButton}
+            onPress={() => router.push(`/cooking/${recipe.id}`)}
+          >
               <MaterialIcons name="restaurant-menu" size={24} color="#fff" style={{marginRight: 8}} />
               <Text style={styles.startButtonText}>Start Cooking</Text>
           </TouchableOpacity>
@@ -457,7 +472,22 @@ const styles = StyleSheet.create({
   },
   startButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
+  },
+  secondaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF3E0',
+    padding: 14,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  secondaryButtonText: {
+    color: '#E65100',
+    fontWeight: '600',
+    fontSize: 15,
   },
 });

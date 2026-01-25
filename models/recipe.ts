@@ -1,3 +1,10 @@
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  quantity?: string;
+  checked: boolean;
+}
+
 export interface IngredientItem {
   name: string;
   quantity?: string;
@@ -11,6 +18,11 @@ export interface IngredientSection {
 
 export interface Step {
   instruction: string;
+  description?: string;
+  tip?: string;
+  image?: string;
+  video?: string;
+  highlightedWord?: string;
 }
 
 export interface Recipe {
