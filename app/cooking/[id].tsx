@@ -2,17 +2,19 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RECIPES } from '../../data/recipes';
 import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
+import { useStore } from '../../store/useStore';
 
 const { width } = Dimensions.get('window');
 
 export default function CookingModeScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
+  const { addXP, incrementStat } = useStore();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,14 @@ export default function CookingModeScreen() {
       setCurrentStepIndex(currentStepIndex + 1);
     } else {
       // Finished
-      router.back();
+      addXP(50);
+      incrementStat('recipesCooked');
+      
+      Alert.alert(
+        "Bon Appétit! 🎉",
+        "You've completed this recipe and earned 50 XP!",
+        [{ text: "Awesome", onPress: () => router.back() }]
+      );
     }
   };
 

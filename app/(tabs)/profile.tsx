@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BADGES, getLevel, getNextLevel } from '../../constants/gamification';
 import i18n from '../../i18n';
 import { useStore } from '../../store/useStore';
 
@@ -11,6 +12,13 @@ export default function ProfileScreen() {
   const { favorites, userProfile, isDarkMode, toggleDarkMode } = useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  const currentLevel = getLevel(userProfile.xp);
+  const nextLevel = getNextLevel(userProfile.xp);
+  
+  const xpProgress = nextLevel 
+    ? ((userProfile.xp - currentLevel.minXP) / (nextLevel.minXP - currentLevel.minXP)) * 100 
+    : 100;
 
   return (
     <View style={styles.container}>
@@ -39,22 +47,22 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     </View>
                     <Text style={styles.name}>{userProfile.name}</Text>
-                    <Text style={styles.bio}>{userProfile.chefLevel} • Zimbabwe</Text>
+                    <Text style={styles.bio}>{currentLevel.title} • Zimbabwe</Text>
                 </View>
             </LinearGradient>
 
             {/* XP Bar Floating */}
             <View style={styles.xpWrapper}>
                 <View style={styles.xpRow}>
-                    <Text style={styles.xpLabel}>{i18n.t('level')} {Math.floor(userProfile.xp / 100) + 1}</Text>
-                    <Text style={styles.xpValue}>{userProfile.xp} / 1000 XP</Text>
+                    <Text style={styles.xpLabel}>{i18n.t('level')} {currentLevel.level}</Text>
+                    <Text style={styles.xpValue}>{userProfile.xp} / {nextLevel ? nextLevel.minXP : 'Max'} XP</Text>
                 </View>
                 <View style={styles.xpTrack}>
                     <LinearGradient
                         colors={['#FFB74D', '#FB8C00']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={[styles.xpFill, { width: `${Math.min((userProfile.xp / 1000) * 100, 100)}%` }]}
+                        style={[styles.xpFill, { width: `${Math.min(xpProgress, 100)}%` }]}
                     />
                 </View>
             </View>
@@ -68,7 +76,7 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.verticalDivider} />
             <View style={styles.statItem}>
-                <Text style={styles.statNumber}>#{Math.floor(Math.random() * 50) + 1}</Text>
+                <Text style={styles.statNumber}>#{Math.max(1, 1000 - Math.floor(userProfile.xp / 10))}</Text>
                 <Text style={styles.statLabel}>{i18n.t('rank')}</Text>
             </View>
             <View style={styles.verticalDivider} />
@@ -87,14 +95,14 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesList}>
-                {['firstCook', 'weekStreak', 'spiceMaster', 'earlyBird', 'proChef'].map((badgeKey, i) => {
-                    const isUnlocked = i === 0; // Mock unlock status
+                {BADGES.map((badge, i) => {
+                    const isUnlocked = userProfile.badges.includes(badge.id);
                     return (
-                        <View key={i} style={[styles.badgeItem, !isUnlocked && styles.badgeLocked]}>
+                        <View key={badge.id} style={[styles.badgeItem, !isUnlocked && styles.badgeLocked]}>
                             <View style={[styles.badgeIcon, !isUnlocked && styles.badgeIconLocked]}>
-                                <Text style={{fontSize: 24}}>{isUnlocked ? '🏆' : '🔒'}</Text>
+                                <Text style={{fontSize: 24}}>{isUnlocked ? badge.icon : '🔒'}</Text>
                             </View>
-                            <Text style={styles.badgeName}>{i18n.t(badgeKey)}</Text>
+                            <Text style={styles.badgeName} numberOfLines={2}>{badge.name}</Text>
                         </View>
                     );
                 })}
