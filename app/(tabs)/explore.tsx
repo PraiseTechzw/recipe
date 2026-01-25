@@ -2,16 +2,16 @@ import { useStore } from '@/store/useStore';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { RECIPES } from '../../data/recipes';
+import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
+import { CATEGORIES, RECIPES } from '../../data/recipes';
 import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { generateRecipeFromImage } from '../../services/ai';
 import { searchRecipes } from '../../services/recommendations';
-import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -984,5 +984,44 @@ const styles = StyleSheet.create({
   sortTextActive: {
     color: '#E65100',
     fontWeight: '700',
+  },
+  // Missing Styles Added
+  scanIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E65100',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoriesContainer: {
+    marginTop: 24,
+    marginBottom: 8,
+  },
+  categoryCircleActive: {
+    transform: [{ scale: 1.05 }],
+  },
+  categoryIconWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#F5F5F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  categoryCircleText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+  },
+  categoryTextActive: {
+    color: '#E65100',
+    fontWeight: 'bold',
   },
 });

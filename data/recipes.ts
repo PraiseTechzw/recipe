@@ -1,5 +1,14 @@
 import { Recipe } from '../models/recipe';
 
+export const CATEGORIES = [
+  { id: '1', name: 'Grains' },
+  { id: '2', name: 'Relishes' },
+  { id: '3', name: 'Meats' },
+  { id: '4', name: 'Drinks' },
+  { id: '5', name: 'Stews' },
+  { id: '6', name: 'Vegetarian' },
+];
+
 export const RECIPES: Recipe[] = [
   {
     id: '1',
