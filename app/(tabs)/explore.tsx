@@ -156,19 +156,6 @@ export default function ExploreScreen() {
     </SafeAreaView>
   );
 }
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.popularList}>
-          {popularRecipes.map(recipe => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
-          ))}
-        </View>
-
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
 
 const styles = StyleSheet.create({
   container: {

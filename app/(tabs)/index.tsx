@@ -1,12 +1,11 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { RECIPES } from '../../data/recipes';
-import { getRandomRecipe, getRecipeOfTheDay, getRecommendedRecipes } from '../../services/recommendations';
+import { CATEGORIES, RECIPES } from '../../data/recipes';
+import { getRecipeOfTheDay, getRecommendedRecipes } from '../../services/recommendations';
 import { useStore } from '../../store/useStore';
 
 export default function HomeScreen() {
@@ -14,9 +13,8 @@ export default function HomeScreen() {
   const { viewHistory, categoryScores } = useStore();
   
   // Smart Algorithms
-  const [featuredRecipe, setFeaturedRecipe] = useState(RECIPES[0]);
+  const [featuredRecipes, setFeaturedRecipes] = useState(RECIPES.slice(0, 3));
   const [dailyPick, setDailyPick] = useState(RECIPES[1]);
-  const [recommendations, setRecommendations] = useState(RECIPES.slice(0, 3));
 
   useEffect(() => {
     // 1. Daily Rotation (Deterministic)
@@ -24,18 +22,10 @@ export default function HomeScreen() {
 
     // 2. Smart Recommendations based on user history
     const smartRecs = getRecommendedRecipes(viewHistory, categoryScores);
-    setRecommendations(smartRecs);
-    
-    // 3. Featured is the top recommendation or a fallback
     if (smartRecs.length > 0) {
-        setFeaturedRecipe(smartRecs[0]);
+        setFeaturedRecipes(smartRecs.slice(0, 5));
     }
   }, [viewHistory, categoryScores]);
-
-  const handleSurpriseMe = () => {
-    const random = getRandomRecipe();
-    router.push(`/recipe/${random.id}`);
-  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -43,82 +33,102 @@ export default function HomeScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Good Morning,</Text>
-            <Text style={styles.subGreeting}>Ready to cook something delicious?</Text>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
+                <View style={styles.avatarContainer}>
+                    <Image source={{ uri: 'https://i.pravatar.cc/150?img=12' }} style={styles.avatar} />
+                    <View style={styles.onlineDot} />
+                </View>
+            </TouchableOpacity>
+            <View style={styles.userInfo}>
+                <Text style={styles.welcomeText}>WELCOME BACK</Text>
+                <Text style={styles.userName}>Tariro</Text>
+            </View>
           </View>
-          <TouchableOpacity style={styles.avatarButton} onPress={() => router.push('/(tabs)/profile')}>
-            <Image source={{ uri: 'https://i.pravatar.cc/150?img=12' }} style={styles.avatar} />
+          <TouchableOpacity style={styles.bellButton}>
+            <Ionicons name="notifications" size={24} color="#333" />
           </TouchableOpacity>
         </View>
 
-        {/* Featured Card */}
-        <Text style={styles.sectionTitle}>Featured Recipe</Text>
-        <Link href={`/recipe/${featuredRecipe.id}`} asChild>
-          <TouchableOpacity style={styles.featuredCard}>
-            <Image source={{ uri: featuredRecipe.image }} style={styles.featuredImage} contentFit="cover" />
-            <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.featuredOverlay}>
-              <View style={styles.featuredBadge}>
-                <Text style={styles.featuredBadgeText}>Recipe of the Day</Text>
-              </View>
-              <Text style={styles.featuredTitle}>{featuredRecipe.title}</Text>
-              <Text style={styles.featuredMeta}>{featuredRecipe.time} • {featuredRecipe.calories}</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </Link>
-
-        {/* Quick Actions */}
-        <View style={styles.actionsRow}>
-          <Link href="/(tabs)/explore" asChild>
-            <TouchableOpacity style={styles.actionButton}>
-              <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
-                <Ionicons name="search" size={24} color="#E65100" />
-              </View>
-              <Text style={styles.actionText}>Search</Text>
-            </TouchableOpacity>
-          </Link>
-          <Link href="/(tabs)/saved" asChild>
-            <TouchableOpacity style={styles.actionButton}>
-              <View style={[styles.actionIcon, { backgroundColor: '#FFEBEE' }]}>
-                <Ionicons name="bookmark" size={24} color="#D32F2F" />
-              </View>
-              <Text style={styles.actionText}>Saved</Text>
-            </TouchableOpacity>
-          </Link>
-          <TouchableOpacity style={styles.actionButton} onPress={handleSurpriseMe}>
-            <View style={[styles.actionIcon, { backgroundColor: '#E3F2FD' }]}>
-              <Ionicons name="shuffle" size={24} color="#1976D2" />
-            </View>
-            <Text style={styles.actionText}>Surprise Me</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton}>
-             <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="nutrition" size={24} color="#388E3C" />
-            </View>
-            <Text style={styles.actionText}>Diet</Text>
-          </TouchableOpacity>
+        {/* Greeting & Search */}
+        <View style={styles.greetingSection}>
+            <Text style={styles.mainGreeting}>Mhoro!</Text>
+            <Text style={styles.subGreeting}>What are we cooking today?</Text>
+            
+            <Link href="/(tabs)/explore" asChild>
+                <TouchableOpacity style={styles.searchBar}>
+                    <Ionicons name="search" size={24} color="#E65100" />
+                    <Text style={styles.placeholderText}>Search for Sadza, Mopane worms...</Text>
+                </TouchableOpacity>
+            </Link>
         </View>
 
-        {/* Daily Pick */}
-        <Text style={styles.sectionTitle}>Daily Inspiration</Text>
-        <Link href={`/recipe/${dailyPick.id}`} asChild>
-           <TouchableOpacity style={styles.dailyCard}>
-             <View style={styles.dailyContent}>
-               <Text style={styles.dailyTitle}>{dailyPick.title}</Text>
-               <Text style={styles.dailyDesc} numberOfLines={2}>{dailyPick.description}</Text>
-               <View style={styles.dailyMeta}>
-                 <Ionicons name="time-outline" size={14} color="#666" />
-                 <Text style={styles.dailyMetaText}>{dailyPick.time}</Text>
-               </View>
-             </View>
-             <Image source={{ uri: dailyPick.image }} style={styles.dailyImage} contentFit="cover" />
-           </TouchableOpacity>
-        </Link>
+        {/* Featured Section */}
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Featured Traditional Dishes</Text>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/explore')}>
+                <Text style={styles.seeAll}>See all</Text>
+            </TouchableOpacity>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredList}>
+            {featuredRecipes.map((recipe) => (
+                <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
+                    <TouchableOpacity style={styles.featuredCard}>
+                        <View style={styles.imageContainer}>
+                            <Image source={{ uri: recipe.image }} style={styles.featuredImage} contentFit="cover" />
+                            <View style={styles.ratingBadge}>
+                                <Ionicons name="star" size={12} color="#E65100" />
+                                <Text style={styles.ratingText}>{recipe.rating || 4.8}</Text>
+                            </View>
+                        </View>
+                        <View style={styles.cardContent}>
+                            <Text style={styles.cardTitle} numberOfLines={1}>{recipe.title}</Text>
+                            <View style={styles.cardMeta}>
+                                <View style={styles.metaItem}>
+                                    <Ionicons name="time-outline" size={14} color="#8D6E63" />
+                                    <Text style={styles.metaText}>{recipe.time}</Text>
+                                </View>
+                                <View style={styles.dotSeparator} />
+                                <View style={styles.metaItem}>
+                                    <View style={styles.greenDot} />
+                                    <Text style={styles.metaText}>Easy</Text>
+                                </View>
+                            </View>
+                        </View>
+                        <View style={styles.arrowButton}>
+                            <Ionicons name="arrow-forward" size={20} color="#fff" />
+                        </View>
+                    </TouchableOpacity>
+                </Link>
+            ))}
+        </ScrollView>
+
+        {/* Categories Grid */}
+        <Text style={[styles.sectionTitle, { marginBottom: 16 }]}>Explore by Category</Text>
+        <View style={styles.categoriesGrid}>
+            {CATEGORIES.map((cat, index) => (
+                 <TouchableOpacity key={cat.id} style={styles.categoryCard} onPress={() => router.push({ pathname: '/(tabs)/explore', params: { category: cat.name } })}>
+                    <View style={[styles.iconCircle, { backgroundColor: getCategoryColor(index) }]}>
+                        <MaterialIcons name={cat.icon as any} size={24} color="#E65100" />
+                    </View>
+                    <View style={styles.categoryInfo}>
+                        <Text style={styles.categoryName}>{cat.name}</Text>
+                        <Text style={styles.categorySubtitle}>{cat.subtitle || 'Traditional'}</Text>
+                    </View>
+                </TouchableOpacity>
+            ))}
+        </View>
 
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const getCategoryColor = (index: number) => {
+    const colors = ['#FFF3E0', '#E8F5E9', '#FCE4EC', '#E3F2FD'];
+    return colors[index % colors.length];
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -126,156 +136,247 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAFAFA',
   },
   scrollContent: {
-    paddingBottom: 20,
-    paddingHorizontal: 16,
+    paddingBottom: 100, // Space for tab bar
+    paddingHorizontal: 20,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 20,
+    marginTop: 10,
+    marginBottom: 24,
   },
-  greeting: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  subGreeting: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 4,
-  },
-  avatarButton: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  avatarContainer: {
+    position: 'relative',
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#eee',
+  },
+  onlineDot: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#E65100',
+    borderWidth: 2,
+    borderColor: '#FAFAFA',
+  },
+  userInfo: {
+    justifyContent: 'center',
+  },
+  welcomeText: {
+    fontSize: 10,
+    color: '#8D6E63', // Brownish
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  bellButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  greetingSection: {
+    marginBottom: 32,
+  },
+  mainGreeting: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 8,
+  },
+  subGreeting: {
+    fontSize: 18,
+    color: '#8D6E63',
+    marginBottom: 24,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 30, // Fully rounded
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    gap: 12,
+  },
+  placeholderText: {
+    color: '#999',
+    fontSize: 15,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-    marginTop: 8,
+    color: '#1a1a1a',
+  },
+  seeAll: {
+    fontSize: 14,
+    color: '#E65100',
+    fontWeight: '600',
+  },
+  featuredList: {
+    paddingRight: 20,
+    marginBottom: 32,
   },
   featuredCard: {
-    height: 250,
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 24,
+    width: 260,
     backgroundColor: '#fff',
+    borderRadius: 24,
+    padding: 12,
+    marginRight: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    position: 'relative', // For arrow button positioning
+  },
+  imageContainer: {
+    height: 160,
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 12,
+    position: 'relative',
   },
   featuredImage: {
     width: '100%',
     height: '100%',
   },
-  featuredOverlay: {
+  ratingBadge: {
     position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '50%',
-    justifyContent: 'flex-end',
-    padding: 16,
-  },
-  featuredBadge: {
-    backgroundColor: '#E65100',
+    top: 10,
+    right: 10,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+    borderRadius: 12,
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  cardContent: {
+    paddingHorizontal: 4,
+    paddingBottom: 8,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
     marginBottom: 8,
   },
-  featuredBadgeText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
-  featuredTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  featuredMeta: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 12,
-  },
-  actionsRow: {
+  cardMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  actionButton: {
     alignItems: 'center',
     gap: 8,
   },
-  actionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#333',
-  },
-  dailyCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    overflow: 'hidden',
-    height: 120,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
-  dailyContent: {
-    flex: 1,
-    padding: 16,
-    justifyContent: 'center',
-  },
-  dailyTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 4,
-  },
-  dailyDesc: {
-    fontSize: 12,
-    color: '#666',
-    lineHeight: 18,
-    marginBottom: 8,
-  },
-  dailyMeta: {
+  metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  dailyMetaText: {
+  metaText: {
     fontSize: 12,
-    color: '#666',
+    color: '#8D6E63',
+    fontWeight: '500',
   },
-  dailyImage: {
-    width: 120,
-    height: '100%',
+  dotSeparator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#ddd',
+  },
+  greenDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4CAF50',
+  },
+  arrowButton: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#E65100',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoriesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  categoryCard: {
+    width: '48%', // Slightly less than 50% to account for gap
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    marginBottom: 4, // Spacing between rows if wrapped
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryInfo: {
+    flex: 1,
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  categorySubtitle: {
+    fontSize: 12,
+    color: '#8D6E63',
   },
 });
