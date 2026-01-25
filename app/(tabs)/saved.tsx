@@ -2,32 +2,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Link, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import RecipeCard from '../../components/RecipeCard';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RECIPES } from '../../data/recipes';
 import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
 
 const { width } = Dimensions.get('window');
+const COLUMN_WIDTH = (width - 48) / 2;
 
 export default function SavedScreen() {
   const router = useRouter();
-  const { favorites } = useStore();
+  const insets = useSafeAreaInsets();
+  const { favorites, isDarkMode } = useStore();
   const [supabaseRecipes, setSupabaseRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
 
   const fetchSavedRecipes = async () => {
     try {
       setLoading(true);
-      
-      // Filter local recipes immediately
-      // Supabase recipes need fetching if we have favorites that aren't local
-      // For simplicity, we'll just try to fetch any favorite IDs from Supabase that look like UUIDs or aren't in local
-      // But actually, simpler to just query Supabase for all favorites and let it return what it finds
       
       if (favorites.length === 0) {
         setSupabaseRecipes([]);
@@ -35,13 +32,6 @@ export default function SavedScreen() {
         return;
       }
 
-      // Check if we have any potential Supabase IDs (assuming local IDs are simple numbers, Supabase might be UUIDs)
-      // or just query all favorites. Supabase will ignore IDs that don't match UUID format if column is UUID, 
-      // or return nothing if they don't exist.
-      // To be safe against invalid input syntax for UUIDs, we might need to be careful.
-      // Assuming 'recipes' table 'id' is uuid. Local IDs "1", "2" might cause error if sent to UUID column.
-      
-      // Let's filter favorites that are NOT in local RECIPES first, assuming those are the remote ones
       const localIds = new Set(RECIPES.map(r => r.id));
       const remoteIds = favorites.filter(id => !localIds.has(id));
 
@@ -71,7 +61,8 @@ export default function SavedScreen() {
             steps: r.steps || [],
             calories: 'N/A',
             tags: ['Community'],
-            servings: '2-4'
+            servings: '2-4',
+            rating: r.rating || 4.5
         }));
         setSupabaseRecipes(formatted);
       }
@@ -92,37 +83,123 @@ export default function SavedScreen() {
     const localSaved = RECIPES.filter(r => favorites.includes(r.id));
     const all = [...localSaved, ...supabaseRecipes];
     
-    if (!searchQuery) return all;
+    let result = all;
+
+    if (activeCategory !== 'All') {
+        result = result.filter(r => r.category === activeCategory);
+    }
     
-    return all.filter(r => 
-      r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [favorites, supabaseRecipes, searchQuery]);
+    if (searchQuery) {
+        result = result.filter(r => 
+            r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            r.category.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }
+    
+    return result;
+  }, [favorites, supabaseRecipes, searchQuery, activeCategory]);
+
+  const CompactRecipeCard = ({ recipe, index }: { recipe: any, index: number }) => (
+    <Link href={`/recipe/${recipe.id}`} asChild>
+        <TouchableOpacity activeOpacity={0.9} style={{ marginBottom: 16 }}>
+            <Animated.View 
+                entering={FadeInUp.delay(index * 100).springify()} 
+                style={[styles.card, isDarkMode && styles.cardDark]}
+            >
+                <Image 
+                    source={{ uri: recipe.image }} 
+                    style={styles.cardImage} 
+                    contentFit="cover"
+                    transition={200}
+                />
+                <View style={styles.cardOverlay}>
+                    <View style={styles.cardBadge}>
+                        <Ionicons name="time-outline" size={12} color="#fff" />
+                        <Text style={styles.cardBadgeText}>{recipe.time}</Text>
+                    </View>
+                </View>
+                
+                <View style={styles.cardContent}>
+                    <Text style={[styles.cardTitle, isDarkMode && styles.textDark]} numberOfLines={2}>
+                        {recipe.title}
+                    </Text>
+                    
+                    <View style={styles.cardFooter}>
+                        <View style={styles.ratingContainer}>
+                            <Ionicons name="star" size={12} color="#FFD700" />
+                            <Text style={[styles.ratingText, isDarkMode && styles.textSubDark]}>
+                                {recipe.rating || 4.5}
+                            </Text>
+                        </View>
+                        <Text style={[styles.caloriesText, isDarkMode && styles.textSubDark]}>
+                           {recipe.calories !== 'N/A' ? recipe.calories : ''}
+                        </Text>
+                    </View>
+                </View>
+            </Animated.View>
+        </TouchableOpacity>
+    </Link>
+  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#121212' : '#F8F9FA' }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
         <View>
-          <Text style={styles.headerTitle}>{i18n.t('savedRecipes')}</Text>
-          <Text style={styles.headerSubtitle}>{filteredRecipes.length} {i18n.t('items')}</Text>
+          <Text style={[styles.headerTitle, isDarkMode && styles.textDark]}>{i18n.t('savedRecipes')}</Text>
+          <Text style={[styles.headerSubtitle, isDarkMode && styles.textSubDark]}>
+            {filteredRecipes.length} {i18n.t('items')} • {activeCategory}
+          </Text>
+        </View>
+        <TouchableOpacity style={[styles.filterBtn, isDarkMode && styles.filterBtnDark]}>
+             <Ionicons name="options-outline" size={24} color={isDarkMode ? '#fff' : '#333'} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.searchSection}>
+        <View style={[styles.searchContainer, isDarkMode && styles.searchContainerDark]}>
+            <Ionicons name="search" size={20} color={isDarkMode ? '#999' : '#999'} style={styles.searchIcon} />
+            <TextInput 
+                style={[styles.searchInput, isDarkMode && styles.textDark]}
+                placeholder={i18n.t('searchSaved')}
+                placeholderTextColor="#999"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close-circle" size={20} color="#ccc" />
+                </TouchableOpacity>
+            )}
         </View>
       </View>
 
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-        <TextInput 
-            style={styles.searchInput}
-            placeholder={i18n.t('searchSaved')}
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-        />
-        {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={20} color="#ccc" />
-            </TouchableOpacity>
-        )}
+      <View style={{ height: 50, marginBottom: 10 }}>
+        <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false} 
+            contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
+        >
+            {['All', 'Traditional', 'Breakfast', 'Dinner', 'Snack', 'Vegetarian', 'Dessert'].map((cat, index) => (
+                <Animated.View key={cat} entering={FadeInRight.delay(index * 50).springify()}>
+                    <TouchableOpacity 
+                        style={[
+                            styles.filterChip, 
+                            isDarkMode && styles.filterChipDark,
+                            activeCategory === cat && styles.filterChipActive
+                        ]}
+                        onPress={() => setActiveCategory(cat)}
+                    >
+                        <Text style={[
+                            styles.filterText, 
+                            isDarkMode && styles.textSubDark,
+                            activeCategory === cat && styles.filterTextActive
+                        ]}>
+                            {cat}
+                        </Text>
+                    </TouchableOpacity>
+                </Animated.View>
+            ))}
+        </ScrollView>
       </View>
 
       {loading ? (
@@ -132,14 +209,14 @@ export default function SavedScreen() {
       ) : filteredRecipes.length === 0 ? (
         <Animated.View entering={FadeInDown.springify()} style={styles.emptyContainer}>
           <Image 
-            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2906/2906856.png' }} // Fallback or use local asset if available
+            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2906/2906856.png' }} 
             style={{ width: 120, height: 120, opacity: 0.5, marginBottom: 20 }}
             contentFit="contain"
           />
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyText, isDarkMode && styles.textDark]}>
             {searchQuery ? 'No matches found' : i18n.t('noSavedRecipes')}
           </Text>
-          <Text style={styles.emptySubText}>
+          <Text style={[styles.emptySubText, isDarkMode && styles.textSubDark]}>
             {searchQuery ? 'Try a different search term' : i18n.t('saveRecipesMessage')}
           </Text>
           {!searchQuery && (
@@ -151,27 +228,31 @@ export default function SavedScreen() {
           )}
         </Animated.View>
       ) : (
-        <Animated.FlatList
-          data={filteredRecipes}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item, index }) => (
-            <Animated.View entering={FadeInDown.delay(index * 100).springify()} layout={Layout.springify()}>
-                <RecipeCard recipe={item} />
-            </Animated.View>
-          )}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="on-drag"
-        />
+        <ScrollView 
+            contentContainerStyle={styles.gridContent} 
+            showsVerticalScrollIndicator={false}
+        >
+            <View style={styles.row}>
+                <View style={styles.column}>
+                    {filteredRecipes.filter((_, i) => i % 2 === 0).map((item, index) => (
+                        <CompactRecipeCard key={item.id} recipe={item} index={index} />
+                    ))}
+                </View>
+                <View style={styles.column}>
+                    {filteredRecipes.filter((_, i) => i % 2 !== 0).map((item, index) => (
+                        <CompactRecipeCard key={item.id} recipe={item} index={index} />
+                    ))}
+                </View>
+            </View>
+        </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   center: {
     flex: 1,
@@ -179,54 +260,175 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-    backgroundColor: '#FAFAFA',
+    paddingHorizontal: 24,
+    paddingBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '800',
     color: '#1a1a1a',
+    letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#666',
     marginTop: 4,
-    fontWeight: '500',
+    fontWeight: '600',
+  },
+  filterBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  filterBtnDark: {
+    backgroundColor: '#1E1E1E',
+    borderColor: '#333',
+  },
+  searchSection: {
+    paddingHorizontal: 24,
+    marginBottom: 20,
   },
   searchContainer: {
-    marginHorizontal: 20,
-    marginBottom: 20,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 48,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 56,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 10,
     elevation: 2,
     borderWidth: 1,
     borderColor: '#f0f0f0',
   },
+  searchContainerDark: {
+    backgroundColor: '#1E1E1E',
+    borderColor: '#333',
+  },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 12,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: '#333',
     height: '100%',
+    fontWeight: '500',
   },
-  listContent: {
-    padding: 20,
-    paddingTop: 0,
+  filterChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+    marginRight: 4,
+  },
+  filterChipDark: {
+    backgroundColor: '#1E1E1E',
+    borderColor: '#333',
+  },
+  filterChipActive: {
+    backgroundColor: '#E65100',
+    borderColor: '#E65100',
+  },
+  filterText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '600',
+  },
+  filterTextActive: {
+    color: '#fff',
+  },
+  gridContent: {
+    padding: 24,
+    paddingTop: 10,
+    paddingBottom: 100,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  column: {
+    width: COLUMN_WIDTH,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  cardDark: {
+    backgroundColor: '#1E1E1E',
+  },
+  cardImage: {
+    width: '100%',
+    height: 160,
+    backgroundColor: '#f0f0f0',
+  },
+  cardOverlay: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row',
+  },
+  cardBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  cardBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  cardContent: {
+    padding: 12,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+  },
+  caloriesText: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '500',
   },
   emptyContainer: {
     flex: 1,
@@ -255,14 +457,20 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 32,
     shadowColor: '#E65100',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowRadius: 16,
+    elevation: 8,
   },
   browseButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  textDark: {
+    color: '#fff',
+  },
+  textSubDark: {
+    color: '#aaa',
   },
 });
