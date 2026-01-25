@@ -113,6 +113,8 @@ const i18n = new I18n({
     recipeCreated: "Your recipe has been created and synced!",
     error: "Error",
   createError: "Failed to create recipe. Please ensure Supabase is configured.",
+    ingredientsPlaceholder: "One per line (e.g. 2 cups flour)",
+    stepsPlaceholder: "One per line (e.g. Mix ingredients)",
     mealieMeal: "Mealie Meal",
     beef: "Beef",
     chicken: "Chicken",
