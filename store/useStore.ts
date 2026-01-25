@@ -16,6 +16,11 @@ interface AppState {
   favorites: string[];
   toggleFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
+
+  // User Recipes
+  myRecipes: Recipe[];
+  addRecipe: (recipe: Recipe) => void;
+  deleteRecipe: (id: string) => void;
   
   // Shopping List
   shoppingList: ShoppingItem[];
@@ -78,6 +83,15 @@ export const useStore = create<AppState>()(
         get().checkBadges();
       },
       isFavorite: (id) => get().favorites.includes(id),
+
+      // User Recipes
+      myRecipes: [],
+      addRecipe: (recipe) => set((state) => ({
+        myRecipes: [recipe, ...state.myRecipes]
+      })),
+      deleteRecipe: (id) => set((state) => ({
+        myRecipes: state.myRecipes.filter(r => r.id !== id)
+      })),
       
       // Shopping List
       shoppingList: [],

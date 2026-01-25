@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { Dimensions, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, FadeInRight, FadeInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BADGES, getLevel, getNextLevel } from '../../constants/gamification';
@@ -12,7 +12,7 @@ import { useStore } from '../../store/useStore';
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
-  const { favorites, userProfile, isDarkMode, toggleDarkMode, setLocale, locale } = useStore();
+  const { favorites, userProfile, isDarkMode, toggleDarkMode, setLocale, locale, myRecipes } = useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -167,6 +167,46 @@ export default function ProfileScreen() {
                 </View>
             </View>
         </Animated.View>
+
+        {/* My Recipes Section */}
+        {myRecipes.length > 0 && (
+            <Animated.View entering={FadeInUp.delay(350).springify()}>
+                <View style={styles.section}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={[styles.sectionTitle, isDarkMode && styles.textDark]}>My Recipes</Text>
+                        <TouchableOpacity>
+                            <Text style={styles.seeAll}>{myRecipes.length}</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={false} 
+                        contentContainerStyle={styles.badgesList}
+                    >
+                        {myRecipes.map((recipe, i) => (
+                            <TouchableOpacity 
+                                key={recipe.id} 
+                                style={[styles.recipeCard, isDarkMode && styles.recipeCardDark]}
+                                // onPress={() => router.push(`/cooking/${recipe.id}`)} 
+                            >
+                                <Image 
+                                    source={recipe.image} 
+                                    style={styles.recipeImage} 
+                                    contentFit="cover"
+                                />
+                                <View style={styles.recipeInfo}>
+                                    <Text style={[styles.recipeTitle, isDarkMode && styles.textDark]} numberOfLines={1}>{recipe.title}</Text>
+                                    <View style={styles.recipeMeta}>
+                                        <Ionicons name="time-outline" size={12} color="#999" />
+                                        <Text style={styles.recipeTime}>{recipe.time}</Text>
+                                    </View>
+                                </View>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            </Animated.View>
+        )}
 
         {/* Badges Section (Trophy Case) */}
         <View style={styles.section}>
@@ -506,6 +546,42 @@ const styles = StyleSheet.create({
   },
   badgeEmoji: {
     fontSize: 24,
+  },
+  recipeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: 140,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  recipeCardDark: {
+    backgroundColor: '#1E1E1E',
+  },
+  recipeImage: {
+    width: '100%',
+    height: 100,
+  },
+  recipeInfo: {
+    padding: 10,
+  },
+  recipeTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  recipeMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  recipeTime: {
+    fontSize: 12,
+    color: '#999',
   },
   checkBadge: {
     position: 'absolute',

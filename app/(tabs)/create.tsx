@@ -1,25 +1,41 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import i18n from '../../i18n';
-import { supabase } from '../../lib/supabase';
+import { Recipe } from '../../models/recipe';
 import { useStore } from '../../store/useStore';
 
 export default function CreateScreen() {
   const router = useRouter();
-  const { addXP } = useStore();
+  const { addXP, addRecipe, userProfile } = useStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [time, setTime] = useState('');
   const [servings, setServings] = useState('');
   const [ingredients, setIngredients] = useState('');
   const [steps, setSteps] = useState('');
+  const [image, setImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
   
   const handleSubmit = async () => {
-    if (!title || !description) {
+    if (!title || !description || !ingredients || !steps) {
         Alert.alert(i18n.t('missingInfo'), i18n.t('missingInfoDesc'));
         return;
     }
@@ -27,43 +43,53 @@ export default function CreateScreen() {
     setIsSubmitting(true);
 
     try {
-        // Insert into Supabase
-        const { error } = await supabase
-            .from('recipes')
-            .insert([
-                { 
-                    title, 
-                    description, 
-                    time, 
-                    servings,
-                    ingredients: ingredients.split('\n').filter(i => i.trim()),
-                    steps: steps.split('\n').filter(s => s.trim()),
-                    // In a real app, handle image upload to Storage and save URL
-                    // image: '...' 
-                }
-            ]);
+        const newRecipe: Recipe = {
+            id: Date.now().toString(), // Simple ID generation
+            title,
+            description,
+            image: image ? { uri: image } : { uri: 'https://via.placeholder.com/400x200?text=No+Image' },
+            category: 'User Recipe',
+            tags: [],
+            time,
+            servings: parseInt(servings) || 2,
+            calories: 'N/A',
+            ingredients: [{
+                title: 'Ingredients',
+                data: ingredients.split('\n').filter(i => i.trim()).map(i => ({ name: i }))
+            }],
+            steps: steps.split('\n').filter(s => s.trim()).map(s => ({ instruction: s })),
+            isTraditional: false,
+            author: {
+                name: userProfile.name,
+                avatar: userProfile.avatar || ''
+            },
+            rating: 0,
+            reviews: 0
+        };
 
-        if (error) {
-            console.error('Supabase Error:', error);
-            throw error;
-        }
+        // Save to local store (Offline support)
+        addRecipe(newRecipe);
+        
+        // Reward user
+        addXP(50);
         
         Alert.alert(i18n.t('success'), i18n.t('recipeCreated'), [
             { 
                 text: 'OK', 
                 onPress: () => {
-                    addXP(50); // Reward user
                     setTitle('');
                     setDescription('');
                     setTime('');
                     setServings('');
                     setIngredients('');
                     setSteps('');
+                    setImage(null);
                     router.push('/(tabs)/profile');
                 }
             }
         ]);
     } catch (error) {
+        console.error(error);
         Alert.alert(i18n.t('error'), i18n.t('createError'));
     } finally {
         setIsSubmitting(false);
@@ -79,12 +105,21 @@ export default function CreateScreen() {
           <Text style={styles.headerSubtitle}>{i18n.t('createSubtitle')}</Text>
         </View>
 
-        {/* Image Upload Placeholder */}
-        <TouchableOpacity style={styles.imageUpload}>
-          <View style={styles.uploadIconContainer}>
-            <Ionicons name="camera" size={32} color="#E65100" />
-          </View>
-          <Text style={styles.uploadText}>{i18n.t('addPhoto')}</Text>
+        {/* Image Upload */}
+        <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
+          {image ? (
+              <Image source={{ uri: image }} style={styles.uploadedImage} contentFit="cover" />
+          ) : (
+              <View style={styles.uploadIconContainer}>
+                <Ionicons name="camera" size={32} color="#E65100" />
+              </View>
+          )}
+          {!image && <Text style={styles.uploadText}>{i18n.t('addPhoto')}</Text>}
+          {image && (
+              <View style={styles.editBadge}>
+                  <Ionicons name="pencil" size={16} color="#fff" />
+              </View>
+          )}
         </TouchableOpacity>
 
         {/* Form Fields */}
@@ -222,6 +257,24 @@ const styles = StyleSheet.create({
     color: '#E65100',
     fontWeight: '600',
     fontSize: 16,
+  },
+  uploadedImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    backgroundColor: '#E65100',
+    padding: 8,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   formGroup: {
     marginBottom: 20,
