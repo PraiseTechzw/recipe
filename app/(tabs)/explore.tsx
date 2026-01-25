@@ -1,11 +1,16 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AdBanner } from '../../components/AdBanner';
 import { CATEGORIES, RECIPES } from '../../data/recipes';
+import i18n from '../../i18n';
+import { generateRecipeFromImage } from '../../services/ai';
 import { searchRecipes } from '../../services/recommendations';
 
 const { width } = Dimensions.get('window');
@@ -22,11 +27,120 @@ export default function ExploreScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [locale, setLocale] = useState(i18n.locale); // State to trigger re-render on language change
   
+  // AI State
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiRecipe, setAiRecipe] = useState<any>(null);
+  const [aiModalVisible, setAiModalVisible] = useState(false);
+
   const filteredRecipes = searchRecipes(searchQuery, activeCategory);
   
   const trendingRecipe = RECIPES.find(r => r.title.includes('Dovi')) || RECIPES[1];
   const otherTrending = RECIPES.find(r => r.title.includes('Muriwo')) || RECIPES[2];
+
+  const toggleLanguage = () => {
+    const locales = ['en', 'sn', 'nd'];
+    const currentIndex = locales.indexOf(i18n.locale); // Use current i18n.locale
+    const nextIndex = (currentIndex + 1) % locales.length;
+    const nextLocale = locales[nextIndex];
+    i18n.locale = nextLocale;
+    setLocale(nextLocale); // Trigger re-render
+  };
+
+  const handleScanIngredients = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Camera permission is required to scan ingredients.');
+        return;
+    }
+
+    try {
+        const result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            base64: true,
+            quality: 0.5,
+        });
+
+        if (!result.canceled && result.assets[0].base64) {
+            setAiModalVisible(true);
+            setIsGenerating(true);
+            setAiRecipe(null);
+            
+            try {
+                const recipe = await generateRecipeFromImage(result.assets[0].base64);
+                setAiRecipe(recipe);
+            } catch (error) {
+                console.error(error);
+                Alert.alert('Error', 'Failed to generate recipe. Please try again.');
+                setAiModalVisible(false);
+            } finally {
+                setIsGenerating(false);
+            }
+        }
+    } catch (error) {
+        console.error(error);
+        Alert.alert('Error', 'Something went wrong launching the camera.');
+    }
+  };
+
+  const renderAiModal = () => (
+    <Modal
+        animationType="slide"
+        transparent={true}
+        visible={aiModalVisible}
+        onRequestClose={() => setAiModalVisible(false)}
+    >
+        <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+                <TouchableOpacity 
+                    style={styles.closeButton} 
+                    onPress={() => setAiModalVisible(false)}
+                >
+                    <Ionicons name="close" size={24} color="#333" />
+                </TouchableOpacity>
+
+                {isGenerating ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#E65100" />
+                        <Text style={styles.loadingText}>Analyzing ingredients & creating recipe...</Text>
+                        <Text style={styles.loadingSubText}>Powered by Gemini AI</Text>
+                    </View>
+                ) : aiRecipe ? (
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        <Text style={styles.aiTitle}>{aiRecipe.title}</Text>
+                        <Text style={styles.aiDescription}>{aiRecipe.description}</Text>
+                        
+                        <View style={styles.aiMetaRow}>
+                            <View style={styles.aiMetaItem}>
+                                <Ionicons name="time-outline" size={16} color="#E65100" />
+                                <Text style={styles.aiMetaText}>{aiRecipe.time}</Text>
+                            </View>
+                            <View style={styles.aiMetaItem}>
+                                <Ionicons name="flame-outline" size={16} color="#E65100" />
+                                <Text style={styles.aiMetaText}>{aiRecipe.calories}</Text>
+                            </View>
+                        </View>
+
+                        <Text style={styles.aiSectionTitle}>Ingredients</Text>
+                        {aiRecipe.ingredients?.map((ing: any, i: number) => (
+                            <Text key={i} style={styles.aiListItem}>• {ing.quantity} {ing.name}</Text>
+                        ))}
+
+                        <Text style={styles.aiSectionTitle}>Steps</Text>
+                        {aiRecipe.steps?.map((step: string, i: number) => (
+                            <View key={i} style={styles.stepItem}>
+                                <Text style={styles.stepNumber}>{i + 1}</Text>
+                                <Text style={styles.stepText}>{step}</Text>
+                            </View>
+                        ))}
+                    </ScrollView>
+                ) : null}
+            </View>
+        </View>
+    </Modal>
+  );
 
   const renderContent = () => {
     if (searchQuery.length > 0 || activeCategory !== 'All') {
@@ -191,6 +305,10 @@ export default function ExploreScreen() {
       {/* Fixed Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{i18n.t('exploreTitle')}</Text>
+        <TouchableOpacity onPress={toggleLanguage} style={styles.langButton}>
+            <Text style={styles.langText}>{i18n.locale.toUpperCase()}</Text>
+            <Ionicons name="globe-outline" size={16} color="#E65100" style={{ marginLeft: 4 }} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -210,8 +328,8 @@ export default function ExploreScreen() {
                 <Ionicons name="close-circle" size={20} color="#999" />
              </TouchableOpacity>
           ) : (
-            <TouchableOpacity>
-                <Ionicons name="options-outline" size={20} color="#E65100" />
+            <TouchableOpacity onPress={handleScanIngredients} style={styles.scanButton}>
+                <Ionicons name="camera" size={22} color="#E65100" />
             </TouchableOpacity>
           )}
         </View>
@@ -249,14 +367,133 @@ export default function ExploreScreen() {
         {renderContent()}
 
       </ScrollView>
+      {renderAiModal()}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  // AI Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    width: '100%',
+    maxHeight: '80%',
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  closeButton: {
+    alignSelf: 'flex-end',
+    padding: 4,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
+  loadingSubText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#888',
+  },
+  aiTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 8,
+  },
+  aiDescription: {
+    fontSize: 16,
+    color: '#666',
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  aiMetaRow: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  aiMetaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  aiMetaText: {
+    marginLeft: 6,
+    color: '#666',
+    fontWeight: '500',
+  },
+  aiSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  aiListItem: {
+    fontSize: 16,
+    color: '#444',
+    marginBottom: 8,
+    paddingLeft: 8,
+  },
+  stepItem: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  stepNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFF3E0',
+    color: '#E65100',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontWeight: 'bold',
+    fontSize: 12,
+    marginRight: 12,
+    marginTop: 2,
+  },
+  stepText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#444',
+    lineHeight: 24,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FAFAFA',
+  },
+  langButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  langText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#E65100',
+  },
+  scanButton: {
+    padding: 4,
   },
   scrollContent: {
     paddingBottom: 100, // Extra padding for tab bar

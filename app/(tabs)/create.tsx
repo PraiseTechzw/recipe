@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
 
 export default function CreateScreen() {
@@ -10,25 +11,56 @@ export default function CreateScreen() {
   const { addXP } = useStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [time, setTime] = useState('');
+  const [servings, setServings] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title || !description) {
         Alert.alert('Missing Info', 'Please provide at least a title and description.');
         return;
     }
-    
-    // Mock submission
-    Alert.alert('Success', 'Your recipe has been submitted for review!', [
-        { 
-            text: 'OK', 
-            onPress: () => {
-                addXP(50); // Reward user
-                setTitle('');
-                setDescription('');
-                router.push('/(tabs)/profile');
-            }
+
+    setIsSubmitting(true);
+
+    try {
+        // Insert into Supabase
+        const { error } = await supabase
+            .from('recipes')
+            .insert([
+                { 
+                    title, 
+                    description, 
+                    time, 
+                    servings,
+                    // In a real app, handle image upload to Storage and save URL
+                    // image: '...' 
+                }
+            ]);
+
+        if (error) {
+            console.error('Supabase Error:', error);
+            throw error;
         }
-    ]);
+        
+        Alert.alert('Success', 'Your recipe has been created and synced!', [
+            { 
+                text: 'OK', 
+                onPress: () => {
+                    addXP(50); // Reward user
+                    setTitle('');
+                    setDescription('');
+                    setTime('');
+                    setServings('');
+                    router.push('/(tabs)/profile');
+                }
+            }
+        ]);
+    } catch (error) {
+        Alert.alert('Error', 'Failed to create recipe. Please ensure Supabase is configured.');
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   return (
@@ -67,6 +99,8 @@ export default function CreateScreen() {
               style={styles.input} 
               placeholder="e.g. 30 mins"
               placeholderTextColor="#999"
+              value={time}
+              onChangeText={setTime}
             />
           </View>
           <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
@@ -75,6 +109,8 @@ export default function CreateScreen() {
               style={styles.input} 
               placeholder="e.g. 4 people"
               placeholderTextColor="#999"
+              value={servings}
+              onChangeText={setServings}
             />
           </View>
         </View>
