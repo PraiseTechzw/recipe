@@ -103,6 +103,7 @@ export default function SavedScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
+<<<<<<< HEAD
         <View>
           <Text style={styles.headerTitle}>{i18n.t('savedRecipes')}</Text>
           <Text style={styles.headerSubtitle}>{filteredRecipes.length} {i18n.t('items')}</Text>
@@ -123,6 +124,10 @@ export default function SavedScreen() {
                 <Ionicons name="close-circle" size={20} color="#ccc" />
             </TouchableOpacity>
         )}
+=======
+        <Text style={styles.headerTitle}>{i18n.t('savedRecipes')}</Text>
+        <Text style={styles.headerSubtitle}>{allRecipes.length} {i18n.t('items')}</Text>
+>>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
       </View>
 
       {loading ? (

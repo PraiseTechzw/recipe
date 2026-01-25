@@ -2,12 +2,19 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+=======
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+>>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RECIPES } from '../../data/recipes';
 import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
+<<<<<<< HEAD
 import { useStore } from '../../store/useStore';
+=======
+>>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
 
 const { width } = Dimensions.get('window');
 
