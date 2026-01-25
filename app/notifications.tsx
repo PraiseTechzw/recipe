@@ -1,8 +1,9 @@
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NotificationService } from '../services/notificationService';
 
 const NOTIFICATIONS = [
     {
@@ -34,6 +35,14 @@ const NOTIFICATIONS = [
 export default function NotificationsScreen() {
   const router = useRouter();
 
+  const handleTestNotification = async () => {
+    await NotificationService.sendLocalNotification(
+        "Test Notification", 
+        "This is how your notifications will look! 🍲"
+    );
+    Alert.alert("Sent!", "You should see a notification in a few seconds.");
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -41,7 +50,9 @@ export default function NotificationsScreen() {
             <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{i18n.t('notifications')}</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity onPress={handleTestNotification}>
+            <Ionicons name="notifications-outline" size={24} color="#333" />
+        </TouchableOpacity>
       </View>
 
       <FlatList

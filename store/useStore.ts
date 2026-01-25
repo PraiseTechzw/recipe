@@ -44,6 +44,7 @@ interface AppState {
     xp: number;
     badges: string[];
     dietaryPreferences: string[];
+    pushToken?: string;
     avatar?: string;
     bio?: string;
     stats: UserStats;
