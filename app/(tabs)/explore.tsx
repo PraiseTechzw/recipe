@@ -31,160 +31,175 @@ export default function ExploreScreen() {
   const renderContent = () => {
     if (searchQuery.length > 0 || activeCategory !== 'All') {
       return (
-        <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+        <Animated.View entering={FadeInDown.duration(400)} style={{ paddingHorizontal: 16, paddingTop: 16 }}>
             <Text style={styles.sectionTitle}>
-                {filteredRecipes.length} Results
+                {filteredRecipes.length} {i18n.t('results')}
             </Text>
             <View style={styles.gridContainer}>
-                {filteredRecipes.map(recipe => (
+                {filteredRecipes.map((recipe, index) => (
                     <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
-                        <TouchableOpacity style={styles.gridCard}>
-                            <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" />
-                            <TouchableOpacity style={styles.favoriteButton}>
-                                <Ionicons name="heart" size={16} color="#fff" />
-                            </TouchableOpacity>
-                            <View style={styles.gridContent}>
-                                <Text style={styles.gridTitle} numberOfLines={1}>{recipe.title}</Text>
-                                <View style={styles.gridMeta}>
-                                    <View style={styles.metaItem}>
-                                        <Ionicons name="time-outline" size={14} color="#888" />
-                                        <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
-                                    </View>
-                                    <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
-                                        <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
-                                            {recipe.category}
-                                        </Text>
+                        <TouchableOpacity>
+                            <Animated.View entering={FadeInDown.delay(index * 100).springify()} style={styles.gridCard}>
+                                <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" transition={200} />
+                                <TouchableOpacity style={styles.favoriteButton}>
+                                    <Ionicons name="heart" size={16} color="#fff" />
+                                </TouchableOpacity>
+                                <View style={styles.gridContent}>
+                                    <Text style={styles.gridTitle} numberOfLines={1}>{recipe.title}</Text>
+                                    <View style={styles.gridMeta}>
+                                        <View style={styles.metaItem}>
+                                            <Ionicons name="time-outline" size={14} color="#888" />
+                                            <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
+                                        </View>
+                                        <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
+                                            <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
+                                                {recipe.category}
+                                            </Text>
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
+                            </Animated.View>
                         </TouchableOpacity>
                     </Link>
                 ))}
             </View>
-        </View>
+        </Animated.View>
       );
     }
 
     return (
         <>
             {/* Trending Section */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Trending this week</Text>
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{i18n.t('trending')}</Text>
                 <TouchableOpacity>
-                    <Text style={styles.seeAll}>See All</Text>
+                    <Text style={styles.seeAll}>{i18n.t('seeAll')}</Text>
                 </TouchableOpacity>
-            </View>
+            </Animated.View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingContainer}>
                 <Link href={`/recipe/${trendingRecipe.id}`} asChild>
-                    <TouchableOpacity style={styles.trendingCard}>
-                        <Image source={{ uri: trendingRecipe.image }} style={styles.trendingImage} contentFit="cover" />
-                        <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.8)']}
-                            style={styles.trendingOverlay}
-                        >
-                            <View style={styles.trendingTag}>
-                                <Ionicons name="trending-up" size={12} color="#E65100" />
-                                <Text style={styles.trendingTagText}>TRENDING</Text>
-                            </View>
-                            <Text style={styles.trendingTitle}>{trendingRecipe.title}</Text>
-                            <Text style={styles.trendingMeta}>{trendingRecipe.time} • {trendingRecipe.calories}</Text>
-                        </LinearGradient>
+                    <TouchableOpacity activeOpacity={0.9}>
+                        <Animated.View entering={FadeInRight.delay(200).springify()} style={styles.trendingCard}>
+                            <Image source={{ uri: trendingRecipe.image }} style={styles.trendingImage} contentFit="cover" transition={300} />
+                            <LinearGradient
+                                colors={['transparent', 'rgba(0,0,0,0.8)']}
+                                style={styles.trendingOverlay}
+                            >
+                                <View style={styles.trendingTag}>
+                                    <Ionicons name="trending-up" size={12} color="#E65100" />
+                                    <Text style={styles.trendingTagText}>{i18n.t('trendingTag')}</Text>
+                                </View>
+                                <Text style={styles.trendingTitle}>{trendingRecipe.title}</Text>
+                                <Text style={styles.trendingMeta}>{trendingRecipe.time} • {trendingRecipe.calories}</Text>
+                            </LinearGradient>
+                        </Animated.View>
                     </TouchableOpacity>
                 </Link>
 
                 <Link href={`/recipe/${otherTrending.id}`} asChild>
-                    <TouchableOpacity style={styles.trendingCard}>
-                        <Image source={{ uri: otherTrending.image }} style={styles.trendingImage} contentFit="cover" />
-                        <LinearGradient
-                            colors={['transparent', 'rgba(0,0,0,0.8)']}
-                            style={styles.trendingOverlay}
-                        >
-                            <View style={[styles.trendingTag, { backgroundColor: '#E8F5E9' }]}>
-                                <Ionicons name="leaf" size={12} color="#2E7D32" />
-                                <Text style={[styles.trendingTagText, { color: '#2E7D32' }]}>HEALTHY</Text>
-                            </View>
-                            <Text style={styles.trendingTitle}>{otherTrending.title}</Text>
-                            <Text style={styles.trendingMeta}>{otherTrending.time} • {otherTrending.calories}</Text>
-                        </LinearGradient>
+                    <TouchableOpacity activeOpacity={0.9}>
+                        <Animated.View entering={FadeInRight.delay(300).springify()} style={styles.trendingCard}>
+                            <Image source={{ uri: otherTrending.image }} style={styles.trendingImage} contentFit="cover" transition={300} />
+                            <LinearGradient
+                                colors={['transparent', 'rgba(0,0,0,0.8)']}
+                                style={styles.trendingOverlay}
+                            >
+                                <View style={[styles.trendingTag, { backgroundColor: '#E8F5E9' }]}>
+                                    <Ionicons name="leaf" size={12} color="#2E7D32" />
+                                    <Text style={[styles.trendingTagText, { color: '#2E7D32' }]}>{i18n.t('healthy')}</Text>
+                                </View>
+                                <Text style={styles.trendingTitle}>{otherTrending.title}</Text>
+                                <Text style={styles.trendingMeta}>{otherTrending.time} • {otherTrending.calories}</Text>
+                            </LinearGradient>
+                        </Animated.View>
                     </TouchableOpacity>
                 </Link>
             </ScrollView>
 
+            <AdBanner />
+
             {/* Categories Circles */}
-            <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Categories</Text>
-            </View>
-            <View style={styles.categoriesRow}>
-                {CATEGORIES.map((cat) => {
-                    const style = CATEGORY_STYLES[cat.name] || { bg: '#F5F5F5', color: '#666', icon: 'restaurant' };
-                    return (
-                        <TouchableOpacity 
-                            key={cat.id} 
-                            style={styles.categoryCircleItem}
-                            onPress={() => setActiveCategory(cat.name)}
-                        >
-                            <View style={[styles.categoryCircle, { backgroundColor: style.bg }]}>
-                                <MaterialIcons name={style.icon} size={28} color={style.color} />
-                            </View>
-                            <Text style={styles.categoryLabel}>{cat.name}</Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
+            <Animated.View entering={FadeInDown.delay(400).duration(500)}>
+                <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionTitle}>{i18n.t('categories')}</Text>
+                </View>
+                <View style={styles.categoriesRow}>
+                    {CATEGORIES.map((cat, index) => {
+                        const style = CATEGORY_STYLES[cat.name] || { bg: '#F5F5F5', color: '#666', icon: 'restaurant' };
+                        return (
+                            <TouchableOpacity 
+                                key={cat.id} 
+                                style={styles.categoryCircleItem}
+                                onPress={() => setActiveCategory(cat.name)}
+                                activeOpacity={0.7}
+                            >
+                                <Animated.View entering={FadeInDown.delay(500 + (index * 100)).springify()} style={[styles.categoryCircle, { backgroundColor: style.bg }]}>
+                                    <MaterialIcons name={style.icon} size={28} color={style.color} />
+                                </Animated.View>
+                                <Text style={styles.categoryLabel}>{cat.name}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </Animated.View>
 
             {/* Popular Recipes Grid */}
-            <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-                <Text style={styles.sectionTitle}>Popular Recipes</Text>
-                <TouchableOpacity>
-                    <Ionicons name="filter" size={20} color="#666" />
-                </TouchableOpacity>
-            </View>
-            
-            <View style={styles.gridContainer}>
-                {RECIPES.map(recipe => (
-                    <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
-                        <TouchableOpacity style={styles.gridCard}>
-                            <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" />
-                            <TouchableOpacity style={styles.favoriteButton}>
-                                <Ionicons name="heart" size={16} color="#fff" />
+            <Animated.View entering={FadeInDown.delay(600).duration(500)}>
+                <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+                    <Text style={styles.sectionTitle}>{i18n.t('popularRecipes')}</Text>
+                    <TouchableOpacity>
+                        <Ionicons name="filter" size={20} color="#666" />
+                    </TouchableOpacity>
+                </View>
+                
+                <View style={styles.gridContainer}>
+                    {RECIPES.map((recipe, index) => (
+                        <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
+                            <TouchableOpacity activeOpacity={0.8}>
+                                <Animated.View entering={FadeInDown.delay(700 + (index * 100)).springify()} style={styles.gridCard}>
+                                    <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" transition={200} />
+                                    <TouchableOpacity style={styles.favoriteButton}>
+                                        <Ionicons name="heart" size={16} color="#fff" />
+                                    </TouchableOpacity>
+                                    <View style={styles.gridContent}>
+                                        <Text style={styles.gridTitle} numberOfLines={1}>{recipe.title}</Text>
+                                        <View style={styles.gridMeta}>
+                                            <View style={styles.metaItem}>
+                                                <Ionicons name="time-outline" size={14} color="#888" />
+                                                <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
+                                            </View>
+                                            <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
+                                                <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
+                                                    {recipe.category}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </Animated.View>
                             </TouchableOpacity>
-                            <View style={styles.gridContent}>
-                                <Text style={styles.gridTitle} numberOfLines={1}>{recipe.title}</Text>
-                                <View style={styles.gridMeta}>
-                                    <View style={styles.metaItem}>
-                                        <Ionicons name="time-outline" size={14} color="#888" />
-                                        <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
-                                    </View>
-                                    <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
-                                        <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
-                                            {recipe.category}
-                                        </Text>
-                                    </View>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    </Link>
-                ))}
-            </View>
+                        </Link>
+                    ))}
+                </View>
+            </Animated.View>
         </>
     );
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
+      {/* Fixed Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>{i18n.t('exploreTitle')}</Text>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Explore Zimbabwe's Flavors</Text>
-        </View>
-
         {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={20} color="#C26A00" style={styles.searchIcon} />
           <TextInput 
-            placeholder="Search recipes, ingredients..." 
+            placeholder={i18n.t('searchPlaceholder')}
             style={styles.searchInput}
             placeholderTextColor="#999"
             value={searchQuery}
@@ -207,18 +222,28 @@ export default function ExploreScreen() {
             style={[styles.filterChip, activeCategory === 'All' && styles.filterChipActive]}
             onPress={() => setActiveCategory('All')}
           >
-            <Text style={[styles.filterText, activeCategory === 'All' && styles.filterTextActive]}>All</Text>
+            <Text style={[styles.filterText, activeCategory === 'All' && styles.filterTextActive]}>{i18n.t('all')}</Text>
           </TouchableOpacity>
           
-          {['Quick Meals', 'Vegetarian', 'Ceremonial'].map((filter) => (
-             <TouchableOpacity 
-                key={filter} 
-                style={[styles.filterChip, activeCategory === filter && styles.filterChipActive]}
-                onPress={() => setActiveCategory(filter)}
-             >
-                <Text style={[styles.filterText, activeCategory === filter && styles.filterTextActive]}>{filter}</Text>
-             </TouchableOpacity>
-          ))}
+          {['Quick Meals', 'Vegetarian', 'Ceremonial'].map((filter) => {
+             // Simple mapping for demo keys, ideally use a robust key map
+             const keyMap: Record<string, string> = {
+                'Quick Meals': 'quickMeals',
+                'Vegetarian': 'vegetarian',
+                'Ceremonial': 'ceremonial'
+             };
+             return (
+                <TouchableOpacity 
+                    key={filter} 
+                    style={[styles.filterChip, activeCategory === filter && styles.filterChipActive]}
+                    onPress={() => setActiveCategory(filter)}
+                >
+                    <Text style={[styles.filterText, activeCategory === filter && styles.filterTextActive]}>
+                        {i18n.t(keyMap[filter] || 'all')}
+                    </Text>
+                </TouchableOpacity>
+             );
+          })}
         </ScrollView>
 
         {renderContent()}
