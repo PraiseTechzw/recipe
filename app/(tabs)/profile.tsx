@@ -145,27 +145,25 @@ export default function ProfileScreen() {
         <Animated.View entering={FadeInUp.delay(300).springify()}>
             <View style={styles.statsGrid}>
                 <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-                    <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
-                        <Ionicons name="restaurant" size={22} color="#2196F3" />
-                    </View>
-                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>{favorites.length}</Text>
-                    <Text style={styles.statLabel}>{i18n.t('saved')}</Text>
-                </View>
-                <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-                    <View style={[styles.statIcon, { backgroundColor: '#F3E5F5' }]}>
-                        <Ionicons name="trophy" size={22} color="#9C27B0" />
-                    </View>
-                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>
-                        #{Math.max(1, 1000 - Math.floor(userProfile.xp / 10))}
-                    </Text>
-                    <Text style={styles.statLabel}>{i18n.t('rank')}</Text>
-                </View>
-                <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
                     <View style={[styles.statIcon, { backgroundColor: '#FFF3E0' }]}>
                         <Ionicons name="flame" size={22} color="#E65100" />
                     </View>
-                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>3</Text>
+                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>{userProfile.stats?.daysStreak || 0}</Text>
                     <Text style={styles.statLabel}>Day Streak</Text>
+                </View>
+                <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
+                    <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
+                        <Ionicons name="restaurant" size={22} color="#1976D2" />
+                    </View>
+                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>{userProfile.stats?.recipesCooked || 0}</Text>
+                    <Text style={styles.statLabel}>Cooked</Text>
+                </View>
+                <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
+                    <View style={[styles.statIcon, { backgroundColor: '#F3E5F5' }]}>
+                        <Ionicons name="bookmark" size={22} color="#7B1FA2" />
+                    </View>
+                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>{userProfile.stats?.savedRecipes || 0}</Text>
+                    <Text style={styles.statLabel}>Saved</Text>
                 </View>
             </View>
         </Animated.View>
@@ -189,7 +187,7 @@ export default function ProfileScreen() {
                             <TouchableOpacity 
                                 key={recipe.id} 
                                 style={[styles.recipeCard, isDarkMode && styles.recipeCardDark]}
-                                // onPress={() => router.push(`/cooking/${recipe.id}`)} 
+                                onPress={() => router.push(`/cooking/${recipe.id}`)} 
                             >
                                 <Image 
                                     source={recipe.image} 
@@ -410,6 +408,14 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     marginBottom: 20,
     fontWeight: '500',
+  },
+  bio: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.9,
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
   xpContainer: {
     width: '100%',

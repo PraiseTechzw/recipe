@@ -101,6 +101,21 @@ export const LEVELS = [
   { level: 8, minXP: 3000, title: 'Executive Chef' },
   { level: 9, minXP: 4000, title: 'Culinary Master' },
   { level: 10, minXP: 5500, title: 'Legend' },
+  { level: 11, minXP: 7000, title: 'Taste Wizard' },
+  { level: 12, minXP: 9000, title: 'Flavor Alchemist' },
+  { level: 13, minXP: 11500, title: 'Gastronomy Guru' },
+  { level: 14, minXP: 14500, title: 'Kitchen Commander' },
+  { level: 15, minXP: 18000, title: 'Spice Lord' },
+  { level: 16, minXP: 22000, title: 'Umami Emperor' },
+  { level: 17, minXP: 26500, title: 'Culinary Titan' },
+  { level: 18, minXP: 31500, title: 'God of Cookery' },
+  { level: 19, minXP: 37000, title: 'Universal Chef' },
+  { level: 20, minXP: 43000, title: 'Cosmic Cook' },
+  { level: 21, minXP: 50000, title: 'Recipe Sage' },
+  { level: 22, minXP: 58000, title: 'Infinite Palate' },
+  { level: 23, minXP: 67000, title: 'Eternal Chef' },
+  { level: 24, minXP: 77000, title: 'Supreme Sustenance' },
+  { level: 25, minXP: 88000, title: 'The Creator' },
 ];
 
 export const getLevel = (xp: number) => {

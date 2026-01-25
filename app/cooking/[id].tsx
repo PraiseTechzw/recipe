@@ -34,12 +34,25 @@ export default function CookingModeScreen() {
       if (data) {
         setRecipe(data);
       } else {
-        const local = RECIPES.find((r) => r.id === id);
+        // Check local static recipes
+        let local = RECIPES.find((r) => r.id === id);
+        
+        // Check user-created recipes (store)
+        if (!local) {
+            const { myRecipes } = useStore.getState();
+            local = myRecipes.find((r) => r.id === id);
+        }
+
         setRecipe(local);
       }
     } catch (e) {
       console.error(e);
-      const local = RECIPES.find((r) => r.id === id);
+      // Fallback to local
+      let local = RECIPES.find((r) => r.id === id);
+      if (!local) {
+          const { myRecipes } = useStore.getState();
+          local = myRecipes.find((r) => r.id === id);
+      }
       setRecipe(local);
     } finally {
       setLoading(false);

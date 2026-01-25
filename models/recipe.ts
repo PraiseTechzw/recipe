@@ -32,6 +32,7 @@ export interface Author {
 
 export interface Recipe {
   id: string;
+  remoteId?: string;
   title: string;
   description: string;
   image: any; // Using require() or uri string

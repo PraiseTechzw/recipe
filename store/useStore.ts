@@ -20,6 +20,7 @@ interface AppState {
   // User Recipes
   myRecipes: Recipe[];
   addRecipe: (recipe: Recipe) => void;
+  updateRecipe: (id: string, updates: Partial<Recipe>) => void;
   deleteRecipe: (id: string) => void;
   
   // Shopping List
@@ -89,6 +90,9 @@ export const useStore = create<AppState>()(
       myRecipes: [],
       addRecipe: (recipe) => set((state) => ({
         myRecipes: [recipe, ...state.myRecipes]
+      })),
+      updateRecipe: (id, updates) => set((state) => ({
+        myRecipes: state.myRecipes.map(r => r.id === id ? { ...r, ...updates } : r)
       })),
       deleteRecipe: (id) => set((state) => ({
         myRecipes: state.myRecipes.filter(r => r.id !== id)

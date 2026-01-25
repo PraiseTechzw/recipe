@@ -76,16 +76,13 @@ export default function EditProfileScreen() {
         <View style={styles.formGroup}>
             <Text style={styles.label}>Chef Level</Text>
             <View style={styles.levelContainer}>
-                {['Beginner', 'Home Cook', 'Pro'].map((level) => (
-                    <TouchableOpacity 
-                        key={level} 
-                        style={[styles.levelChip, chefLevel === level && styles.levelChipActive]}
-                        onPress={() => setChefLevel(level as any)}
-                    >
-                        <Text style={[styles.levelText, chefLevel === level && styles.levelTextActive]}>{level}</Text>
-                    </TouchableOpacity>
-                ))}
+                <View style={[styles.levelChip, styles.levelChipActive]}>
+                    <Text style={[styles.levelText, styles.levelTextActive]}>{chefLevel}</Text>
+                </View>
             </View>
+            <Text style={styles.helperText}>
+                Level up by cooking more recipes and earning XP!
+            </Text>
         </View>
 
         <View style={styles.formGroup}>
@@ -204,5 +201,11 @@ const styles = StyleSheet.create({
   levelTextActive: {
     color: '#E65100',
     fontWeight: '600',
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });

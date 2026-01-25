@@ -1,8 +1,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 import i18n from '../i18n';
+import { SyncService } from '../services/syncService';
 import { useStore } from '../store/useStore';
 
 export const unstable_settings = {
@@ -11,6 +13,10 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const { isDarkMode, locale } = useStore();
+
+  useEffect(() => {
+    SyncService.syncRecipes().catch(e => console.log('Initial sync failed', e));
+  }, []);
 
   if (locale) {
     i18n.locale = locale;

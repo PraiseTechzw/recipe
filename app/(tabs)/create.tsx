@@ -70,6 +70,9 @@ export default function CreateScreen() {
         // Save to local store (Offline support)
         addRecipe(newRecipe);
         
+        // Attempt to sync (Online support)
+        SyncService.syncRecipes().catch(err => console.log('Background sync failed', err));
+
         // Reward user
         addXP(50);
         
