@@ -1,14 +1,41 @@
-import { StyleSheet, ScrollView, View, Text, TextInput, FlatList, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Link, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { RECIPES, CATEGORIES } from '../../data/recipes';
-import RecipeCard from '../../components/RecipeCard';
-import { Colors } from '../../constants/theme';
-import { Link } from 'expo-router';
+import { RECIPES } from '../../data/recipes';
+import { getRandomRecipe, getRecipeOfTheDay, getRecommendedRecipes } from '../../services/recommendations';
+import { useStore } from '../../store/useStore';
 
 export default function HomeScreen() {
-  const trendingRecipe = RECIPES[1]; // Dovi
-  const popularRecipes = RECIPES.filter(r => r.id !== '2');
+  const router = useRouter();
+  const { viewHistory, categoryScores } = useStore();
+  
+  // Smart Algorithms
+  const [featuredRecipe, setFeaturedRecipe] = useState(RECIPES[0]);
+  const [dailyPick, setDailyPick] = useState(RECIPES[1]);
+  const [recommendations, setRecommendations] = useState(RECIPES.slice(0, 3));
+
+  useEffect(() => {
+    // 1. Daily Rotation (Deterministic)
+    setDailyPick(getRecipeOfTheDay());
+
+    // 2. Smart Recommendations based on user history
+    const smartRecs = getRecommendedRecipes(viewHistory, categoryScores);
+    setRecommendations(smartRecs);
+    
+    // 3. Featured is the top recommendation or a fallback
+    if (smartRecs.length > 0) {
+        setFeaturedRecipe(smartRecs[0]);
+    }
+  }, [viewHistory, categoryScores]);
+
+  const handleSurpriseMe = () => {
+    const random = getRandomRecipe();
+    router.push(`/recipe/${random.id}`);
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -16,96 +43,77 @@ export default function HomeScreen() {
         
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Explore Zimbabwe's Flavors</Text>
-        </View>
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
-          <TextInput 
-            placeholder="Search recipes, ingredients..." 
-            style={styles.searchInput}
-            placeholderTextColor="#999"
-          />
-          <TouchableOpacity>
-             <Ionicons name="options-outline" size={20} color={Colors.light.tint} />
+          <View>
+            <Text style={styles.greeting}>Good Morning,</Text>
+            <Text style={styles.subGreeting}>Ready to cook something delicious?</Text>
+          </View>
+          <TouchableOpacity style={styles.avatarButton} onPress={() => router.push('/(tabs)/profile')}>
+            <Image source={{ uri: 'https://i.pravatar.cc/150?img=12' }} style={styles.avatar} />
           </TouchableOpacity>
         </View>
 
-        {/* Filters */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll} contentContainerStyle={styles.filtersContent}>
-          <TouchableOpacity style={[styles.filterChip, styles.filterChipActive]}>
-            <Text style={[styles.filterText, styles.filterTextActive]}>All</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterChip}>
-            <Text style={styles.filterText}>Quick Meals</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterChip}>
-            <Text style={styles.filterText}>Vegetarian</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.filterChip}>
-             <Text style={styles.filterText}>Ceremonial</Text>
-          </TouchableOpacity>
-        </ScrollView>
-
-        {/* Trending */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Trending this week</Text>
-          <TouchableOpacity>
-            <Text style={styles.seeAll}>See All</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingContainer}>
-           <Link href={`/recipe/${trendingRecipe.id}`} asChild>
-             <TouchableOpacity style={styles.trendingCard}>
-               <Image source={{ uri: trendingRecipe.image }} style={styles.trendingImage} />
-               <View style={styles.trendingOverlay}>
-                 <Text style={styles.trendingLabel}>↗ TRENDING</Text>
-                 <Text style={styles.trendingTitle}>{trendingRecipe.title}</Text>
-                 <Text style={styles.trendingMeta}>{trendingRecipe.time} • {trendingRecipe.calories}</Text>
-               </View>
-             </TouchableOpacity>
-           </Link>
-           {/* Duplicate for demo scroll */}
-           <Link href={`/recipe/${trendingRecipe.id}`} asChild>
-             <TouchableOpacity style={[styles.trendingCard, { marginLeft: 16 }]}>
-               <Image source={{ uri: RECIPES[2].image }} style={styles.trendingImage} />
-               <View style={styles.trendingOverlay}>
-                 <Text style={styles.trendingLabel}>↗ HEALTHY</Text>
-                 <Text style={styles.trendingTitle}>{RECIPES[2].title}</Text>
-                 <Text style={styles.trendingMeta}>{RECIPES[2].time} • {RECIPES[2].calories}</Text>
-               </View>
-             </TouchableOpacity>
-           </Link>
-        </ScrollView>
-
-        {/* Categories */}
-        <Text style={[styles.sectionTitle, { marginTop: 24, paddingHorizontal: 16 }]}>Categories</Text>
-        <View style={styles.categoriesContainer}>
-          {CATEGORIES.map((cat) => (
-            <TouchableOpacity key={cat.id} style={styles.categoryItem}>
-              <View style={styles.categoryIconContainer}>
-                <MaterialIcons name={cat.icon as any} size={24} color="#E65100" />
+        {/* Featured Card */}
+        <Text style={styles.sectionTitle}>Featured Recipe</Text>
+        <Link href={`/recipe/${featuredRecipe.id}`} asChild>
+          <TouchableOpacity style={styles.featuredCard}>
+            <Image source={{ uri: featuredRecipe.image }} style={styles.featuredImage} contentFit="cover" />
+            <LinearGradient colors={['transparent', 'rgba(0,0,0,0.8)']} style={styles.featuredOverlay}>
+              <View style={styles.featuredBadge}>
+                <Text style={styles.featuredBadgeText}>Recipe of the Day</Text>
               </View>
-              <Text style={styles.categoryName}>{cat.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              <Text style={styles.featuredTitle}>{featuredRecipe.title}</Text>
+              <Text style={styles.featuredMeta}>{featuredRecipe.time} • {featuredRecipe.calories}</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Link>
 
-        {/* Popular Recipes */}
-        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-          <Text style={styles.sectionTitle}>Popular Recipes</Text>
-          <TouchableOpacity>
-             <MaterialIcons name="filter-list" size={24} color="#666" />
+        {/* Quick Actions */}
+        <View style={styles.actionsRow}>
+          <Link href="/(tabs)/explore" asChild>
+            <TouchableOpacity style={styles.actionButton}>
+              <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
+                <Ionicons name="search" size={24} color="#E65100" />
+              </View>
+              <Text style={styles.actionText}>Search</Text>
+            </TouchableOpacity>
+          </Link>
+          <Link href="/(tabs)/saved" asChild>
+            <TouchableOpacity style={styles.actionButton}>
+              <View style={[styles.actionIcon, { backgroundColor: '#FFEBEE' }]}>
+                <Ionicons name="bookmark" size={24} color="#D32F2F" />
+              </View>
+              <Text style={styles.actionText}>Saved</Text>
+            </TouchableOpacity>
+          </Link>
+          <TouchableOpacity style={styles.actionButton} onPress={handleSurpriseMe}>
+            <View style={[styles.actionIcon, { backgroundColor: '#E3F2FD' }]}>
+              <Ionicons name="shuffle" size={24} color="#1976D2" />
+            </View>
+            <Text style={styles.actionText}>Surprise Me</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton}>
+             <View style={[styles.actionIcon, { backgroundColor: '#E8F5E9' }]}>
+              <Ionicons name="nutrition" size={24} color="#388E3C" />
+            </View>
+            <Text style={styles.actionText}>Diet</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.popularList}>
-          {popularRecipes.map(recipe => (
-            <RecipeCard key={recipe.id} recipe={recipe} />
-          ))}
-        </View>
+        {/* Daily Pick */}
+        <Text style={styles.sectionTitle}>Daily Inspiration</Text>
+        <Link href={`/recipe/${dailyPick.id}`} asChild>
+           <TouchableOpacity style={styles.dailyCard}>
+             <View style={styles.dailyContent}>
+               <Text style={styles.dailyTitle}>{dailyPick.title}</Text>
+               <Text style={styles.dailyDesc} numberOfLines={2}>{dailyPick.description}</Text>
+               <View style={styles.dailyMeta}>
+                 <Ionicons name="time-outline" size={14} color="#666" />
+                 <Text style={styles.dailyMetaText}>{dailyPick.time}</Text>
+               </View>
+             </View>
+             <Image source={{ uri: dailyPick.image }} style={styles.dailyImage} contentFit="cover" />
+           </TouchableOpacity>
+        </Link>
 
       </ScrollView>
     </SafeAreaView>
@@ -119,142 +127,155 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
+    paddingHorizontal: 16,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    marginHorizontal: 16,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-  },
-  filtersScroll: {
-    marginTop: 16,
-    paddingLeft: 16,
-  },
-  filtersContent: {
-    paddingRight: 16,
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#eee',
-  },
-  filterChipActive: {
-    backgroundColor: '#E65100',
-    borderColor: '#E65100',
-  },
-  filterText: {
-    color: '#666',
-    fontWeight: '600',
-  },
-  filterTextActive: {
-    color: '#fff',
-  },
-  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 12,
+    marginVertical: 20,
+  },
+  greeting: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  subGreeting: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 4,
+  },
+  avatarButton: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  avatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#eee',
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
+    marginBottom: 12,
+    marginTop: 8,
   },
-  seeAll: {
-    color: '#E65100',
-    fontWeight: '600',
-  },
-  trendingContainer: {
-    paddingHorizontal: 16,
-  },
-  trendingCard: {
-    width: 280,
-    height: 180,
-    borderRadius: 16,
+  featuredCard: {
+    height: 250,
+    borderRadius: 20,
     overflow: 'hidden',
+    marginBottom: 24,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  trendingImage: {
+  featuredImage: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
-  trendingOverlay: {
+  featuredOverlay: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
+    bottom: 0,
+    height: '50%',
+    justifyContent: 'flex-end',
     padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.4)', // Gradient simulation
   },
-  trendingLabel: {
-    color: '#FFA726',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginBottom: 4,
+  featuredBadge: {
+    backgroundColor: '#E65100',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
   },
-  trendingTitle: {
+  featuredBadgeText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  featuredTitle: {
+    color: '#fff',
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  trendingMeta: {
-    color: '#eee',
+  featuredMeta: {
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 12,
   },
-  categoriesContainer: {
+  actionsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    marginBottom: 24,
   },
-  categoryItem: {
+  actionButton: {
     alignItems: 'center',
     gap: 8,
   },
-  categoryIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#FFF3E0', // Light orange
+  actionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  categoryName: {
+  actionText: {
     fontSize: 12,
     fontWeight: '500',
     color: '#333',
   },
-  popularList: {
-    paddingHorizontal: 16,
+  dailyCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    overflow: 'hidden',
+    height: 120,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  dailyContent: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+  },
+  dailyTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  dailyDesc: {
+    fontSize: 12,
+    color: '#666',
+    lineHeight: 18,
+    marginBottom: 8,
+  },
+  dailyMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dailyMetaText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  dailyImage: {
+    width: 120,
+    height: '100%',
   },
 });

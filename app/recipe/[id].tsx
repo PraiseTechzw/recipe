@@ -1,4 +1,5 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
@@ -19,13 +20,15 @@ export default function RecipeDetailScreen() {
   const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients');
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
   
-  const { isFavorite, toggleFavorite } = useStore();
+  const { isFavorite, toggleFavorite, logRecipeView } = useStore();
   const favorite = recipe ? isFavorite(recipe.id) : false;
 
   useEffect(() => {
     // Analytics: Recipe View
-    console.log(`Analytics: view_recipe ${id}`);
-  }, [id]);
+    if (recipe) {
+        logRecipeView(recipe.id, recipe.category);
+    }
+  }, [id, recipe]);
 
   const handleToggleFavorite = async () => {
     if (!recipe) return;

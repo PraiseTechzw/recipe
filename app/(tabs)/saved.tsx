@@ -1,25 +1,26 @@
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useStore } from '../../store/useStore';
-import { RECIPES } from '../../data/recipes';
-import RecipeCard from '../../components/RecipeCard';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import RecipeCard from '../../components/RecipeCard';
+import { RECIPES } from '../../data/recipes';
+import { useStore } from '../../store/useStore';
 
-export default function FavoritesScreen() {
+export default function SavedScreen() {
   const { favorites } = useStore();
   const favoriteRecipes = RECIPES.filter(r => favorites.includes(r.id));
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Favorites</Text>
+        <Text style={styles.headerTitle}>Saved Recipes</Text>
+        <Text style={styles.headerSubtitle}>{favoriteRecipes.length} items</Text>
       </View>
 
       {favoriteRecipes.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="heart-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>No favorites yet</Text>
+          <Ionicons name="bookmark-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyText}>No saved recipes yet</Text>
           <Text style={styles.emptySubText}>Save recipes you love to cook here!</Text>
           <Link href="/(tabs)" asChild>
             <TouchableOpacity style={styles.browseButton}>
@@ -52,9 +53,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
   listContent: {
     padding: 16,
