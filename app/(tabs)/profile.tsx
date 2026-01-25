@@ -95,23 +95,14 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesList}>
-<<<<<<< HEAD
                 {BADGES.map((badge, i) => {
                     const isUnlocked = userProfile.badges.includes(badge.id);
-=======
-                {['firstCook', 'weekStreak', 'spiceMaster', 'earlyBird', 'proChef'].map((badgeKey, i) => {
-                    const isUnlocked = i === 0; // Mock unlock status
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
                     return (
                         <View key={badge.id} style={[styles.badgeItem, !isUnlocked && styles.badgeLocked]}>
                             <View style={[styles.badgeIcon, !isUnlocked && styles.badgeIconLocked]}>
-                                <Text style={{fontSize: 24}}>{isUnlocked ? badge.icon : '🔒'}</Text>
+                                <Text style={{ fontSize: 24 }}>{badge.icon}</Text>
                             </View>
-<<<<<<< HEAD
-                            <Text style={styles.badgeName} numberOfLines={2}>{badge.name}</Text>
-=======
-                            <Text style={styles.badgeName}>{i18n.t(badgeKey)}</Text>
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
+                            <Text style={styles.badgeName}>{badge.name}</Text>
                         </View>
                     );
                 })}

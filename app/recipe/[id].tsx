@@ -278,7 +278,6 @@ export default function RecipeDetailScreen() {
                   <Text style={styles.sectionTitle}>{section.title}</Text>
                   {section.data.map((item: any, i: number) => {
                     const name = typeof item === 'string' ? item : item.name;
-<<<<<<< HEAD
                     const quantity = typeof item === 'object' && item.quantity ? getAdjustedQuantity(item.quantity, multiplier) : '';
                     const isChecked = checkedIngredients.has(name);
                     
@@ -293,19 +292,6 @@ export default function RecipeDetailScreen() {
                          </Text>
                          {quantity ? <Text style={styles.ingredientQuantity}>{quantity}</Text> : null}
                       </View>
-=======
-                    const quantity = typeof item === 'object' && item.quantity ? item.quantity : '';
-                    const isChecked = checkedIngredients.has(name);
-                    
-                    return (
-                    <TouchableOpacity key={i} style={styles.ingredientRow} onPress={() => toggleIngredient(name)}>
-                      <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
-                        {isChecked && <Ionicons name="checkmark" size={14} color="#fff" />}
-                      </View>
-                      <Text style={[styles.ingredientText, isChecked && styles.ingredientTextChecked]}>
-                        {quantity ? `${quantity} ` : ''}{name}
-                      </Text>
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
                     </TouchableOpacity>
                     );
                   })}
@@ -331,11 +317,7 @@ export default function RecipeDetailScreen() {
                   </View>
                   <View style={styles.stepContent}>
                     <Text style={styles.stepText}>{instruction}</Text>
-<<<<<<< HEAD
                     {description && <Text style={styles.stepDescription}>{description}</Text>}
-=======
-                    {description && <Text style={{ fontSize: 14, color: '#666', marginTop: 4 }}>{description}</Text>}
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
                   </View>
                 </View>
                 );

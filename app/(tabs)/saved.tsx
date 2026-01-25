@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Link, useRouter, useFocusEffect } from 'expo-router';
-import { useCallback, useState, useMemo } from 'react';
+import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Dimensions, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -103,7 +103,6 @@ export default function SavedScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-<<<<<<< HEAD
         <View>
           <Text style={styles.headerTitle}>{i18n.t('savedRecipes')}</Text>
           <Text style={styles.headerSubtitle}>{filteredRecipes.length} {i18n.t('items')}</Text>
@@ -124,10 +123,6 @@ export default function SavedScreen() {
                 <Ionicons name="close-circle" size={20} color="#ccc" />
             </TouchableOpacity>
         )}
-=======
-        <Text style={styles.headerTitle}>{i18n.t('savedRecipes')}</Text>
-        <Text style={styles.headerSubtitle}>{allRecipes.length} {i18n.t('items')}</Text>
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
       </View>
 
       {loading ? (

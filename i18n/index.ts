@@ -25,6 +25,7 @@ const i18n = new I18n({
     aiGenerate: "Generate with AI",
     scanIngredients: "Scan Ingredients",
     savedRecipes: "Saved Recipes",
+    searchSaved: "Search saved recipes",
     noSavedRecipes: "No saved recipes yet",
     saveRecipesMessage: "Save recipes you love to cook here!",
     browseRecipes: "Browse Recipes",
@@ -114,11 +115,8 @@ const i18n = new I18n({
     recipeCreated: "Your recipe has been created and synced!",
     error: "Error",
   createError: "Failed to create recipe. Please ensure Supabase is configured.",
-<<<<<<< HEAD
     ingredientsPlaceholder: "One per line (e.g. 2 cups flour)",
     stepsPlaceholder: "One per line (e.g. Mix ingredients)",
-=======
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
     mealieMeal: "Mealie Meal",
     beef: "Beef",
     chicken: "Chicken",
@@ -131,7 +129,6 @@ const i18n = new I18n({
     oil: "Cooking Oil",
     salt: "Salt",
     garlic: "Garlic",
-<<<<<<< HEAD
     home: "Home",
     explore: "Explore",
     sortBy: "Sort By",
@@ -143,8 +140,6 @@ const i18n = new I18n({
     chefsTip: "Chef's Tip",
     finishCooking: "Finish Cooking",
     nextStep: "Next Step",
-=======
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",
@@ -263,7 +258,6 @@ const i18n = new I18n({
     oil: "Mafuta",
     salt: "Munyu",
     garlic: "Garlic",
-<<<<<<< HEAD
     home: "Kumba",
     explore: "Tsvaga",
     sortBy: "Ronga ne",
@@ -275,8 +269,6 @@ const i18n = new I18n({
     chefsTip: "Mazano aShefu",
     finishCooking: "Pedza Kubika",
     nextStep: "Danho Rinotevera",
-=======
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
   },
   nd: {
     exploreTitle: "Hlola Nambitha zeZimbabwe",
@@ -301,6 +293,7 @@ const i18n = new I18n({
     aiGenerate: "Dala nge AI",
     scanIngredients: "Thatha Isithombe Sezithako",
     savedRecipes: "Amaresiphi Agciniweyo",
+    searchSaved: "Dingisisa okugciniweyo",
     noSavedRecipes: "Akukho okugciniweyo",
     saveRecipesMessage: "Gcina amaresiphi owathandayo lapha!",
     browseRecipes: "Hlola Amaresiphi",
@@ -369,15 +362,11 @@ const i18n = new I18n({
     createTitle: "Yabelana Iresiphi Yakho",
     home: "Ekhaya",
     explore: "Hlola",
-<<<<<<< HEAD
     sortBy: "Hlela nga",
     cookingMode: "Imodi Yokupheka",
-=======
     saved: "Okugciniweyo",
     profile: "Iphrofayili",
     goBack: "Buyela Emuva",
-    cookingMode: "UKUPHEKA",
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
     step: "Isinyathelo",
     of: "sama",
     mins: "imizuzu",
@@ -404,11 +393,8 @@ const i18n = new I18n({
     recipeCreated: "Iresiphi yakho idaliwe futhi yagcinwa!",
     error: "Iphutha",
     createError: "Ihlulekile ukudala iresiphi. Hlola iSupabase.",
-<<<<<<< HEAD
     ingredientsPlaceholder: "Okukodwa emgqeni (isib. 2 izinkomishi zefulawa)",
     stepsPlaceholder: "Okukodwa emgqeni (isib. Hlanganisa konke)",
-=======
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
     mealieMeal: "Impuphu",
     beef: "Inyama yenkomo",
     chicken: "Inkukhu",

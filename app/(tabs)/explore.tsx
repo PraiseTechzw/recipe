@@ -1,3 +1,4 @@
+import { useStore } from '@/store/useStore';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -13,7 +14,6 @@ import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { generateRecipeFromImage } from '../../services/ai';
 import { searchRecipes } from '../../services/recommendations';
-import { useStore } from '@/store/useStore';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -29,12 +29,9 @@ export default function ExploreScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-<<<<<<< HEAD
+  const { locale, setLocale } = useStore();
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'time' | 'calories' | 'rating'>('newest');
-=======
-  const { locale, setLocale } = useStore();
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
   
   // AI State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -57,8 +54,6 @@ export default function ExploreScreen() {
   const trendingRecipe = RECIPES.find(r => r.title.includes('Dovi')) || RECIPES[1];
   const otherTrending = RECIPES.find(r => r.title.includes('Muriwo')) || RECIPES[2];
 
-<<<<<<< HEAD
-=======
   const toggleLanguage = () => {
     const locales = ['en', 'sn', 'nd'];
     const currentIndex = locales.indexOf(locale);
@@ -67,7 +62,6 @@ export default function ExploreScreen() {
     setLocale(nextLocale);
   };
 
->>>>>>> b6371b3 (feat(i18n): add full app internationalization with dynamic locale switching)
   const handleScanIngredients = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
