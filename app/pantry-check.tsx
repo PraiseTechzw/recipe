@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
+import i18n from '../i18n';
 
 const COMMON_INGREDIENTS = [
     { id: 'mealie-meal', name: 'Mealie Meal', icon: '🍚' },
@@ -49,8 +50,8 @@ export default function PantryCheckScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>What's in your kitchen?</Text>
-        <Text style={styles.subtitle}>Select ingredients you have, and we'll suggest recipes you can cook right now.</Text>
+        <Text style={styles.title}>{i18n.t('pantryCheck')}</Text>
+        <Text style={styles.subtitle}>{i18n.t('pantrySubtitle')}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.grid}>
@@ -73,10 +74,10 @@ export default function PantryCheckScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>Skip for now</Text>
+            <Text style={styles.skipText}>{i18n.t('skip')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={handleContinue} style={styles.continueButton}>
-            <Text style={styles.continueText}>Show Recipes ({selected.size})</Text>
+            <Text style={styles.continueText}>{i18n.t('showRecipes')} ({selected.size})</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>

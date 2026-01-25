@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import i18n from '../../i18n';
 import { useStore } from '../../store/useStore';
 
 export default function ProfileScreen() {
@@ -24,7 +25,7 @@ export default function ProfileScreen() {
                 style={[styles.gradientHeader, { paddingTop: insets.top + 10 }]}
             >
                 <View style={styles.headerTop}>
-                    <Text style={styles.headerTitle}>Profile</Text>
+                    <Text style={styles.headerTitle}>{i18n.t('profile')}</Text>
                     <TouchableOpacity style={styles.settingsButton} onPress={() => router.push('/settings')}>
                         <Ionicons name="settings-outline" size={24} color="#fff" />
                     </TouchableOpacity>
@@ -45,7 +46,7 @@ export default function ProfileScreen() {
             {/* XP Bar Floating */}
             <View style={styles.xpWrapper}>
                 <View style={styles.xpRow}>
-                    <Text style={styles.xpLabel}>Level {Math.floor(userProfile.xp / 100) + 1}</Text>
+                    <Text style={styles.xpLabel}>{i18n.t('level')} {Math.floor(userProfile.xp / 100) + 1}</Text>
                     <Text style={styles.xpValue}>{userProfile.xp} / 1000 XP</Text>
                 </View>
                 <View style={styles.xpTrack}>
@@ -63,26 +64,26 @@ export default function ProfileScreen() {
         <View style={styles.statsCard}>
             <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{favorites.length}</Text>
-                <Text style={styles.statLabel}>Saved</Text>
+                <Text style={styles.statLabel}>{i18n.t('saved')}</Text>
             </View>
             <View style={styles.verticalDivider} />
             <View style={styles.statItem}>
                 <Text style={styles.statNumber}>#{Math.floor(Math.random() * 50) + 1}</Text>
-                <Text style={styles.statLabel}>Rank</Text>
+                <Text style={styles.statLabel}>{i18n.t('rank')}</Text>
             </View>
             <View style={styles.verticalDivider} />
             <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{userProfile.badges.length}</Text>
-                <Text style={styles.statLabel}>Badges</Text>
+                <Text style={styles.statLabel}>{i18n.t('badges')}</Text>
             </View>
         </View>
 
         {/* Achievements Section */}
         <View style={styles.section}>
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Achievements</Text>
+                <Text style={styles.sectionTitle}>{i18n.t('achievements')}</Text>
                 <TouchableOpacity>
-                    <Text style={styles.seeAll}>View All</Text>
+                    <Text style={styles.seeAll}>{i18n.t('viewAll')}</Text>
                 </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesList}>

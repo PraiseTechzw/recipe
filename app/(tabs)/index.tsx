@@ -1,4 +1,4 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { Link, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -6,6 +6,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Logo from '../../components/Logo';
 import { CATEGORIES, RECIPES } from '../../data/recipes';
+import i18n from '../../i18n';
 import { getRecipeOfTheDay, getRecommendedRecipes } from '../../services/recommendations';
 import { useStore } from '../../store/useStore';
 
@@ -68,22 +69,22 @@ export default function HomeScreen() {
 
         {/* Greeting & Search */}
         <View style={styles.greetingSection}>
-            <Text style={styles.mainGreeting}>Mhoro, {userProfile.name}!</Text>
-            <Text style={styles.subGreeting}>What are we cooking today?</Text>
+            <Text style={styles.mainGreeting}>{i18n.t('greeting')}, {userProfile.name}!</Text>
+            <Text style={styles.subGreeting}>{i18n.t('subGreeting')}</Text>
             
             <Link href="/(tabs)/explore" asChild>
                 <TouchableOpacity style={styles.searchBar}>
                     <Ionicons name="search" size={24} color="#E65100" />
-                    <Text style={styles.placeholderText}>Search for Sadza, Mopane worms...</Text>
+                    <Text style={styles.placeholderText}>{i18n.t('searchPlaceholderHome')}</Text>
                 </TouchableOpacity>
             </Link>
         </View>
 
         {/* Featured Section */}
         <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Featured Traditional Dishes</Text>
+            <Text style={styles.sectionTitle}>{i18n.t('featured')}</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/explore')}>
-                <Text style={styles.seeAll}>See all</Text>
+                <Text style={styles.seeAll}>{i18n.t('seeAll')}</Text>
             </TouchableOpacity>
         </View>
 
@@ -98,41 +99,53 @@ export default function HomeScreen() {
                                 <Text style={styles.ratingText}>{recipe.rating || 4.8}</Text>
                             </View>
                         </View>
-                        <View style={styles.cardContent}>
-                            <Text style={styles.cardTitle} numberOfLines={1}>{recipe.title}</Text>
-                            <View style={styles.cardMeta}>
-                                <View style={styles.metaItem}>
-                                    <Ionicons name="time-outline" size={14} color="#8D6E63" />
-                                    <Text style={styles.metaText}>{recipe.time}</Text>
-                                </View>
-                                <View style={styles.dotSeparator} />
-                                <View style={styles.metaItem}>
-                                    <View style={styles.greenDot} />
-                                    <Text style={styles.metaText}>Easy</Text>
-                                </View>
+                        <Text style={styles.featuredTitle} numberOfLines={2}>{recipe.title}</Text>
+                        <View style={styles.metaRow}>
+                            <View style={styles.metaItem}>
+                                <Ionicons name="time-outline" size={14} color="#757575" />
+                                <Text style={styles.metaText}>{recipe.time}</Text>
                             </View>
-                        </View>
-                        <View style={styles.arrowButton}>
-                            <Ionicons name="arrow-forward" size={20} color="#fff" />
+                            <View style={styles.metaItem}>
+                                <Ionicons name="flame-outline" size={14} color="#757575" />
+                                <Text style={styles.metaText}>{recipe.calories || 'N/A'}</Text>
+                            </View>
                         </View>
                     </TouchableOpacity>
                 </Link>
             ))}
         </ScrollView>
 
-        {/* Categories Grid */}
-        <Text style={[styles.sectionTitle, { marginBottom: 16 }]}>Explore by Category</Text>
+        {/* Recipe of the Day */}
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{i18n.t('recipeOfTheDay')}</Text>
+        </View>
+        
+        <Link href={`/recipe/${dailyPick.id}`} asChild>
+            <TouchableOpacity style={styles.dailyCard}>
+                <Image source={{ uri: dailyPick.image }} style={styles.dailyImage} contentFit="cover" />
+                <View style={styles.dailyOverlay}>
+                    <View style={styles.dailyBadge}>
+                        <Text style={styles.dailyBadgeText}>DAILY PICK</Text>
+                    </View>
+                    <Text style={styles.dailyTitle}>{dailyPick.title}</Text>
+                    <Text style={styles.dailyDesc} numberOfLines={1}>{dailyPick.description}</Text>
+                </View>
+            </TouchableOpacity>
+        </Link>
+
+        {/* Quick Categories */}
+        <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{i18n.t('categories')}</Text>
+        </View>
+
         <View style={styles.categoriesGrid}>
-            {CATEGORIES.map((cat, index) => (
-                 <TouchableOpacity key={cat.id} style={styles.categoryCard} onPress={() => router.push({ pathname: '/(tabs)/explore', params: { category: cat.name } })}>
-                    <View style={[styles.iconCircle, { backgroundColor: getCategoryColor(index) }]}>
-                        <MaterialIcons name={cat.icon as any} size={24} color="#E65100" />
-                    </View>
-                    <View style={styles.categoryInfo}>
+            {CATEGORIES.slice(0, 4).map((cat) => (
+                <Link key={cat.id} href={{ pathname: '/(tabs)/explore', params: { category: cat.name } }} asChild>
+                    <TouchableOpacity style={styles.categoryCard}>
+                        <Text style={styles.categoryEmoji}>{cat.icon}</Text>
                         <Text style={styles.categoryName}>{cat.name}</Text>
-                        <Text style={styles.categorySubtitle}>{cat.subtitle || 'Traditional'}</Text>
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity>
+                </Link>
             ))}
         </View>
 
@@ -279,34 +292,31 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   featuredCard: {
-    width: 260,
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 12,
+    width: 220,
     marginRight: 16,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    position: 'relative', // For arrow button positioning
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
   },
   imageContainer: {
-    height: 160,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 12,
     position: 'relative',
+    marginBottom: 12,
   },
   featuredImage: {
     width: '100%',
-    height: '100%',
+    height: 140,
+    borderRadius: 16,
   },
   ratingBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: '#fff',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(255,255,255,0.95)',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
@@ -319,20 +329,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#333',
   },
-  cardContent: {
-    paddingHorizontal: 4,
-    paddingBottom: 8,
-  },
-  cardTitle: {
-    fontSize: 18,
+  featuredTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1a1a1a',
     marginBottom: 8,
+    height: 40,
   },
-  cardMeta: {
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
   },
   metaItem: {
     flexDirection: 'row',
@@ -341,31 +348,52 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#8D6E63',
-    fontWeight: '500',
+    color: '#757575',
   },
-  dotSeparator: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#ddd',
+  dailyCard: {
+    width: '100%',
+    height: 200,
+    borderRadius: 24,
+    marginBottom: 32,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  greenDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#4CAF50',
+  dailyImage: {
+    width: '100%',
+    height: '100%',
   },
-  arrowButton: {
+  dailyOverlay: {
     position: 'absolute',
-    bottom: 12,
-    right: 12,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  dailyBadge: {
     backgroundColor: '#E65100',
-    justifyContent: 'center',
-    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  dailyBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+  },
+  dailyTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 4,
+  },
+  dailyDesc: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
   },
   categoriesGrid: {
     flexDirection: 'row',
@@ -373,37 +401,25 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   categoryCard: {
-    width: '48%', // Slightly less than 50% to account for gap
+    width: '48%',
     backgroundColor: '#fff',
-    borderRadius: 16,
     padding: 16,
-    flexDirection: 'row',
+    borderRadius: 20,
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowRadius: 4,
     elevation: 2,
-    marginBottom: 4, // Spacing between rows if wrapped
   },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  categoryInfo: {
-    flex: 1,
+  categoryEmoji: {
+    fontSize: 24,
   },
   categoryName: {
-    fontSize: 14,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '600',
     color: '#333',
-  },
-  categorySubtitle: {
-    fontSize: 12,
-    color: '#8D6E63',
   },
 });

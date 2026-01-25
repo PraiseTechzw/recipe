@@ -1,10 +1,38 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import i18n from '../i18n';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const [locale, setLocale] = useState(i18n.locale);
+
+  const changeLanguage = () => {
+    const options = [
+        { text: 'English', onPress: () => setAppLocale('en') },
+        { text: 'Shona', onPress: () => setAppLocale('sn') },
+        { text: 'Ndebele', onPress: () => setAppLocale('nd') },
+        { text: 'Cancel', style: 'cancel' }
+    ];
+
+    Alert.alert(i18n.t('language'), 'Select Language / Sarudza Mutauro / Khetha Ulimi', options as any);
+  };
+
+  const setAppLocale = (lang: string) => {
+      i18n.locale = lang;
+      setLocale(lang);
+  };
+
+  const getLanguageName = () => {
+      switch(i18n.locale) {
+          case 'en': return 'English';
+          case 'sn': return 'Shona';
+          case 'nd': return 'Ndebele';
+          default: return 'English';
+      }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -12,19 +40,19 @@ export default function SettingsScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={styles.headerTitle}>{i18n.t('settingsTitle')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>App Preferences</Text>
+            <Text style={styles.sectionTitle}>{i18n.t('appPreferences')}</Text>
             
             <View style={styles.item}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="moon-outline" size={22} color="#666" />
-                    <Text style={styles.itemText}>Dark Mode</Text>
+                    <Text style={styles.itemText}>{i18n.t('darkMode')}</Text>
                 </View>
                 <Switch value={false} trackColor={{false: '#eee', true: '#E65100'}} thumbColor="#fff" />
             </View>
@@ -32,22 +60,22 @@ export default function SettingsScreen() {
             <View style={styles.item}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="notifications-outline" size={22} color="#666" />
-                    <Text style={styles.itemText}>Push Notifications</Text>
+                    <Text style={styles.itemText}>{i18n.t('notifications')}</Text>
                 </View>
                 <Switch value={true} trackColor={{false: '#eee', true: '#E65100'}} thumbColor="#fff" />
             </View>
         </View>
 
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Content</Text>
+            <Text style={styles.sectionTitle}>{i18n.t('content')}</Text>
             
-            <TouchableOpacity style={styles.item}>
+            <TouchableOpacity style={styles.item} onPress={changeLanguage}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="language-outline" size={22} color="#666" />
-                    <Text style={styles.itemText}>Language</Text>
+                    <Text style={styles.itemText}>{i18n.t('language')}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ color: '#999', marginRight: 8 }}>English</Text>
+                    <Text style={{ color: '#999', marginRight: 8 }}>{getLanguageName()}</Text>
                     <Ionicons name="chevron-forward" size={20} color="#ccc" />
                 </View>
             </TouchableOpacity>
@@ -55,19 +83,19 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.item}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="download-outline" size={22} color="#666" />
-                    <Text style={styles.itemText}>Offline Data</Text>
+                    <Text style={styles.itemText}>{i18n.t('offlineData')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About</Text>
+            <Text style={styles.sectionTitle}>{i18n.t('about')}</Text>
             
             <TouchableOpacity style={styles.item}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="information-circle-outline" size={22} color="#666" />
-                    <Text style={styles.itemText}>Version</Text>
+                    <Text style={styles.itemText}>{i18n.t('version')}</Text>
                 </View>
                 <Text style={{ color: '#999' }}>2.0.0</Text>
             </TouchableOpacity>
@@ -75,7 +103,7 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.item}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="document-text-outline" size={22} color="#666" />
-                    <Text style={styles.itemText}>Terms of Service</Text>
+                    <Text style={styles.itemText}>{i18n.t('terms')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </TouchableOpacity>
@@ -83,14 +111,14 @@ export default function SettingsScreen() {
             <TouchableOpacity style={styles.item}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="shield-checkmark-outline" size={22} color="#666" />
-                    <Text style={styles.itemText}>Privacy Policy</Text>
+                    <Text style={styles.itemText}>{i18n.t('privacy')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color="#ccc" />
             </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.deleteButton}>
-            <Text style={styles.deleteText}>Delete Account</Text>
+            <Text style={styles.deleteText}>{i18n.t('deleteAccount')}</Text>
         </TouchableOpacity>
 
       </ScrollView>

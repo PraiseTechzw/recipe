@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../store/useStore';
+import i18n from '../i18n';
 
 export default function UserInfoScreen() {
   const router = useRouter();
@@ -37,20 +38,40 @@ export default function UserInfoScreen() {
     router.replace('/pantry-check');
   };
 
+  const getLevelLabel = (l: string) => {
+      switch(l) {
+          case 'Beginner': return i18n.t('beginner');
+          case 'Home Cook': return i18n.t('homeCook');
+          case 'Pro': return i18n.t('pro');
+          default: return l;
+      }
+  };
+
+  const getDietLabel = (d: string) => {
+      switch(d) {
+          case 'Vegetarian': return i18n.t('vegetarian');
+          case 'Vegan': return i18n.t('vegan');
+          case 'Gluten-Free': return i18n.t('glutenFree');
+          case 'Halal': return i18n.t('halal');
+          case 'None': return i18n.t('none');
+          default: return d;
+      }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-            <Text style={styles.title}>Tell us about you</Text>
-            <Text style={styles.subtitle}>We'll personalize your recipe recommendations.</Text>
+            <Text style={styles.title}>{i18n.t('onboardingTitle')}</Text>
+            <Text style={styles.subtitle}>{i18n.t('onboardingSubtitle')}</Text>
         </View>
 
         {/* Name Input */}
         <View style={styles.section}>
-            <Text style={styles.label}>What should we call you?</Text>
+            <Text style={styles.label}>{i18n.t('nameLabel')}</Text>
             <TextInput 
                 style={styles.input}
-                placeholder="Enter your name"
+                placeholder={i18n.t('namePlaceholder')}
                 value={name}
                 onChangeText={setName}
             />
@@ -58,7 +79,7 @@ export default function UserInfoScreen() {
 
         {/* Chef Level */}
         <View style={styles.section}>
-            <Text style={styles.label}>Cooking Experience</Text>
+            <Text style={styles.label}>{i18n.t('experienceLabel')}</Text>
             <View style={styles.optionsRow}>
                 {['Beginner', 'Home Cook', 'Pro'].map((l) => (
                     <TouchableOpacity 
@@ -66,7 +87,7 @@ export default function UserInfoScreen() {
                         style={[styles.optionCard, level === l && styles.optionSelected]}
                         onPress={() => setLevel(l as any)}
                     >
-                        <Text style={[styles.optionText, level === l && styles.optionTextSelected]}>{l}</Text>
+                        <Text style={[styles.optionText, level === l && styles.optionTextSelected]}>{getLevelLabel(l)}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -74,7 +95,7 @@ export default function UserInfoScreen() {
 
         {/* Dietary Preferences */}
         <View style={styles.section}>
-            <Text style={styles.label}>Dietary Preferences</Text>
+            <Text style={styles.label}>{i18n.t('dietaryLabel')}</Text>
             <View style={styles.chipsContainer}>
                 {['Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'None'].map((d) => (
                     <TouchableOpacity 
@@ -82,7 +103,7 @@ export default function UserInfoScreen() {
                         style={[styles.chip, diet.includes(d) && styles.chipSelected]}
                         onPress={() => toggleDiet(d)}
                     >
-                        <Text style={[styles.chipText, diet.includes(d) && styles.chipTextSelected]}>{d}</Text>
+                        <Text style={[styles.chipText, diet.includes(d) && styles.chipTextSelected]}>{getDietLabel(d)}</Text>
                     </TouchableOpacity>
                 ))}
             </View>
@@ -96,7 +117,7 @@ export default function UserInfoScreen() {
             onPress={handleNext}
             disabled={name.length === 0}
         >
-            <Text style={styles.buttonText}>Continue</Text>
+            <Text style={styles.buttonText}>{i18n.t('continue')}</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>

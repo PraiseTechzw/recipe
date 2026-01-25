@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View, ScrollView, Alert } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import i18n from '../i18n';
 import { useStore } from '../store/useStore';
 
 export default function ShoppingListScreen() {
@@ -10,11 +11,11 @@ export default function ShoppingListScreen() {
 
   const handleClear = () => {
     Alert.alert(
-        "Clear List",
-        "Are you sure you want to clear your shopping list?",
+        i18n.t('clear'),
+        i18n.t('clearListConfirm'),
         [
-            { text: "Cancel", style: "cancel" },
-            { text: "Clear", style: "destructive", onPress: clearShoppingList }
+            { text: i18n.t('cancel'), style: "cancel" },
+            { text: i18n.t('clear'), style: "destructive", onPress: clearShoppingList }
         ]
     );
   };
@@ -25,9 +26,9 @@ export default function ShoppingListScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
-        <Text style={styles.title}>Shopping List</Text>
+        <Text style={styles.title}>{i18n.t('shoppingList')}</Text>
         <TouchableOpacity onPress={handleClear} disabled={shoppingList.length === 0}>
-            <Text style={[styles.clearText, shoppingList.length === 0 && styles.disabledText]}>Clear</Text>
+            <Text style={[styles.clearText, shoppingList.length === 0 && styles.disabledText]}>{i18n.t('clear')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -37,10 +38,10 @@ export default function ShoppingListScreen() {
                 <View style={styles.emptyIcon}>
                     <Ionicons name="basket-outline" size={48} color="#BDBDBD" />
                 </View>
-                <Text style={styles.emptyTitle}>Your list is empty</Text>
-                <Text style={styles.emptyText}>Add ingredients from recipes to help you shop for your next meal.</Text>
+                <Text style={styles.emptyTitle}>{i18n.t('emptyList')}</Text>
+                <Text style={styles.emptyText}>{i18n.t('emptyListMessage')}</Text>
                 <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/(tabs)/explore')}>
-                    <Text style={styles.browseButtonText}>Browse Recipes</Text>
+                    <Text style={styles.browseButtonText}>{i18n.t('browseRecipes')}</Text>
                 </TouchableOpacity>
             </View>
         ) : (
@@ -102,35 +103,36 @@ const styles = StyleSheet.create({
     color: '#E0E0E0',
   },
   content: {
-    padding: 20,
-    paddingBottom: 100,
+    flexGrow: 1,
   },
   emptyState: {
+    flex: 1,
     alignItems: 'center',
-    marginTop: 60,
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    marginTop: 100,
   },
   emptyIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: '#F5F5F5',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1a1a1a',
     marginBottom: 8,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#757575',
     textAlign: 'center',
-    maxWidth: 260,
-    marginBottom: 24,
-    lineHeight: 20,
+    lineHeight: 24,
+    marginBottom: 32,
   },
   browseButton: {
     backgroundColor: '#E65100',
@@ -141,23 +143,28 @@ const styles = StyleSheet.create({
   browseButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 16,
   },
   list: {
-    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   itemRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   itemChecked: {
-    backgroundColor: '#FAFAFA',
-    borderColor: 'transparent',
+    backgroundColor: '#F9F9F9',
+    opacity: 0.8,
   },
   checkbox: {
     width: 24,
@@ -165,28 +172,28 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     borderWidth: 2,
     borderColor: '#E0E0E0',
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 16,
   },
   checkboxChecked: {
-    backgroundColor: '#E65100',
-    borderColor: '#E65100',
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
   },
   itemInfo: {
     flex: 1,
   },
   itemName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    color: '#1a1a1a',
+    fontWeight: '500',
   },
   textChecked: {
-    textDecorationLine: 'line-through',
     color: '#9E9E9E',
+    textDecorationLine: 'line-through',
   },
   itemQuantity: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#757575',
     marginTop: 2,
   },

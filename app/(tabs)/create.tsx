@@ -13,11 +13,13 @@ export default function CreateScreen() {
   const [description, setDescription] = useState('');
   const [time, setTime] = useState('');
   const [servings, setServings] = useState('');
+  const [ingredients, setIngredients] = useState('');
+  const [steps, setSteps] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const handleSubmit = async () => {
     if (!title || !description) {
-        Alert.alert('Missing Info', 'Please provide at least a title and description.');
+        Alert.alert(i18n.t('missingInfo'), i18n.t('missingInfoDesc'));
         return;
     }
 
@@ -33,6 +35,8 @@ export default function CreateScreen() {
                     description, 
                     time, 
                     servings,
+                    ingredients: ingredients.split('\n').filter(i => i.trim()),
+                    steps: steps.split('\n').filter(s => s.trim()),
                     // In a real app, handle image upload to Storage and save URL
                     // image: '...' 
                 }
@@ -43,7 +47,7 @@ export default function CreateScreen() {
             throw error;
         }
         
-        Alert.alert('Success', 'Your recipe has been created and synced!', [
+        Alert.alert(i18n.t('success'), i18n.t('recipeCreated'), [
             { 
                 text: 'OK', 
                 onPress: () => {
@@ -52,12 +56,14 @@ export default function CreateScreen() {
                     setDescription('');
                     setTime('');
                     setServings('');
+                    setIngredients('');
+                    setSteps('');
                     router.push('/(tabs)/profile');
                 }
             }
         ]);
     } catch (error) {
-        Alert.alert('Error', 'Failed to create recipe. Please ensure Supabase is configured.');
+        Alert.alert(i18n.t('error'), i18n.t('createError'));
     } finally {
         setIsSubmitting(false);
     }
@@ -68,8 +74,8 @@ export default function CreateScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Share Your Recipe</Text>
-          <Text style={styles.headerSubtitle}>Join the community of Zimbabwean chefs</Text>
+          <Text style={styles.headerTitle}>{i18n.t('createTitle')}</Text>
+          <Text style={styles.headerSubtitle}>{i18n.t('createSubtitle')}</Text>
         </View>
 
         {/* Image Upload Placeholder */}
@@ -77,15 +83,15 @@ export default function CreateScreen() {
           <View style={styles.uploadIconContainer}>
             <Ionicons name="camera" size={32} color="#E65100" />
           </View>
-          <Text style={styles.uploadText}>Add Cover Photo</Text>
+          <Text style={styles.uploadText}>{i18n.t('addPhoto')}</Text>
         </TouchableOpacity>
 
         {/* Form Fields */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Recipe Title</Text>
+          <Text style={styles.label}>{i18n.t('recipeTitle')}</Text>
           <TextInput 
             style={styles.input} 
-            placeholder="e.g. Grandma's Sadza"
+            placeholder={i18n.t('recipeTitlePlaceholder')}
             placeholderTextColor="#999"
             value={title}
             onChangeText={setTitle}
@@ -94,20 +100,20 @@ export default function CreateScreen() {
 
         <View style={styles.row}>
           <View style={[styles.formGroup, { flex: 1, marginRight: 8 }]}>
-            <Text style={styles.label}>Prep Time</Text>
+            <Text style={styles.label}>{i18n.t('prepTime')}</Text>
             <TextInput 
               style={styles.input} 
-              placeholder="e.g. 30 mins"
+              placeholder={i18n.t('prepTimePlaceholder')}
               placeholderTextColor="#999"
               value={time}
               onChangeText={setTime}
             />
           </View>
           <View style={[styles.formGroup, { flex: 1, marginLeft: 8 }]}>
-            <Text style={styles.label}>Servings</Text>
+            <Text style={styles.label}>{i18n.t('servings')}</Text>
             <TextInput 
               style={styles.input} 
-              placeholder="e.g. 4 people"
+              placeholder={i18n.t('servingsPlaceholder')}
               placeholderTextColor="#999"
               value={servings}
               onChangeText={setServings}
@@ -116,10 +122,10 @@ export default function CreateScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Description</Text>
+          <Text style={styles.label}>{i18n.t('description')}</Text>
           <TextInput 
             style={[styles.input, styles.textArea]} 
-            placeholder="Tell us about this dish..."
+            placeholder={i18n.t('descriptionPlaceholder')}
             placeholderTextColor="#999"
             multiline
             numberOfLines={4}
@@ -129,31 +135,39 @@ export default function CreateScreen() {
           />
         </View>
 
-        {/* Ingredients Placeholder */}
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-            <TouchableOpacity>
-                <Text style={styles.addButton}>+ Add</Text>
-            </TouchableOpacity>
-        </View>
-        <View style={styles.placeholderList}>
-            <Text style={styles.placeholderText}>No ingredients added yet</Text>
+        {/* Ingredients */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>{i18n.t('ingredients')}</Text>
+          <TextInput 
+            style={[styles.input, styles.textArea]} 
+            placeholder="Enter ingredients (one per line)"
+            placeholderTextColor="#999"
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            value={ingredients}
+            onChangeText={setIngredients}
+          />
         </View>
 
-        {/* Steps Placeholder */}
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Instructions</Text>
-            <TouchableOpacity>
-                <Text style={styles.addButton}>+ Add Step</Text>
-            </TouchableOpacity>
-        </View>
-        <View style={styles.placeholderList}>
-            <Text style={styles.placeholderText}>No instructions added yet</Text>
+        {/* Steps */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>{i18n.t('steps')}</Text>
+          <TextInput 
+            style={[styles.input, styles.textArea]} 
+            placeholder="Enter steps (one per line)"
+            placeholderTextColor="#999"
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            value={steps}
+            onChangeText={setSteps}
+          />
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Submit Recipe</Text>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={isSubmitting}>
+            <Text style={styles.submitButtonText}>{isSubmitting ? i18n.t('publishing') : i18n.t('publish')}</Text>
         </TouchableOpacity>
 
       </ScrollView>
