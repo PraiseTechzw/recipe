@@ -85,6 +85,32 @@ export default function ExploreScreen() {
     }
   };
 
+  const handleSaveAiRecipe = async () => {
+    if (!aiRecipe) return;
+
+    try {
+        const { error } = await supabase
+            .from('recipes')
+            .insert([
+                { 
+                    title: aiRecipe.title, 
+                    description: aiRecipe.description, 
+                    time: aiRecipe.time, 
+                    category: aiRecipe.category || 'Other',
+                    image: 'https://via.placeholder.com/600x400?text=AI+Generated+Recipe'
+                }
+            ]);
+
+        if (error) throw error;
+        
+        Alert.alert('Success', 'Recipe saved to your collection!');
+        setAiModalVisible(false);
+    } catch (error) {
+        console.error(error);
+        Alert.alert('Note', 'Recipe generated! Configure Supabase to save it permanently.');
+    }
+  };
+
   const renderAiModal = () => (
     <Modal
         animationType="slide"
@@ -108,6 +134,7 @@ export default function ExploreScreen() {
                         <Text style={styles.loadingSubText}>Powered by Gemini AI</Text>
                     </View>
                 ) : aiRecipe ? (
+                    <>
                     <ScrollView showsVerticalScrollIndicator={false}>
                         <Text style={styles.aiTitle}>{aiRecipe.title}</Text>
                         <Text style={styles.aiDescription}>{aiRecipe.description}</Text>
@@ -135,7 +162,17 @@ export default function ExploreScreen() {
                                 <Text style={styles.stepText}>{step}</Text>
                             </View>
                         ))}
+                        
+                        <View style={{ height: 80 }} /> 
                     </ScrollView>
+                    
+                    <View style={styles.modalActions}>
+                        <TouchableOpacity style={styles.saveButton} onPress={handleSaveAiRecipe}>
+                            <Ionicons name="save-outline" size={20} color="#fff" />
+                            <Text style={styles.saveButtonText}>Save Recipe</Text>
+                        </TouchableOpacity>
+                    </View>
+                    </>
                 ) : null}
             </View>
         </View>
@@ -455,6 +492,31 @@ const styles = StyleSheet.create({
   stepItem: {
     flexDirection: 'row',
     marginBottom: 16,
+  },
+  modalActions: {
+    position: 'absolute',
+    bottom: 24,
+    left: 24,
+    right: 24,
+  },
+  saveButton: {
+    backgroundColor: '#E65100',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
   stepNumber: {
     width: 24,

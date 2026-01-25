@@ -7,9 +7,32 @@ const genAI = new GoogleGenerativeAI(API_KEY);
 
 export async function generateRecipeFromImage(base64Image: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
 
-    const prompt = "Analyze this image of ingredients and suggest a Zimbabwean or African-inspired recipe that can be made with them. Return the response in JSON format with fields: title, description, time, calories, ingredients (array of objects with name, quantity), steps (array of strings), and category.";
+    const prompt = `
+      You are an expert Zimbabwean chef. Analyze this image of ingredients.
+      1. Identify the ingredients visible in the photo.
+      2. Suggest a creative, authentic Zimbabwean or African-inspired recipe using these ingredients. You may assume common pantry staples (salt, oil, water, onions, tomatoes) are available.
+      3. Return ONLY a valid JSON object with this structure:
+      {
+        "title": "Recipe Name",
+        "description": "A brief, mouth-watering description.",
+        "time": "e.g. 45 mins",
+        "calories": "e.g. 350 kcal",
+        "ingredients": [
+          {"name": "Ingredient 1", "quantity": "1 cup"},
+          {"name": "Ingredient 2", "quantity": "2 tbsp"}
+        ],
+        "steps": [
+          "Step 1 description",
+          "Step 2 description"
+        ],
+        "category": "One of: Grains, Relishes, Meats, Drinks, Vegetarian"
+      }
+    `;
 
     const imagePart = {
       inlineData: {
@@ -22,10 +45,7 @@ export async function generateRecipeFromImage(base64Image: string) {
     const response = await result.response;
     const text = response.text();
     
-    // Clean up markdown code blocks if present
-    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    
-    return JSON.parse(cleanText);
+    return JSON.parse(text);
   } catch (error) {
     console.error("Error generating recipe:", error);
     throw error;
