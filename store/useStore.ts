@@ -38,6 +38,7 @@ interface AppState {
 
   // User Profile & Gamification
   userProfile: {
+    id: string;
     name: string;
     chefLevel: string;
     xp: number;
@@ -127,6 +128,7 @@ export const useStore = create<AppState>()(
 
       // User Profile & Gamification
       userProfile: {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         name: 'Guest',
         chefLevel: 'Beginner',
         xp: 0,

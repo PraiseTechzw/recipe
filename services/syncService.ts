@@ -20,7 +20,30 @@ export const SyncService = {
       return;
     }
 
-    const { myRecipes, updateRecipe } = useStore.getState();
+    const { myRecipes, updateRecipe, userProfile } = useStore.getState();
+
+    // Ensure user profile exists in DB first
+    if (userProfile.id) {
+        try {
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: userProfile.id,
+                    name: userProfile.name,
+                    avatar_url: userProfile.avatar,
+                    bio: userProfile.bio,
+                    xp: userProfile.xp,
+                    chef_level: userProfile.chefLevel,
+                    badges: userProfile.badges,
+                    stats: userProfile.stats
+                }, { onConflict: 'id' });
+            
+            if (profileError) console.warn('Profile sync error:', profileError);
+        } catch (e) {
+            console.warn('Profile sync failed:', e);
+        }
+    }
+
     const unsyncedRecipes = myRecipes.filter(r => !r.remoteId);
 
     if (unsyncedRecipes.length === 0) return;
@@ -67,7 +90,7 @@ export const SyncService = {
           .insert([
             {
               ...recipeData,
-              // author_id: user.id, // We need auth context here
+              author_id: userProfile.id, // Using the public ID
               original_id: id,
               image_url: imageUrl,
               ingredients: recipe.ingredients, // JSONB
