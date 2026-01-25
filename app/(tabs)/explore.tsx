@@ -1,15 +1,12 @@
 import { useStore } from '@/store/useStore';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import Animated, { FadeInDown, FadeInRight } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { AdBanner } from '../../components/AdBanner';
-import { CATEGORIES, RECIPES } from '../../data/recipes';
+import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { RECIPES } from '../../data/recipes';
 import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { generateRecipeFromImage } from '../../services/ai';
@@ -282,186 +279,8 @@ export default function ExploreScreen() {
         ))}
     </View>
   );
-
-  const renderContent = () => {
-    if (searchQuery.length > 0 || activeCategory !== 'All') {
-      return (
-        <Animated.View entering={FadeInDown.duration(400)} style={{ paddingTop: 16 }}>
-            <View style={[styles.sectionHeader, { marginTop: 0 }]}>
-                <Text style={styles.sectionTitle}>
-                    {filteredRecipes.length} {i18n.t('results')}
-                </Text>
-            </View>
-            {renderRecipeList(filteredRecipes, 100)}
-        </Animated.View>
-      );
-    }
-
-    return (
-        <>
-            {/* Trending Section */}
-            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{i18n.t('trending')}</Text>
-                <TouchableOpacity>
-                    <Text style={styles.seeAll}>{i18n.t('seeAll')}</Text>
-                </TouchableOpacity>
-            </Animated.View>
-
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingContainer}>
-                <Link href={`/recipe/${trendingRecipe.id}`} asChild>
-                    <TouchableOpacity activeOpacity={0.9}>
-                        <Animated.View entering={FadeInRight.delay(200).springify()} style={styles.trendingCard}>
-                            <Image source={{ uri: trendingRecipe.image }} style={styles.trendingImage} contentFit="cover" transition={300} />
-                            <LinearGradient
-                                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']}
-                                style={styles.trendingOverlay}
-                            >
-                                <View style={styles.trendingTag}>
-                                    <Ionicons name="trending-up" size={12} color="#E65100" />
-                                    <Text style={styles.trendingTagText}>{i18n.t('trendingTag')}</Text>
-                                </View>
-                                <Text style={styles.trendingTitle}>{trendingRecipe.title}</Text>
-                                <Text style={styles.trendingMeta}>{trendingRecipe.time} • {trendingRecipe.calories}</Text>
-                            </LinearGradient>
-                        </Animated.View>
-                    </TouchableOpacity>
-                </Link>
-
-                <Link href={`/recipe/${otherTrending.id}`} asChild>
-                    <TouchableOpacity activeOpacity={0.9}>
-                        <Animated.View entering={FadeInRight.delay(300).springify()} style={styles.trendingCard}>
-                            <Image source={{ uri: otherTrending.image }} style={styles.trendingImage} contentFit="cover" transition={300} />
-                            <LinearGradient
-                                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']}
-                                style={styles.trendingOverlay}
-                            >
-                                <View style={[styles.trendingTag, { backgroundColor: '#E8F5E9' }]}>
-                                    <Ionicons name="leaf" size={12} color="#2E7D32" />
-                                    <Text style={[styles.trendingTagText, { color: '#2E7D32' }]}>{i18n.t('healthy')}</Text>
-                                </View>
-                                <Text style={styles.trendingTitle}>{otherTrending.title}</Text>
-                                <Text style={styles.trendingMeta}>{otherTrending.time} • {otherTrending.calories}</Text>
-                            </LinearGradient>
-                        </Animated.View>
-                    </TouchableOpacity>
-                </Link>
-            </ScrollView>
-
-            <AdBanner />
-
-            {/* Categories Circles */}
-            <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>{i18n.t('categories')}</Text>
-                </View>
-                <View style={styles.categoriesRow}>
-                    {CATEGORIES.map((cat, index) => {
-                        const style = CATEGORY_STYLES[cat.name] || { bg: '#F5F5F5', color: '#666', icon: 'restaurant' };
-                        return (
-                            <TouchableOpacity 
-                                key={cat.id} 
-                                style={styles.categoryCircleItem}
-                                onPress={() => setActiveCategory(cat.name)}
-                                activeOpacity={0.7}
-                            >
-                                <Animated.View entering={FadeInDown.delay(500 + (index * 100)).springify()} style={[styles.categoryCircle, { backgroundColor: style.bg }]}>
-                                    <MaterialIcons name={style.icon} size={28} color={style.color} />
-                                </Animated.View>
-                                <Text style={styles.categoryLabel}>{cat.name}</Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-            </Animated.View>
-
-            {/* Popular Recipes List */}
-            <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-                <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-                    <Text style={styles.sectionTitle}>{i18n.t('popularRecipes')}</Text>
-                    <TouchableOpacity onPress={() => setSortModalVisible(true)}>
-                        <Ionicons name="filter" size={20} color="#666" />
-                    </TouchableOpacity>
-                </View>
-                
-                {renderRecipeList(RECIPES, 700)}
-            </Animated.View>
-        </>
-    );
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Fixed Header */}
-      <View style={styles.header}>
-        <View>
-            <Text style={styles.headerSubtitle}>{i18n.t('exploreSubtitle') || 'Discover'}</Text>
-            <Text style={styles.headerTitle}>{i18n.t('exploreTitle')}</Text>
-        </View>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={22} color="#C26A00" style={styles.searchIcon} />
-          <TextInput 
-            placeholder={i18n.t('searchPlaceholder')}
-            style={styles.searchInput}
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 ? (
-             <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={20} color="#999" />
-             </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={handleScanIngredients}>
-                <LinearGradient
-                    colors={['#FF8C00', '#E65100']}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.aiScanButton}
-                >
-                    <Ionicons name="scan-outline" size={20} color="#fff" />
-                    <View style={styles.aiBadge}>
-                        <Text style={styles.aiBadgeText}>AI</Text>
-                    </View>
-                </LinearGradient>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Filters */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll} contentContainerStyle={styles.filtersContent}>
-          <TouchableOpacity 
-            style={[styles.filterChip, activeCategory === 'All' && styles.filterChipActive]}
-            onPress={() => setActiveCategory('All')}
-          >
-            <Text style={[styles.filterText, activeCategory === 'All' && styles.filterTextActive]}>{i18n.t('all')}</Text>
-          </TouchableOpacity>
-          
-          {['Traditional', 'Dinner', 'Stew', 'Vegetarian', 'High Protein'].map((filter) => {
-             return (
-                <TouchableOpacity 
-                    key={filter} 
-                    style={[styles.filterChip, activeCategory === filter && styles.filterChipActive]}
-                    onPress={() => setActiveCategory(filter)}
-                >
-                    <Text style={[styles.filterText, activeCategory === filter && styles.filterTextActive]}>
-                        {filter}
-                    </Text>
-                </TouchableOpacity>
-             );
-          })}
-        </ScrollView>
-
-        {renderContent()}
-
-      </ScrollView>{renderAiModal()}
-      {renderSortModal()}
-    </SafeAreaView>
-  );
 }
 
 const styles = StyleSheet.create({
