@@ -1,0 +1,82 @@
+[33mcommit be1acae54030949732af1b5db5f493435a2db58f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Praise Masunga <praisesamasunga04@gmail.com>
+Date:   Sun Jan 25 16:05:49 2026 +0200
+
+    chore: remove sensitive service account key files
+    
+    Delete Google Play Store and Firebase service account JSON key files to prevent accidental exposure of credentials. These files should not be stored in version control.
+
+ .gitignore                                                 |  4 [32m++++[m
+ googlre-play-store-2e8beefb537c.json                       | 13 [31m-------------[m
+ universestay-8c0e4-firebase-adminsdk-gdovy-4f3aad9118.json | 13 [31m-------------[m
+ 3 files changed, 4 insertions(+), 26 deletions(-)
+
+[33mcommit e3981d46f245da88ed4731bd3421c04ee65f3bbd[m
+Author: Praise Masunga <praisesamasunga04@gmail.com>
+Date:   Sun Jan 25 15:54:45 2026 +0200
+
+    feat(gamification): add XP rewards, badges, and enhanced UI
+    
+    - Award 50 XP upon recipe completion and increment stats
+    - Add gamification constants with badges, levels, and progression logic
+    - Update profile screen to display XP progress, level, and badges
+    - Enhance saved recipes screen with search, animations, and improved empty state
+    - Improve recipe detail UI with animated header, serving multiplier, and step visualization
+    - Extend store to handle XP, stats, badges, and automatic badge unlocking
+
+ app/(tabs)/profile.tsx    |  28 [32m+++[m[31m--[m
+ app/(tabs)/saved.tsx      | 199 [32m++++++++++++++++++++++[m[31m-------[m
+ app/cooking/[id].tsx      |  13 [32m+[m[31m-[m
+ app/recipe/[id].tsx       | 311 [32m++++++++++++++++++++++++++++++++++[m[31m------------[m
+ constants/gamification.ts | 118 [32m++++++++++++++++++[m
+ i18n/index.ts             |  24 [32m+++[m[31m-[m
+ store/useStore.ts         | 133 [32m++++++++++++++++++[m[31m--[m
+ 7 files changed, 675 insertions(+), 151 deletions(-)
+
+[33mcommit e3f1b09db938f18b23f2a46d0b2e97bd12452559[m
+Author: Praise Masunga <praisesamasunga04@gmail.com>
+Date:   Sun Jan 25 14:43:58 2026 +0200
+
+    feat(explore): add sorting modal and switch to list layout
+    
+    - Add sort modal with options for newest, cooking time, rating, and calories
+    - Replace grid layout with list layout showing more recipe details
+    - Update sorting logic to include rating and maintain original order for newest
+    - Improve recipe card design with better information hierarchy
+
+ app/(tabs)/explore.tsx | 233 [32m++++++++++++++++++++++++++++++++++++[m[31m-------------[m
+ 1 file changed, 171 insertions(+), 62 deletions(-)
+
+[33mcommit de7b0324de0c30f570b9e3d3a873a6071a2df7a7[m
+Author: Praise Masunga <praisesamasunga04@gmail.com>
+Date:   Sun Jan 25 14:33:14 2026 +0200
+
+    feat: enhance UI/UX and add author support to recipes
+    
+    - Add Author interface to recipe model and include author data in recipes
+    - Improve home screen layout with enhanced cards, gradient overlays, and author display
+    - Update explore screen with refined search, filter categories, and AI scan button
+    - Extend i18n translations for new UI elements and missing keys
+    - Fix category filtering to include tags in search results
+    - Centralize locale management in settings using global store
+    - Add new recipe (Maheu) and update existing recipe images
+
+ app/(tabs)/explore.tsx      | 326 [32m++++++++++++++++++++++++[m[31m--------------------[m
+ app/(tabs)/index.tsx        | 283 [32m+++++++++++++++++++++++[m[31m---------------[m
+ app/settings.tsx            |  17 [32m+[m[31m--[m
+ data/recipes.ts             |  51 [32m++++++[m[31m-[m
+ i18n/index.ts               |   9 [32m++[m
+ models/recipe.ts            |   6 [32m+[m
+ services/recommendations.ts |   2 [32m+[m[31m-[m
+ 7 files changed, 425 insertions(+), 269 deletions(-)
+
+[33mcommit 42284a15859010e554954dc0a19f532b091e6d4e[m
+Author: Praise Masunga <praisesamasunga04@gmail.com>
+Date:   Sun Jan 25 13:26:52 2026 +0200
+
+    feat(i18n): add placeholders for ingredients and steps fields
+    
+    Add translation keys for form field placeholders to improve user guidance when creating recipes.
+
+ i18n/index.ts | 2 [32m++[m
+ 1 file changed, 2 insertions(+)
