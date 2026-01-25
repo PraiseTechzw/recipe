@@ -13,7 +13,6 @@ import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { generateRecipeFromImage } from '../../services/ai';
 import { searchRecipes } from '../../services/recommendations';
-import { useStore } from '@/store/useStore';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -29,25 +28,23 @@ export default function ExploreScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const { locale, setLocale } = useStore();
   
   // AI State
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiRecipe, setAiRecipe] = useState<any>(null);
   const [aiModalVisible, setAiModalVisible] = useState(false);
 
-  const filteredRecipes = searchRecipes(searchQuery, activeCategory);
+  const filteredRecipes = searchRecipes(searchQuery, activeCategory).sort((a, b) => {
+    if (sortBy === 'time') {
+      return parseInt(a.time) - parseInt(b.time);
+    } else if (sortBy === 'calories') {
+      return parseInt(a.calories) - parseInt(b.calories);
+    }
+    return 0;
+  });
   
   const trendingRecipe = RECIPES.find(r => r.title.includes('Dovi')) || RECIPES[1];
   const otherTrending = RECIPES.find(r => r.title.includes('Muriwo')) || RECIPES[2];
-
-  const toggleLanguage = () => {
-    const locales = ['en', 'sn', 'nd'];
-    const currentIndex = locales.indexOf(locale);
-    const nextIndex = (currentIndex + 1) % locales.length;
-    const nextLocale = locales[nextIndex];
-    setLocale(nextLocale);
-  };
 
   const handleScanIngredients = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
@@ -181,41 +178,47 @@ export default function ExploreScreen() {
     </Modal>
   );
 
+  const renderRecipeGrid = (recipes: typeof RECIPES, delayBase: number = 0) => (
+    <View style={styles.gridContainer}>
+        {recipes.map((recipe, index) => (
+            <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
+                <TouchableOpacity activeOpacity={0.8}>
+                    <Animated.View entering={FadeInDown.delay(delayBase + (index * 100)).springify()} style={styles.gridCard}>
+                        <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" transition={200} />
+                        <TouchableOpacity style={styles.favoriteButton}>
+                            <Ionicons name="heart" size={18} color="#FF5252" />
+                        </TouchableOpacity>
+                        <View style={styles.gridContent}>
+                            <Text style={styles.gridTitle} numberOfLines={2}>{recipe.title}</Text>
+                            <View style={styles.gridMeta}>
+                                <View style={styles.metaItem}>
+                                    <Ionicons name="time-outline" size={14} color="#888" />
+                                    <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
+                                </View>
+                                <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
+                                    <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
+                                        {recipe.category}
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    </Animated.View>
+                </TouchableOpacity>
+            </Link>
+        ))}
+    </View>
+  );
+
   const renderContent = () => {
     if (searchQuery.length > 0 || activeCategory !== 'All') {
       return (
-        <Animated.View entering={FadeInDown.duration(400)} style={{ paddingHorizontal: 16, paddingTop: 16 }}>
-            <Text style={styles.sectionTitle}>
-                {filteredRecipes.length} {i18n.t('results')}
-            </Text>
-            <View style={styles.gridContainer}>
-                {filteredRecipes.map((recipe, index) => (
-                    <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
-                        <TouchableOpacity>
-                            <Animated.View entering={FadeInDown.delay(index * 100).springify()} style={styles.gridCard}>
-                                <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" transition={200} />
-                                <TouchableOpacity style={styles.favoriteButton}>
-                                    <Ionicons name="heart" size={16} color="#fff" />
-                                </TouchableOpacity>
-                                <View style={styles.gridContent}>
-                                    <Text style={styles.gridTitle} numberOfLines={1}>{recipe.title}</Text>
-                                    <View style={styles.gridMeta}>
-                                        <View style={styles.metaItem}>
-                                            <Ionicons name="time-outline" size={14} color="#888" />
-                                            <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
-                                        </View>
-                                        <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
-                                            <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
-                                                {recipe.category}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            </Animated.View>
-                        </TouchableOpacity>
-                    </Link>
-                ))}
+        <Animated.View entering={FadeInDown.duration(400)} style={{ paddingTop: 16 }}>
+            <View style={[styles.sectionHeader, { marginTop: 0 }]}>
+                <Text style={styles.sectionTitle}>
+                    {filteredRecipes.length} {i18n.t('results')}
+                </Text>
             </View>
+            {renderRecipeGrid(filteredRecipes, 100)}
         </Animated.View>
       );
     }
@@ -236,7 +239,7 @@ export default function ExploreScreen() {
                         <Animated.View entering={FadeInRight.delay(200).springify()} style={styles.trendingCard}>
                             <Image source={{ uri: trendingRecipe.image }} style={styles.trendingImage} contentFit="cover" transition={300} />
                             <LinearGradient
-                                colors={['transparent', 'rgba(0,0,0,0.8)']}
+                                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']}
                                 style={styles.trendingOverlay}
                             >
                                 <View style={styles.trendingTag}>
@@ -255,7 +258,7 @@ export default function ExploreScreen() {
                         <Animated.View entering={FadeInRight.delay(300).springify()} style={styles.trendingCard}>
                             <Image source={{ uri: otherTrending.image }} style={styles.trendingImage} contentFit="cover" transition={300} />
                             <LinearGradient
-                                colors={['transparent', 'rgba(0,0,0,0.8)']}
+                                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']}
                                 style={styles.trendingOverlay}
                             >
                                 <View style={[styles.trendingTag, { backgroundColor: '#E8F5E9' }]}>
@@ -306,34 +309,7 @@ export default function ExploreScreen() {
                     </TouchableOpacity>
                 </View>
                 
-                <View style={styles.gridContainer}>
-                    {RECIPES.map((recipe, index) => (
-                        <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
-                            <TouchableOpacity activeOpacity={0.8}>
-                                <Animated.View entering={FadeInDown.delay(700 + (index * 100)).springify()} style={styles.gridCard}>
-                                    <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" transition={200} />
-                                    <TouchableOpacity style={styles.favoriteButton}>
-                                        <Ionicons name="heart" size={16} color="#fff" />
-                                    </TouchableOpacity>
-                                    <View style={styles.gridContent}>
-                                        <Text style={styles.gridTitle} numberOfLines={1}>{recipe.title}</Text>
-                                        <View style={styles.gridMeta}>
-                                            <View style={styles.metaItem}>
-                                                <Ionicons name="time-outline" size={14} color="#888" />
-                                                <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
-                                            </View>
-                                            <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
-                                                <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
-                                                    {recipe.category}
-                                                </Text>
-                                            </View>
-                                        </View>
-                                    </View>
-                                </Animated.View>
-                            </TouchableOpacity>
-                        </Link>
-                    ))}
-                </View>
+                {renderRecipeGrid(RECIPES, 700)}
             </Animated.View>
         </>
     );
@@ -343,18 +319,17 @@ export default function ExploreScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Fixed Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{i18n.t('exploreTitle')}</Text>
-        <TouchableOpacity onPress={toggleLanguage} style={styles.langButton}>
-            <Text style={styles.langText}>{i18n.locale.toUpperCase()}</Text>
-            <Ionicons name="globe-outline" size={16} color="#E65100" style={{ marginLeft: 4 }} />
-        </TouchableOpacity>
+        <View>
+            <Text style={styles.headerSubtitle}>{i18n.t('exploreSubtitle') || 'Discover'}</Text>
+            <Text style={styles.headerTitle}>{i18n.t('exploreTitle')}</Text>
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <Ionicons name="search" size={20} color="#C26A00" style={styles.searchIcon} />
+          <Ionicons name="search" size={22} color="#C26A00" style={styles.searchIcon} />
           <TextInput 
             placeholder={i18n.t('searchPlaceholder')}
             style={styles.searchInput}
@@ -367,8 +342,18 @@ export default function ExploreScreen() {
                 <Ionicons name="close-circle" size={20} color="#999" />
              </TouchableOpacity>
           ) : (
-            <TouchableOpacity onPress={handleScanIngredients} style={styles.scanButton}>
-                <Ionicons name="camera" size={22} color="#E65100" />
+            <TouchableOpacity onPress={handleScanIngredients}>
+                <LinearGradient
+                    colors={['#FF8C00', '#E65100']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.aiScanButton}
+                >
+                    <Ionicons name="scan-outline" size={20} color="#fff" />
+                    <View style={styles.aiBadge}>
+                        <Text style={styles.aiBadgeText}>AI</Text>
+                    </View>
+                </LinearGradient>
             </TouchableOpacity>
           )}
         </View>
@@ -382,13 +367,7 @@ export default function ExploreScreen() {
             <Text style={[styles.filterText, activeCategory === 'All' && styles.filterTextActive]}>{i18n.t('all')}</Text>
           </TouchableOpacity>
           
-          {['Quick Meals', 'Vegetarian', 'Ceremonial'].map((filter) => {
-             // Simple mapping for demo keys, ideally use a robust key map
-             const keyMap: Record<string, string> = {
-                'Quick Meals': 'quickMeals',
-                'Vegetarian': 'vegetarian',
-                'Ceremonial': 'ceremonial'
-             };
+          {['Traditional', 'Dinner', 'Stew', 'Vegetarian', 'High Protein'].map((filter) => {
              return (
                 <TouchableOpacity 
                     key={filter} 
@@ -396,7 +375,7 @@ export default function ExploreScreen() {
                     onPress={() => setActiveCategory(filter)}
                 >
                     <Text style={[styles.filterText, activeCategory === filter && styles.filterTextActive]}>
-                        {i18n.t(keyMap[filter] || 'all')}
+                        {filter}
                     </Text>
                 </TouchableOpacity>
              );
@@ -563,15 +542,55 @@ const styles = StyleSheet.create({
     paddingBottom: 100, // Extra padding for tab bar
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#E65100',
+    fontWeight: '700',
+    letterSpacing: 1,
+    marginBottom: 4,
+    textTransform: 'uppercase',
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '800',
     color: '#1a1a1a',
-    letterSpacing: -0.5,
+    letterSpacing: -1,
+    lineHeight: 32,
+  },
+  aiScanButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  aiBadge: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: '#2962FF',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: '#fff',
+  },
+  aiBadgeText: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   searchContainer: {
     flexDirection: 'row',
@@ -579,23 +598,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     marginHorizontal: 16,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
+    paddingVertical: 14, // Slightly taller
+    borderRadius: 24, // More rounded like Home
     marginTop: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   searchIcon: {
-    marginRight: 10,
-    opacity: 0.5,
+    marginRight: 12,
+    opacity: 0.7, // Darker icon
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
-    color: '#333',
+    fontSize: 16, // Larger text
+    color: '#1a1a1a',
     fontWeight: '500',
   },
   filtersScroll: {
@@ -615,6 +636,11 @@ const styles = StyleSheet.create({
     marginRight: 12,
     borderWidth: 1,
     borderColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   filterChipActive: {
     backgroundColor: '#E65100',
@@ -637,9 +663,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#1a1a1a',
+    letterSpacing: -0.5,
   },
   seeAll: {
     fontSize: 14,
@@ -651,17 +678,19 @@ const styles = StyleSheet.create({
     paddingRight: 8,
   },
   trendingCard: {
-    width: width * 0.75,
-    height: 180,
-    marginRight: 16,
-    borderRadius: 20,
+    width: width * 0.85, // Wider card
+    height: 240, // Taller for more impact
+    marginRight: 20,
+    borderRadius: 28,
     overflow: 'hidden',
     backgroundColor: '#fff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   trendingImage: {
     width: '100%',
@@ -672,16 +701,16 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 16,
-    paddingTop: 40,
+    padding: 20,
+    paddingTop: 60,
   },
   trendingTag: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF3E0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
     alignSelf: 'flex-start',
     marginBottom: 8,
   },
@@ -715,22 +744,23 @@ const styles = StyleSheet.create({
     width: (width - 32) / 4,
   },
   categoryCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
     shadowColor: '#E65100',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
   },
   categoryLabel: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: '#333',
+    letterSpacing: -0.2,
   },
   gridContainer: {
     flexDirection: 'row',
@@ -741,38 +771,44 @@ const styles = StyleSheet.create({
   gridCard: {
     width: CARD_WIDTH,
     backgroundColor: '#fff',
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 20,
+    marginBottom: 20,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 6,
   },
   gridImage: {
     width: '100%',
-    height: CARD_WIDTH,
+    height: CARD_WIDTH * 1.25, // Slightly less tall than before for better balance
   },
   favoriteButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   gridContent: {
     padding: 12,
   },
   gridTitle: {
     fontSize: 15,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#1a1a1a',
-    marginBottom: 8,
+    marginBottom: 6,
+    lineHeight: 20,
   },
   gridMeta: {
     flexDirection: 'row',
@@ -790,8 +826,8 @@ const styles = StyleSheet.create({
   },
   tagBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   tagText: {
     fontSize: 10,

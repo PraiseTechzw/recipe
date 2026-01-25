@@ -66,7 +66,7 @@ export const searchRecipes = (query: string, categoryFilter?: string | null): Re
       );
       
     const matchesCategory = categoryFilter && categoryFilter !== 'All' 
-      ? r.category === categoryFilter 
+      ? r.category === categoryFilter || r.tags?.includes(categoryFilter)
       : true;
 
     return matchesSearch && matchesCategory;

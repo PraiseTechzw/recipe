@@ -25,6 +25,11 @@ export interface Step {
   highlightedWord?: string;
 }
 
+export interface Author {
+  name: string;
+  avatar: string;
+}
+
 export interface Recipe {
   id: string;
   title: string;
@@ -40,4 +45,5 @@ export interface Recipe {
   isTraditional: boolean;
   rating?: number;
   reviews?: number;
+  author?: Author;
 }

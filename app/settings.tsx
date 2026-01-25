@@ -1,32 +1,27 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import i18n from '../i18n';
+import { useStore } from '../store/useStore';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [locale, setLocale] = useState(i18n.locale);
+  const { locale, setLocale } = useStore();
 
   const changeLanguage = () => {
     const options = [
-        { text: 'English', onPress: () => setAppLocale('en') },
-        { text: 'Shona', onPress: () => setAppLocale('sn') },
-        { text: 'Ndebele', onPress: () => setAppLocale('nd') },
+        { text: 'English', onPress: () => setLocale('en') },
+        { text: 'Shona', onPress: () => setLocale('sn') },
+        { text: 'Ndebele', onPress: () => setLocale('nd') },
         { text: 'Cancel', style: 'cancel' }
     ];
 
     Alert.alert(i18n.t('language'), 'Select Language / Sarudza Mutauro / Khetha Ulimi', options as any);
   };
 
-  const setAppLocale = (lang: string) => {
-      i18n.locale = lang;
-      setLocale(lang);
-  };
-
   const getLanguageName = () => {
-      switch(i18n.locale) {
+      switch(locale) {
           case 'en': return 'English';
           case 'sn': return 'Shona';
           case 'nd': return 'Ndebele';

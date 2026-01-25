@@ -13,6 +13,10 @@ export const RECIPES: Recipe[] = [
     calories: '520 Kcal',
     isTraditional: true,
     rating: 4.8,
+    author: {
+      name: 'Gogo Mary',
+      avatar: 'https://i.pravatar.cc/150?u=gogo'
+    },
     ingredients: [
       {
         title: 'Beef Stew',
@@ -53,6 +57,10 @@ export const RECIPES: Recipe[] = [
     calories: '320 Kcal',
     isTraditional: true,
     rating: 4.9,
+    author: {
+      name: 'Chef Tino',
+      avatar: 'https://i.pravatar.cc/150?u=tino'
+    },
     ingredients: [
       {
         title: 'Stew',
@@ -97,13 +105,17 @@ export const RECIPES: Recipe[] = [
     id: '3',
     title: 'Mopane Worms',
     description: 'A high-protein traditional delicacy, crunchy and savory.',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0N-d2v6pM_iOqQZ0_xQ&s', // Placeholder
+    image: 'https://www.tfpd.co.za/wp-content/uploads/2018/02/IMG_3592.jpg',
     category: 'High Protein',
     tags: ['Exotic', 'Protein'],
     time: '35 Mins',
     servings: 2,
     calories: '200 Kcal',
     isTraditional: true,
+    author: {
+      name: 'Auntie Rudo',
+      avatar: 'https://i.pravatar.cc/150?u=rudo'
+    },
     ingredients: [
         { title: 'Main', data: [{ name: 'Mopane Worms', quantity: '2 cups', description: 'Dried' }] }
     ],
@@ -120,6 +132,10 @@ export const RECIPES: Recipe[] = [
     servings: 4,
     calories: '180 Kcal',
     isTraditional: true,
+    author: {
+      name: 'Chef Tino',
+      avatar: 'https://i.pravatar.cc/150?u=tino'
+    },
     ingredients: [],
     steps: []
   },
@@ -128,14 +144,45 @@ export const RECIPES: Recipe[] = [
     title: 'Mutakura',
     description: 'A mixture of maize and peanuts/beans boiled together.',
     image: 'https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?q=80&w=1000&auto=format&fit=crop',
-    category: 'Traditional',
+    category: 'Grains',
     tags: ['Grains', 'Filling'],
     time: '90 Mins',
     servings: 6,
     calories: '400 Kcal',
     isTraditional: true,
+    author: {
+      name: 'Gogo Mary',
+      avatar: 'https://i.pravatar.cc/150?u=gogo'
+    },
     ingredients: [],
     steps: []
+  },
+  {
+    id: '6',
+    title: 'Maheu (Sorghum Drink)',
+    description: 'A traditional non-alcoholic fermented drink made from maize or sorghum meal.',
+    image: 'https://images.unsplash.com/photo-1546173159-315724a31696?q=80&w=1000&auto=format&fit=crop',
+    category: 'Drinks',
+    tags: ['Drinks', 'Fermented', 'Traditional'],
+    time: '24 Hrs',
+    servings: 6,
+    calories: '150 Kcal',
+    isTraditional: true,
+    author: {
+      name: 'Gogo Mary',
+      avatar: 'https://i.pravatar.cc/150?u=gogo'
+    },
+    ingredients: [
+        { title: 'Base', data: [{ name: 'Sorghum/Mealie Meal', quantity: '1 cup' }, { name: 'Water', quantity: '4 cups' }] },
+        { title: 'Fermentation', data: [{ name: 'Malt/Flour', quantity: '2 tbsp' }, { name: 'Sugar', quantity: 'to taste' }] }
+    ],
+    steps: [
+        { instruction: 'Boil water and mealie meal to make a thin porridge.' },
+        { instruction: 'Let it cool completely.' },
+        { instruction: 'Stir in malt or wheat flour.' },
+        { instruction: 'Cover and leave in a warm place for 24 hours to ferment.' },
+        { instruction: 'Serve chilled.' }
+    ]
   }
 ];
 

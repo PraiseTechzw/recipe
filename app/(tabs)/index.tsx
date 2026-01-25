@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Logo from '../../components/Logo';
-import { CATEGORIES, RECIPES } from '../../data/recipes';
+import { RECIPES } from '../../data/recipes';
 import i18n from '../../i18n';
 import { getRecipeOfTheDay, getRecommendedRecipes } from '../../services/recommendations';
 import { useStore } from '../../store/useStore';
@@ -42,7 +43,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <View style={styles.contentContainer}>
         
         {/* Header */}
         <View style={styles.header}>
@@ -67,6 +68,7 @@ export default function HomeScreen() {
             </View>
         </View>
 
+        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Greeting & Search */}
         <View style={styles.greetingSection}>
             <Text style={styles.mainGreeting}>{i18n.t('greeting')}, {userProfile.name}!</Text>
@@ -76,6 +78,12 @@ export default function HomeScreen() {
                 <TouchableOpacity style={styles.searchBar}>
                     <Ionicons name="search" size={24} color="#E65100" />
                     <Text style={styles.placeholderText}>{i18n.t('searchPlaceholderHome')}</Text>
+                    <LinearGradient
+                        colors={['#FF8C00', '#E65100']}
+                        style={styles.aiButtonHome}
+                    >
+                        <Ionicons name="scan-outline" size={18} color="#fff" />
+                    </LinearGradient>
                 </TouchableOpacity>
             </Link>
         </View>
@@ -88,7 +96,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.featuredList}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={styles.featuredList}>
             {featuredRecipes.map((recipe) => (
                 <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
                     <TouchableOpacity style={styles.featuredCard}>
@@ -101,13 +109,13 @@ export default function HomeScreen() {
                         </View>
                         <Text style={styles.featuredTitle} numberOfLines={2}>{recipe.title}</Text>
                         <View style={styles.metaRow}>
+                            <View style={styles.authorRow}>
+                                <Image source={{ uri: recipe.author?.avatar }} style={styles.smallAvatar} />
+                                <Text style={styles.authorName} numberOfLines={1}>{recipe.author?.name}</Text>
+                            </View>
                             <View style={styles.metaItem}>
                                 <Ionicons name="time-outline" size={14} color="#757575" />
                                 <Text style={styles.metaText}>{recipe.time}</Text>
-                            </View>
-                            <View style={styles.metaItem}>
-                                <Ionicons name="flame-outline" size={14} color="#757575" />
-                                <Text style={styles.metaText}>{recipe.calories || 'N/A'}</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -122,50 +130,41 @@ export default function HomeScreen() {
         
         <Link href={`/recipe/${dailyPick.id}`} asChild>
             <TouchableOpacity style={styles.dailyCard}>
-                <Image source={{ uri: dailyPick.image }} style={styles.dailyImage} contentFit="cover" />
-                <View style={styles.dailyOverlay}>
-                    <View style={styles.dailyBadge}>
-                        <Text style={styles.dailyBadgeText}>DAILY PICK</Text>
+                <Image source={{ uri: dailyPick.image }} style={styles.dailyImage} contentFit="cover" transition={1000} />
+                <LinearGradient 
+                    colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']} 
+                    style={styles.dailyOverlay}
+                >
+                    <View style={styles.dailyHeader}>
+                        <View style={styles.dailyBadge}>
+                            <Text style={styles.dailyBadgeText}>DAILY PICK</Text>
+                        </View>
+                        <View style={styles.authorContainer}>
+                            <Image source={{ uri: dailyPick.author?.avatar }} style={styles.mediumAvatar} />
+                            <Text style={styles.authorNameLight}>{dailyPick.author?.name}</Text>
+                        </View>
                     </View>
                     <Text style={styles.dailyTitle}>{dailyPick.title}</Text>
                     <Text style={styles.dailyDesc} numberOfLines={1}>{dailyPick.description}</Text>
-                </View>
+                </LinearGradient>
             </TouchableOpacity>
         </Link>
+        </ScrollView>
 
-        {/* Quick Categories */}
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{i18n.t('categories')}</Text>
-        </View>
-
-        <View style={styles.categoriesGrid}>
-            {CATEGORIES.slice(0, 4).map((cat) => (
-                <Link key={cat.id} href={{ pathname: '/(tabs)/explore', params: { category: cat.name } }} asChild>
-                    <TouchableOpacity style={styles.categoryCard}>
-                        <Text style={styles.categoryEmoji}>{cat.icon}</Text>
-                        <Text style={styles.categoryName}>{cat.name}</Text>
-                    </TouchableOpacity>
-                </Link>
-            ))}
-        </View>
-
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
-const getCategoryColor = (index: number) => {
-    const colors = ['#FFF3E0', '#E8F5E9', '#FCE4EC', '#E3F2FD'];
-    return colors[index % colors.length];
-};
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAFA',
   },
-  scrollContent: {
-    paddingBottom: 100, // Space for tab bar
+  contentContainer: {
+    flex: 1,
     paddingHorizontal: 20,
   },
   header: {
@@ -173,7 +172,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 10,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -240,47 +239,65 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   greetingSection: {
-    marginBottom: 32,
+    marginBottom: 20,
   },
   mainGreeting: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#1a1a1a',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   subGreeting: {
-    fontSize: 18,
+    fontSize: 16,
     color: '#8D6E63',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 30, // Fully rounded
+    paddingVertical: 12,
+    borderRadius: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
     elevation: 2,
     gap: 12,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
   placeholderText: {
+    flex: 1,
     color: '#999',
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  aiButtonHome: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
+    marginTop: 8,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#1a1a1a',
+    letterSpacing: -0.5,
   },
   seeAll: {
     fontSize: 14,
@@ -288,41 +305,49 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   featuredList: {
-    paddingRight: 20,
-    marginBottom: 32,
+    paddingHorizontal: 20,
+    paddingBottom: 24, // Increased for shadow visibility
   },
   featuredCard: {
-    width: 220,
-    marginRight: 16,
+    width: 260, // Slightly wider for better layout
+    marginRight: 20, // More space between cards
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 24,
     padding: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
   },
   imageContainer: {
     position: 'relative',
     marginBottom: 12,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
   featuredImage: {
     width: '100%',
-    height: 140,
-    borderRadius: 16,
+    height: 150,
+    borderRadius: 20,
   },
   ratingBadge: {
     position: 'absolute',
-    top: 8,
-    left: 8,
+    top: 10,
+    left: 10,
     backgroundColor: 'rgba(255,255,255,0.95)',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
     gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   ratingText: {
     fontSize: 12,
@@ -330,16 +355,35 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   featuredTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '700',
     color: '#1a1a1a',
     marginBottom: 8,
-    height: 40,
+    height: 44,
+    lineHeight: 22,
   },
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
+  },
+  authorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flex: 1,
+  },
+  smallAvatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#eee',
+  },
+  authorName: {
+    fontSize: 12,
+    color: '#555',
+    fontWeight: '500',
+    flex: 1,
   },
   metaItem: {
     flexDirection: 'row',
@@ -351,12 +395,20 @@ const styles = StyleSheet.create({
     color: '#757575',
   },
   dailyCard: {
+    flex: 1,
     width: '100%',
-    height: 200,
-    borderRadius: 24,
-    marginBottom: 32,
+    borderRadius: 30,
+    marginBottom: 10,
     overflow: 'hidden',
     position: 'relative',
+    minHeight: 220,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#F5F5F5',
   },
   dailyImage: {
     width: '100%',
@@ -367,59 +419,70 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 20,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    padding: 24,
+    paddingTop: 80, // Extended gradient area
     justifyContent: 'flex-end',
+  },
+  dailyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  authorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  mediumAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+  authorNameLight: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
   dailyBadge: {
     backgroundColor: '#E65100',
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   dailyBadgeText: {
     color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
+    fontSize: 11,
+    fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   dailyTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: '800',
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 6,
+    letterSpacing: -0.5,
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   dailyDesc: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  categoryCard: {
-    width: '48%',
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 20,
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  categoryEmoji: {
-    fontSize: 24,
-  },
-  categoryName: {
     fontSize: 15,
-    fontWeight: '600',
-    color: '#333',
+    color: 'rgba(255,255,255,0.95)',
+    lineHeight: 20,
   },
 });

@@ -3,6 +3,7 @@ import { I18n } from 'i18n-js/src';
 
 const i18n = new I18n({
   en: {
+    exploreSubtitle: "Discover",
     exploreTitle: "Explore Zimbabwe's Flavors",
     searchPlaceholder: "Search recipes, ingredients...",
     trending: "Trending this week",
@@ -127,9 +128,12 @@ const i18n = new I18n({
     oil: "Cooking Oil",
     salt: "Salt",
     garlic: "Garlic",
+    home: "Home",
+    explore: "Explore",
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",
+    exploreSubtitle: "Tsvaga",
     searchPlaceholder: "Tsvaga mabikirwo, zvinoshandiswa...",
     trending: "Zvirikutaurwa svondo rino",
     seeAll: "Ona Zvese",
@@ -244,9 +248,12 @@ const i18n = new I18n({
     oil: "Mafuta",
     salt: "Munyu",
     garlic: "Garlic",
+    home: "Kumba",
+    explore: "Tsvaga",
   },
   nd: {
     exploreTitle: "Hlola Nambitha zeZimbabwe",
+    exploreSubtitle: "Hlola",
     searchPlaceholder: "Dingisisa amaresiphi...",
     trending: "Okutrendayo iviki leli",
     seeAll: "Bona Konke",
@@ -365,6 +372,8 @@ const i18n = new I18n({
     recipeCreated: "Iresiphi yakho idaliwe futhi yagcinwa!",
     error: "Iphutha",
     createError: "Ihlulekile ukudala iresiphi. Hlola iSupabase.",
+    ingredientsPlaceholder: "Okukodwa emgqeni (isib. 2 izinkomishi zefulawa)",
+    stepsPlaceholder: "Okukodwa emgqeni (isib. Hlanganisa konke)",
     mealieMeal: "Impuphu",
     beef: "Inyama yenkomo",
     chicken: "Inkukhu",
