@@ -1,12 +1,14 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as StoreReview from 'expo-store-review';
 import { useEffect, useState } from 'react';
-import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RECIPES } from '../../data/recipes';
+import i18n from '../../i18n';
+import { supabase } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
 
 const { width } = Dimensions.get('window');
@@ -16,11 +18,58 @@ export default function RecipeDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
-  const recipe = RECIPES.find(r => r.id === id);
+  const [recipe, setRecipe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'ingredients' | 'steps'>('ingredients');
   const [checkedIngredients, setCheckedIngredients] = useState<Set<string>>(new Set());
   
   const { isFavorite, toggleFavorite, logRecipeView, addToShoppingList } = useStore();
+  
+  useEffect(() => {
+    const loadRecipe = async () => {
+        setLoading(true);
+        const localRecipe = RECIPES.find(r => r.id === id);
+        if (localRecipe) {
+            setRecipe(localRecipe);
+            setLoading(false);
+            return;
+        }
+
+        // Try Supabase
+        try {
+            const { data, error } = await supabase
+                .from('recipes')
+                .select('*')
+                .eq('id', id)
+                .single();
+            
+            if (data) {
+                setRecipe({
+                    id: data.id,
+                    title: data.title,
+                    image: data.image,
+                    time: data.time,
+                    category: data.category,
+                    description: data.description,
+                    ingredients: data.ingredients || [],
+                    steps: data.steps || [],
+                    calories: 'N/A',
+                    tags: ['Community'],
+                    servings: '2-4'
+                });
+            } else {
+                console.log('Recipe not found in Supabase or Local');
+            }
+        } catch (e) {
+            console.log('Error loading recipe:', e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    loadRecipe();
+  }, [id]);
+
   const favorite = recipe ? isFavorite(recipe.id) : false;
 
   useEffect(() => {
@@ -36,9 +85,7 @@ export default function RecipeDetailScreen() {
     
     // Smart Review Prompt Logic: If adding to favorites (positive action)
     if (!favorite) {
-       // Check if available and maybe ask
        if (await StoreReview.hasAction()) {
-           // In production, limit frequency. Here we just show it for demo.
            // StoreReview.requestReview(); 
            console.log('Requesting review...');
        }
@@ -47,9 +94,9 @@ export default function RecipeDetailScreen() {
 
   const handleAddToShoppingList = () => {
     if (!recipe) return;
-    const allIngredients = recipe.ingredients.flatMap(s => s.data);
+    const allIngredients = recipe.ingredients.flatMap((s: any) => s.data);
     addToShoppingList(allIngredients);
-    Alert.alert("Success", "Ingredients added to your shopping list.");
+    Alert.alert("Success", i18n.t('ingredients') + " added to " + i18n.t('shoppingList'));
   };
 
   const toggleIngredient = (name: string) => {
@@ -61,6 +108,10 @@ export default function RecipeDetailScreen() {
     }
     setCheckedIngredients(newSet);
   };
+
+  if (loading) {
+    return <View style={styles.center}><ActivityIndicator size="large" color="#E65100" /></View>;
+  }
 
   if (!recipe) {
     return <View style={styles.center}><Text>Recipe not found</Text></View>;
@@ -90,7 +141,7 @@ export default function RecipeDetailScreen() {
 
           <View style={styles.headerContent}>
             <View style={styles.tagsRow}>
-              {recipe.tags.map((tag, i) => (
+              {recipe.tags.map((tag: string, i: number) => (
                 <View key={i} style={[styles.tag, tag === 'Traditional' ? styles.tagDark : styles.tagOrange]}>
                   {tag === 'Traditional' && <Ionicons name="earth" size={12} color="#fff" style={{marginRight: 4}} />}
                   <Text style={styles.tagText}>{tag}</Text>
@@ -98,117 +149,88 @@ export default function RecipeDetailScreen() {
               ))}
             </View>
             <Text style={styles.title}>{recipe.title}</Text>
-            <Text style={styles.description} numberOfLines={2}>{recipe.description}</Text>
+            
+            <View style={styles.metaRow}>
+              <View style={styles.metaItem}>
+                <Ionicons name="time-outline" size={16} color="#ddd" />
+                <Text style={styles.metaText}>{recipe.time}</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Ionicons name="people-outline" size={16} color="#ddd" />
+                <Text style={styles.metaText}>{recipe.servings} {i18n.t('servings')}</Text>
+              </View>
+              <View style={styles.metaItem}>
+                <Ionicons name="flame-outline" size={16} color="#ddd" />
+                <Text style={styles.metaText}>{recipe.calories}</Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        {/* Content Body */}
-        <View style={styles.contentBody}>
-            {/* Stats Card */}
-            <View style={styles.statsCard}>
-                <View style={styles.statItem}>
-                    <Ionicons name="time" size={20} color="#E65100" />
-                    <Text style={styles.statValue}>{recipe.time}</Text>
-                    <Text style={styles.statLabel}>TIME</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                    <Ionicons name="restaurant" size={20} color="#E65100" />
-                    <Text style={styles.statValue}>{recipe.servings} Servings</Text>
-                    <Text style={styles.statLabel}>YIELD</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                    <Ionicons name="flame" size={20} color="#E65100" />
-                    <Text style={styles.statValue}>{recipe.calories}</Text>
-                    <Text style={styles.statLabel}>ENERGY</Text>
-                </View>
-            </View>
+        {/* Content Tabs */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'ingredients' && styles.activeTab]} 
+            onPress={() => setActiveTab('ingredients')}
+          >
+            <Text style={[styles.tabText, activeTab === 'ingredients' && styles.activeTabText]}>{i18n.t('ingredients')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'steps' && styles.activeTab]} 
+            onPress={() => setActiveTab('steps')}
+          >
+            <Text style={[styles.tabText, activeTab === 'steps' && styles.activeTabText]}>{i18n.t('steps')}</Text>
+          </TouchableOpacity>
+        </View>
 
-            {/* Tabs */}
-            <View style={styles.tabsContainer}>
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'ingredients' && styles.activeTab]}
-                    onPress={() => setActiveTab('ingredients')}
-                >
-                    <MaterialIcons name="shopping-basket" size={18} color={activeTab === 'ingredients' ? '#fff' : '#666'} />
-                    <Text style={[styles.tabText, activeTab === 'ingredients' && styles.activeTabText]}>Ingredients</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
-                    style={[styles.tab, activeTab === 'steps' && styles.activeTab]}
-                    onPress={() => setActiveTab('steps')}
-                >
-                    <MaterialIcons name="format-list-numbered" size={18} color={activeTab === 'steps' ? '#fff' : '#666'} />
-                    <Text style={[styles.tabText, activeTab === 'steps' && styles.activeTabText]}>Steps</Text>
-                </TouchableOpacity>
+        <View style={styles.contentContainer}>
+          {activeTab === 'ingredients' ? (
+            <View>
+              {recipe.ingredients.map((section: any, index: number) => (
+                <View key={index} style={styles.section}>
+                  <Text style={styles.sectionTitle}>{section.title}</Text>
+                  {section.data.map((item: string, i: number) => (
+                    <TouchableOpacity key={i} style={styles.ingredientRow} onPress={() => toggleIngredient(item)}>
+                      <View style={[styles.checkbox, checkedIngredients.has(item) && styles.checkboxChecked]}>
+                        {checkedIngredients.has(item) && <Ionicons name="checkmark" size={14} color="#fff" />}
+                      </View>
+                      <Text style={[styles.ingredientText, checkedIngredients.has(item) && styles.ingredientTextChecked]}>
+                        {item}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ))}
+              
+              <TouchableOpacity style={styles.shoppingButton} onPress={handleAddToShoppingList}>
+                <Ionicons name="cart-outline" size={20} color="#fff" />
+                <Text style={styles.shoppingButtonText}>{i18n.t('addToShoppingList')}</Text>
+              </TouchableOpacity>
             </View>
-
-            {/* Tab Content */}
-            <View style={styles.listContainer}>
-                {activeTab === 'ingredients' ? (
-                    <View>
-                        <View style={styles.listHeaderRow}>
-                            <Text style={styles.listHeaderTitle}>{recipe.ingredients[0]?.title || 'Ingredients'}</Text>
-                            <Text style={styles.itemCount}>{recipe.ingredients.reduce((acc, sec) => acc + sec.data.length, 0)} Items</Text>
-                        </View>
-                        
-                        {recipe.ingredients.map((section, secIdx) => (
-                            <View key={secIdx} style={{marginBottom: 16}}>
-                                {recipe.ingredients.length > 1 && (
-                                    <Text style={styles.sectionHeader}>{section.title}</Text>
-                                )}
-                                {section.data.map((item, idx) => (
-                                    <TouchableOpacity 
-                                        key={idx} 
-                                        style={styles.ingredientRow} 
-                                        onPress={() => toggleIngredient(item.name)}
-                                        activeOpacity={0.7}
-                                    >
-                                        <View style={[styles.checkbox, checkedIngredients.has(item.name) && styles.checkboxChecked]}>
-                                            {checkedIngredients.has(item.name) && <Ionicons name="checkmark" size={14} color="#fff" />}
-                                        </View>
-                                        <View style={styles.ingredientInfo}>
-                                            <Text style={styles.ingredientName}>
-                                                <Text style={{fontWeight: 'bold'}}>{item.quantity ? `${item.quantity} ` : ''}</Text>
-                                                {item.name}
-                                            </Text>
-                                            {item.description && <Text style={styles.ingredientDesc}>{item.description}</Text>}
-                                        </View>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        ))}
-                        
-                        <TouchableOpacity style={styles.secondaryButton} onPress={handleAddToShoppingList}>
-                            <Ionicons name="basket-outline" size={20} color="#E65100" />
-                            <Text style={styles.secondaryButtonText}>Add All to Shopping List</Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : (
-                    <View>
-                         {recipe.steps.map((step, idx) => (
-                             <View key={idx} style={styles.stepRow}>
-                                 <View style={styles.stepNumberContainer}>
-                                     <Text style={styles.stepNumber}>{idx + 1}</Text>
-                                 </View>
-                                 <Text style={styles.stepText}>{step.instruction}</Text>
-                             </View>
-                         ))}
-                    </View>
-                )}
+          ) : (
+            <View>
+              {recipe.steps.map((item: string, index: number) => (
+                <View key={index} style={styles.stepItem}>
+                  <View style={styles.stepNumberContainer}>
+                    <Text style={styles.stepNumber}>{index + 1}</Text>
+                    <View style={styles.stepLine} />
+                  </View>
+                  <View style={styles.stepContent}>
+                    <Text style={styles.stepText}>{item}</Text>
+                  </View>
+                </View>
+              ))}
             </View>
+          )}
         </View>
       </ScrollView>
 
-      {/* Footer Button */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-          <TouchableOpacity 
-            style={styles.startButton}
-            onPress={() => router.push(`/cooking/${recipe.id}`)}
-          >
-              <MaterialIcons name="restaurant-menu" size={24} color="#fff" style={{marginRight: 8}} />
-              <Text style={styles.startButtonText}>Start Cooking</Text>
-          </TouchableOpacity>
+      {/* Floating Action Button for Cooking Mode */}
+      <View style={styles.fabContainer}>
+         <TouchableOpacity style={styles.fab} onPress={() => router.push(`/cooking/${recipe.id}`)}>
+            <Ionicons name="play" size={24} color="#fff" />
+            <Text style={styles.fabText}>{i18n.t('startCooking')}</Text>
+         </TouchableOpacity>
       </View>
     </View>
   );
@@ -217,7 +239,7 @@ export default function RecipeDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#fff',
   },
   center: {
     flex: 1,
@@ -225,24 +247,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerImageContainer: {
-    width: '100%',
     height: 350,
-    justifyContent: 'flex-end',
+    width: '100%',
+    position: 'relative',
   },
   headerImage: {
-    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
   gradient: {
     position: 'absolute',
     left: 0,
     right: 0,
-    top: 0,
     bottom: 0,
+    height: '100%',
   },
   headerButtons: {
     position: 'absolute',
-    left: 16,
-    right: 16,
+    left: 20,
+    right: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     zIndex: 10,
@@ -251,14 +274,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    backdropFilter: 'blur(10px)', // Works on iOS mostly
   },
   headerContent: {
-    padding: 20,
-    paddingBottom: 40, // Space for the overlapping card
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -266,228 +290,185 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tag: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
   },
   tagOrange: {
     backgroundColor: '#E65100',
   },
   tagDark: {
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: '#333',
   },
   tagText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 8,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  description: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  contentBody: {
-    backgroundColor: '#FAFAFA',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    marginTop: -24,
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    minHeight: 500,
-  },
-  statsCard: {
+  metaRow: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-    marginBottom: 24,
-    marginTop: -40, // Pull up to overlap
+    gap: 16,
   },
-  statItem: {
-    flex: 1,
+  metaItem: {
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  statDivider: {
-    width: 1,
-    height: '100%',
-    backgroundColor: '#eee',
-  },
-  statValue: {
+  metaText: {
+    color: '#ddd',
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  statLabel: {
-    fontSize: 10,
-    color: '#999',
-    fontWeight: 'bold',
+    fontWeight: '500',
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
-    borderRadius: 16,
-    padding: 4,
-    marginBottom: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    backgroundColor: '#fff',
   },
   tab: {
     flex: 1,
-    flexDirection: 'row',
+    paddingVertical: 16,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 12,
-    gap: 8,
   },
   activeTab: {
-    backgroundColor: '#E65100', // Orange
+    borderBottomWidth: 2,
+    borderBottomColor: '#E65100',
   },
   tabText: {
-    fontWeight: '600',
+    fontSize: 16,
     color: '#666',
+    fontWeight: '500',
   },
   activeTabText: {
-    color: '#fff',
+    color: '#E65100',
+    fontWeight: 'bold',
   },
-  listContainer: {
-    marginBottom: 20,
+  contentContainer: {
+    padding: 20,
   },
-  listHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
+  section: {
+    marginBottom: 24,
   },
-  listHeaderTitle: {
+  sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-  },
-  itemCount: {
-    color: '#999',
-    fontSize: 12,
-  },
-  sectionHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
     marginBottom: 12,
-    marginTop: 8,
   },
   ingredientRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#f0f0f0',
+    paddingVertical: 4,
   },
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 6,
+    borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E0E0E0',
+    borderColor: '#ddd',
     marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#E65100', // Orange
+    backgroundColor: '#E65100',
     borderColor: '#E65100',
   },
-  ingredientInfo: {
-    flex: 1,
-  },
-  ingredientName: {
-    fontSize: 15,
-    color: '#333',
-  },
-  ingredientDesc: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 2,
-  },
-  stepRow: {
-    flexDirection: 'row',
-    marginBottom: 24,
-  },
-  stepNumberContainer: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FFE0B2', // Light Orange
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  stepNumber: {
-    color: '#E65100',
-    fontWeight: 'bold',
-  },
-  stepText: {
-    flex: 1,
-    fontSize: 15,
-    color: '#333',
-    lineHeight: 22,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff', // Transparent or gradient
-    paddingTop: 16,
-    paddingHorizontal: 16,
-    // Shadow for footer
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 10,
-  },
-  startButton: {
-    backgroundColor: '#E65100',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 16,
-    borderRadius: 24,
-  },
-  startButtonText: {
-    color: '#fff',
+  ingredientText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
   },
-  secondaryButton: {
+  ingredientTextChecked: {
+    color: '#999',
+    textDecorationLine: 'line-through',
+  },
+  shoppingButton: {
+    backgroundColor: '#333',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFF3E0',
-    padding: 14,
+    padding: 16,
     borderRadius: 12,
     marginTop: 8,
     gap: 8,
   },
-  secondaryButtonText: {
+  shoppingButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  stepItem: {
+    flexDirection: 'row',
+    marginBottom: 24,
+  },
+  stepNumberContainer: {
+    alignItems: 'center',
+    marginRight: 16,
+    width: 30,
+  },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFF3E0',
     color: '#E65100',
-    fontWeight: '600',
-    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 28,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  stepLine: {
+    width: 2,
+    flex: 1,
+    backgroundColor: '#FFF3E0',
+    marginTop: 8,
+  },
+  stepContent: {
+    flex: 1,
+    paddingBottom: 8,
+  },
+  stepText: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+  },
+  fabContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  fab: {
+    flexDirection: 'row',
+    backgroundColor: '#E65100',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 32,
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

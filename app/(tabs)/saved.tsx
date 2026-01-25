@@ -1,37 +1,90 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Link, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import RecipeCard from '../../components/RecipeCard';
 import { RECIPES } from '../../data/recipes';
+import i18n from '../../i18n';
+import { supabase } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
 
 export default function SavedScreen() {
   const { favorites } = useStore();
-  const favoriteRecipes = RECIPES.filter(r => favorites.includes(r.id));
+  const [supabaseRecipes, setSupabaseRecipes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchSupabaseRecipes = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) {
+        // console.error('Error fetching recipes:', error);
+        // Fail silently or show empty for now if table doesn't exist
+        setSupabaseRecipes([]);
+      } else if (data) {
+        // Transform to match Recipe interface
+        const formatted = data.map(r => ({
+            id: r.id,
+            title: r.title,
+            image: r.image,
+            time: r.time,
+            category: r.category,
+            description: r.description,
+            ingredients: r.ingredients || [],
+            steps: r.steps || [],
+            calories: 'N/A', // Default
+            tags: ['Community'], // Default
+            servings: '2-4'
+        }));
+        setSupabaseRecipes(formatted);
+      }
+    } catch (e) {
+      console.log('Supabase fetch error:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchSupabaseRecipes();
+    }, [])
+  );
+
+  const localFavorites = RECIPES.filter(r => favorites.includes(r.id));
+  const allRecipes = [...supabaseRecipes, ...localFavorites];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Saved Recipes</Text>
-        <Text style={styles.headerSubtitle}>{favoriteRecipes.length} items</Text>
+        <Text style={styles.headerTitle}>{i18n.t('savedRecipes')}</Text>
+        <Text style={styles.headerSubtitle}>{allRecipes.length} items</Text>
       </View>
 
-      {favoriteRecipes.length === 0 ? (
+      {loading ? (
+        <View style={styles.center}>
+            <ActivityIndicator size="large" color="#E65100" />
+        </View>
+      ) : allRecipes.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="bookmark-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyText}>No saved recipes yet</Text>
-          <Text style={styles.emptySubText}>Save recipes you love to cook here!</Text>
-          <Link href="/(tabs)" asChild>
+          <Text style={styles.emptyText}>{i18n.t('noSavedRecipes')}</Text>
+          <Text style={styles.emptySubText}>{i18n.t('saveRecipesMessage')}</Text>
+          <Link href="/(tabs)/explore" asChild>
             <TouchableOpacity style={styles.browseButton}>
-                <Text style={styles.browseButtonText}>Browse Recipes</Text>
+                <Text style={styles.browseButtonText}>{i18n.t('browseRecipes')}</Text>
             </TouchableOpacity>
           </Link>
         </View>
       ) : (
         <FlatList
-          data={favoriteRecipes}
-          keyExtractor={(item) => item.id}
+          data={allRecipes}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <RecipeCard recipe={item} />}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
@@ -45,6 +98,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAFA',
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     padding: 16,

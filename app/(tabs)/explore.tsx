@@ -97,7 +97,16 @@ export default function ExploreScreen() {
                     description: aiRecipe.description, 
                     time: aiRecipe.time, 
                     category: aiRecipe.category || 'Other',
-                    image: 'https://via.placeholder.com/600x400?text=AI+Generated+Recipe'
+                    image: 'https://via.placeholder.com/600x400?text=AI+Generated+Recipe',
+                    ingredients: aiRecipe.ingredients,
+                    steps: aiRecipe.steps
+                }
+            ]);
+
+        if (error) throw error;
+        Alert.alert('Success', 'Recipe saved to your collection!');
+        setAiModalVisible(false);
+    } catch (error) {
                 }
             ]);
 
