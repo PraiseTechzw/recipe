@@ -103,28 +103,28 @@ export default function ProfileScreen() {
 
         {/* Menu Sections */}
         <View style={styles.menuContainer}>
-            <Text style={styles.menuHeader}>Account</Text>
+            <Text style={styles.menuHeader}>{i18n.t('account')}</Text>
             <View style={styles.menuGroup}>
-                <MenuOption icon="person-outline" label="Personal Information" onPress={() => router.push('/edit-profile')} />
-                <MenuOption icon="notifications-outline" label="Notifications" onPress={() => router.push('/notifications')} />
+                <MenuOption icon="person-outline" label={i18n.t('personalInfo')} onPress={() => router.push('/edit-profile')} />
+                <MenuOption icon="notifications-outline" label={i18n.t('notifications')} onPress={() => router.push('/notifications')} />
                 <View style={styles.menuItem}>
                     <View style={[styles.menuIconBox, { backgroundColor: '#F3E5F5' }]}>
                         <Ionicons name="moon-outline" size={20} color="#7B1FA2" />
                     </View>
-                    <Text style={styles.menuText}>Dark Mode</Text>
+                    <Text style={styles.menuText}>{i18n.t('darkMode')}</Text>
                     <Switch value={false} trackColor={{false: '#eee', true: '#E65100'}} thumbColor="#fff" />
                 </View>
             </View>
 
-            <Text style={styles.menuHeader}>Support</Text>
+            <Text style={styles.menuHeader}>{i18n.t('support')}</Text>
             <View style={styles.menuGroup}>
-                <MenuOption icon="help-circle-outline" label="Help Center" />
-                <MenuOption icon="star-outline" label="Rate Us" />
+                <MenuOption icon="help-circle-outline" label={i18n.t('helpCenter')} />
+                <MenuOption icon="star-outline" label={i18n.t('rateUs')} />
             </View>
         </View>
 
         <TouchableOpacity style={styles.logoutButton}>
-            <Text style={styles.logoutText}>Log Out</Text>
+            <Text style={styles.logoutText}>{i18n.t('logOut')}</Text>
         </TouchableOpacity>
 
       </ScrollView>

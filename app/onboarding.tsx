@@ -3,8 +3,8 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useStore } from '../store/useStore';
 import i18n from '../i18n';
+import { useStore } from '../store/useStore';
 
 export default function UserInfoScreen() {
   const router = useRouter();
@@ -113,9 +113,9 @@ export default function UserInfoScreen() {
 
       <View style={styles.footer}>
         <TouchableOpacity 
-            style={[styles.button, name.length === 0 && styles.buttonDisabled]} 
+            style={[styles.button, name.trim().length === 0 && styles.buttonDisabled]} 
             onPress={handleNext}
-            disabled={name.length === 0}
+            disabled={name.trim().length === 0}
         >
             <Text style={styles.buttonText}>{i18n.t('continue')}</Text>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
