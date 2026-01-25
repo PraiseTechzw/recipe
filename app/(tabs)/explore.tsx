@@ -28,6 +28,8 @@ export default function ExploreScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [sortModalVisible, setSortModalVisible] = useState(false);
+  const [sortBy, setSortBy] = useState<'newest' | 'time' | 'calories' | 'rating'>('newest');
   
   // AI State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -35,12 +37,16 @@ export default function ExploreScreen() {
   const [aiModalVisible, setAiModalVisible] = useState(false);
 
   const filteredRecipes = searchRecipes(searchQuery, activeCategory).sort((a, b) => {
-    if (sortBy === 'time') {
-      return parseInt(a.time) - parseInt(b.time);
-    } else if (sortBy === 'calories') {
-      return parseInt(a.calories) - parseInt(b.calories);
+    switch (sortBy) {
+        case 'time':
+            return parseInt(a.time) - parseInt(b.time);
+        case 'calories':
+            return parseInt(a.calories) - parseInt(b.calories);
+        case 'rating':
+            return (b.rating || 0) - (a.rating || 0);
+        default:
+            return 0; // Keep original order (Newest/Relevance)
     }
-    return 0;
   });
   
   const trendingRecipe = RECIPES.find(r => r.title.includes('Dovi')) || RECIPES[1];
@@ -178,23 +184,76 @@ export default function ExploreScreen() {
     </Modal>
   );
 
-  const renderRecipeGrid = (recipes: typeof RECIPES, delayBase: number = 0) => (
-    <View style={styles.gridContainer}>
+  const renderSortModal = () => (
+    <Modal
+        animationType="fade"
+        transparent={true}
+        visible={sortModalVisible}
+        onRequestClose={() => setSortModalVisible(false)}
+    >
+        <TouchableOpacity 
+            style={styles.modalOverlay} 
+            activeOpacity={1} 
+            onPress={() => setSortModalVisible(false)}
+        >
+            <Animated.View entering={FadeInDown.springify()} style={styles.sortModalContent}>
+                <Text style={styles.sortTitle}>{i18n.t('sortBy') || 'Sort By'}</Text>
+                
+                {[
+                    { id: 'newest', label: 'Newest', icon: 'sparkles-outline' },
+                    { id: 'time', label: 'Cooking Time', icon: 'time-outline' },
+                    { id: 'rating', label: 'Top Rated', icon: 'star-outline' },
+                    { id: 'calories', label: 'Calories (Low to High)', icon: 'flame-outline' },
+                ].map((option) => (
+                    <TouchableOpacity 
+                        key={option.id} 
+                        style={[styles.sortOption, sortBy === option.id && styles.sortOptionActive]}
+                        onPress={() => {
+                            setSortBy(option.id as any);
+                            setSortModalVisible(false);
+                        }}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Ionicons name={option.icon as any} size={20} color={sortBy === option.id ? '#E65100' : '#666'} />
+                            <Text style={[styles.sortText, sortBy === option.id && styles.sortTextActive]}>{option.label}</Text>
+                        </View>
+                        {sortBy === option.id && <Ionicons name="checkmark" size={20} color="#E65100" />}
+                    </TouchableOpacity>
+                ))}
+            </Animated.View>
+        </TouchableOpacity>
+    </Modal>
+  );
+
+  const renderRecipeList = (recipes: typeof RECIPES, delayBase: number = 0) => (
+    <View style={styles.listContainer}>
         {recipes.map((recipe, index) => (
             <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
-                <TouchableOpacity activeOpacity={0.8}>
-                    <Animated.View entering={FadeInDown.delay(delayBase + (index * 100)).springify()} style={styles.gridCard}>
-                        <Image source={{ uri: recipe.image }} style={styles.gridImage} contentFit="cover" transition={200} />
-                        <TouchableOpacity style={styles.favoriteButton}>
-                            <Ionicons name="heart" size={18} color="#FF5252" />
-                        </TouchableOpacity>
-                        <View style={styles.gridContent}>
-                            <Text style={styles.gridTitle} numberOfLines={2}>{recipe.title}</Text>
-                            <View style={styles.gridMeta}>
-                                <View style={styles.metaItem}>
-                                    <Ionicons name="time-outline" size={14} color="#888" />
-                                    <Text style={styles.metaText}>{recipe.time.replace(' Mins', 'm')}</Text>
+                <TouchableOpacity activeOpacity={0.9}>
+                    <Animated.View entering={FadeInDown.delay(delayBase + (index * 100)).springify()} style={styles.listCard}>
+                        <Image source={{ uri: recipe.image }} style={styles.listImage} contentFit="cover" transition={200} />
+                        <View style={styles.listContent}>
+                            <View style={styles.listHeader}>
+                                <Text style={styles.listTitle} numberOfLines={1}>{recipe.title}</Text>
+                                <TouchableOpacity style={styles.favoriteButtonSmall}>
+                                    <Ionicons name="heart-outline" size={16} color="#666" />
+                                </TouchableOpacity>
+                            </View>
+                            
+                            <Text style={styles.listDescription} numberOfLines={2}>{recipe.description}</Text>
+                            
+                            <View style={styles.listFooter}>
+                                <View style={styles.metaRow}>
+                                    <View style={styles.metaItem}>
+                                        <Ionicons name="time-outline" size={14} color="#888" />
+                                        <Text style={styles.metaText}>{recipe.time}</Text>
+                                    </View>
+                                    <View style={[styles.metaItem, { marginLeft: 12 }]}>
+                                        <Ionicons name="flame-outline" size={14} color="#888" />
+                                        <Text style={styles.metaText}>{recipe.calories}</Text>
+                                    </View>
                                 </View>
+                                
                                 <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
                                     <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
                                         {recipe.category}
@@ -218,7 +277,7 @@ export default function ExploreScreen() {
                     {filteredRecipes.length} {i18n.t('results')}
                 </Text>
             </View>
-            {renderRecipeGrid(filteredRecipes, 100)}
+            {renderRecipeList(filteredRecipes, 100)}
         </Animated.View>
       );
     }
@@ -300,16 +359,16 @@ export default function ExploreScreen() {
                 </View>
             </Animated.View>
 
-            {/* Popular Recipes Grid */}
+            {/* Popular Recipes List */}
             <Animated.View entering={FadeInDown.delay(600).duration(500)}>
                 <View style={[styles.sectionHeader, { marginTop: 24 }]}>
                     <Text style={styles.sectionTitle}>{i18n.t('popularRecipes')}</Text>
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => setSortModalVisible(true)}>
                         <Ionicons name="filter" size={20} color="#666" />
                     </TouchableOpacity>
                 </View>
                 
-                {renderRecipeGrid(RECIPES, 700)}
+                {renderRecipeList(RECIPES, 700)}
             </Animated.View>
         </>
     );
@@ -384,8 +443,8 @@ export default function ExploreScreen() {
 
         {renderContent()}
 
-      </ScrollView>
-      {renderAiModal()}
+      </ScrollView>{renderAiModal()}
+      {renderSortModal()}
     </SafeAreaView>
   );
 }
@@ -762,58 +821,64 @@ const styles = StyleSheet.create({
     color: '#333',
     letterSpacing: -0.2,
   },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  listContainer: {
     paddingHorizontal: 16,
-    justifyContent: 'space-between',
+    paddingBottom: 24,
   },
-  gridCard: {
-    width: CARD_WIDTH,
+  listCard: {
+    flexDirection: 'row',
     backgroundColor: '#fff',
     borderRadius: 20,
-    marginBottom: 20,
+    marginBottom: 16,
     overflow: 'hidden',
+    height: 120,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  gridImage: {
-    width: '100%',
-    height: CARD_WIDTH * 1.25, // Slightly less tall than before for better balance
+  listImage: {
+    width: 120,
+    height: '100%',
   },
-  favoriteButton: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  gridContent: {
+  listContent: {
+    flex: 1,
     padding: 12,
+    justifyContent: 'space-between',
   },
-  gridTitle: {
-    fontSize: 15,
+  listHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  listTitle: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#1a1a1a',
-    marginBottom: 6,
-    lineHeight: 20,
+    flex: 1,
+    marginRight: 8,
   },
-  gridMeta: {
+  listDescription: {
+    fontSize: 12,
+    color: '#666',
+    lineHeight: 16,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  listFooter: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  favoriteButtonSmall: {
+    padding: 4,
   },
   metaItem: {
     flexDirection: 'row',
@@ -827,10 +892,54 @@ const styles = StyleSheet.create({
   tagBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   tagText: {
     fontSize: 10,
+    fontWeight: '700',
+  },
+  // Sort Modal Styles
+  sortModalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 24,
+    width: '80%',
+    padding: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  sortTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#1a1a1a',
+    textAlign: 'center',
+  },
+  sortOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  sortOptionActive: {
+    backgroundColor: '#FFF3E0',
+    marginHorizontal: -12,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderBottomWidth: 0,
+  },
+  sortText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 12,
+    fontWeight: '500',
+  },
+  sortTextActive: {
+    color: '#E65100',
     fontWeight: '700',
   },
 });
