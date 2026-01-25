@@ -13,13 +13,15 @@ export default function EditProfileScreen() {
   const [name, setName] = useState(userProfile.name);
   const [chefLevel, setChefLevel] = useState(userProfile.chefLevel);
   const [avatar, setAvatar] = useState(userProfile.avatar);
+  const [bio, setBio] = useState(userProfile.bio || '');
 
   const handleSave = () => {
     setUserProfile({
         ...userProfile,
         name,
         chefLevel,
-        avatar
+        avatar,
+        bio
     });
     router.back();
   };
@@ -91,6 +93,8 @@ export default function EditProfileScreen() {
             <TextInput 
                 style={[styles.input, styles.textArea]} 
                 placeholder="Write a short bio..."
+                value={bio}
+                onChangeText={setBio}
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"

@@ -43,6 +43,7 @@ interface AppState {
     badges: string[];
     dietaryPreferences: string[];
     avatar?: string;
+    bio?: string;
     stats: UserStats;
   };
   setUserProfile: (profile: Partial<AppState['userProfile']>) => void;

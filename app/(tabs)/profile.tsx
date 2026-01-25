@@ -113,6 +113,7 @@ export default function ProfileScreen() {
                         
                         <Text style={styles.name}>{userProfile.name}</Text>
                         <Text style={styles.title}>{currentLevel.title}</Text>
+                        {userProfile.bio ? <Text style={styles.bio}>{userProfile.bio}</Text> : null}
                         
                         {/* XP Progress Bar */}
                         <View style={styles.xpContainer}>
