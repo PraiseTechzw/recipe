@@ -2,7 +2,7 @@ import { useStore } from '@/store/useStore';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
-import { Link, useRouter } from 'expo-router';
+import { Link, Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -11,6 +11,7 @@ import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { generateRecipeFromImage } from '../../services/ai';
 import { searchRecipes } from '../../services/recommendations';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -281,6 +282,214 @@ export default function ExploreScreen() {
   );
   };
 
+  const renderContent = () => {
+    if (searchQuery.length > 0 || activeCategory !== 'All') {
+      return (
+        <Animated.View entering={FadeInDown.duration(400)} style={{ paddingTop: 16 }}>
+            <View style={[styles.sectionHeader, { marginTop: 0 }]}>
+                <Text style={styles.sectionTitle}>
+                    {filteredRecipes.length} {i18n.t('results')}
+                </Text>
+            </View>
+            {renderRecipeList(filteredRecipes, 100)}
+        </Animated.View>
+      );
+    }
+
+    return (
+        <>
+            {/* Trending Section */}
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{i18n.t('trending')}</Text>
+                <TouchableOpacity>
+                    <Text style={styles.seeAll}>{i18n.t('seeAll')}</Text>
+                </TouchableOpacity>
+            </Animated.View>
+
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingContainer}>
+                {trendingRecipe && (
+                <Link href={`/recipe/${trendingRecipe.id}`} asChild>
+                    <TouchableOpacity activeOpacity={0.9}>
+                        <Animated.View entering={FadeInRight.delay(200).springify()} style={styles.trendingCard}>
+                            <Image source={{ uri: trendingRecipe.image }} style={styles.trendingImage} contentFit="cover" transition={300} />
+                            <LinearGradient
+                                colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']}
+                                style={styles.trendingOverlay}
+                            >
+                                <View style={styles.trendingTag}>
+                                    <Ionicons name="trending-up" size={12} color="#E65100" />
+                                    <Text style={styles.trendingTagText}>{i18n.t('trendingTag')}</Text>
+                                </View>
+                                <Text style={styles.trendingTitle}>{trendingRecipe.title}</Text>
+                                <Text style={styles.trendingMeta}>{trendingRecipe.time} • {trendingRecipe.calories}</Text>
+                            </LinearGradient>
+                        </Animated.View>
+                    </TouchableOpacity>
+                </Link>
+                )}
+            </ScrollView>
+
+            {/* Categories */}
+            <View style={styles.categoriesContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
+                    <TouchableOpacity 
+                        style={[styles.categoryCircleItem, activeCategory === 'All' && styles.categoryCircleActive]}
+                        onPress={() => setActiveCategory('All')}
+                    >
+                        <View style={[styles.categoryIconWrap, activeCategory === 'All' && { backgroundColor: '#E65100' }]}>
+                            <Ionicons name="grid-outline" size={20} color={activeCategory === 'All' ? '#FFF' : '#666'} />
+                        </View>
+                        <Text style={[styles.categoryCircleText, activeCategory === 'All' && styles.categoryTextActive]}>{i18n.t('all')}</Text>
+                    </TouchableOpacity>
+
+                    {CATEGORIES && CATEGORIES.map((cat, index) => {
+                        const style = CATEGORY_STYLES[cat.name] || { bg: '#F5F5F5', color: '#666', icon: 'restaurant' };
+                        const isActive = activeCategory === cat.name;
+                        
+                        return (
+                            <TouchableOpacity 
+                                key={cat.id} 
+                                style={styles.categoryCircleItem}
+                                onPress={() => setActiveCategory(cat.name)}
+                            >
+                                <View style={[styles.categoryIconWrap, isActive && { backgroundColor: style.color }]}>
+                                    <Ionicons name={style.icon as any} size={20} color={isActive ? '#FFF' : style.color} />
+                                </View>
+                                <Text style={[styles.categoryCircleText, isActive && { color: style.color, fontWeight: 'bold' }]}>
+                                    {cat.name}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            </View>
+
+            {/* Popular/Recipe List */}
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{i18n.t('popular')}</Text>
+                <TouchableOpacity onPress={() => setSortModalVisible(true)}>
+                    <Ionicons name="filter" size={20} color="#E65100" />
+                </TouchableOpacity>
+            </View>
+
+            {renderRecipeList(filteredRecipes, 200)}
+        </>
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <StatusBar style="dark" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+            <Text style={styles.headerSubtitle}>{i18n.t('greeting')}</Text>
+            <Text style={styles.headerTitle}>{i18n.t('appTitle')}</Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity style={styles.langButton} onPress={toggleLanguage}>
+                <Ionicons name="language" size={16} color="#E65100" style={{ marginRight: 4 }} />
+                <Text style={styles.langText}>{locale.toUpperCase()}</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.scanButton} onPress={handleScanIngredients}>
+                <View style={styles.scanIconContainer}>
+                    <Ionicons name="scan" size={24} color="#FFF" />
+                </View>
+            </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+        <TextInput 
+            style={styles.searchInput}
+            placeholder={i18n.t('searchPlaceholder')}
+            placeholderTextColor="#999"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={18} color="#999" />
+            </TouchableOpacity>
+        )}
+      </View>
+
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {renderContent()}
+      </ScrollView>
+
+      {/* AI Generator Modal */}
+      <Modal
+        visible={aiModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setAiModalVisible(false)}
+      >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+                <TouchableOpacity style={styles.closeButton} onPress={() => setAiModalVisible(false)}>
+                    <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+                
+                {isGenerating ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#E65100" />
+                        <Text style={styles.loadingText}>Analyzing Ingredients...</Text>
+                        <Text style={styles.loadingSubText}>Our AI chef is cooking up a recipe for you!</Text>
+                    </View>
+                ) : aiRecipe ? (
+                    <ScrollView showsVerticalScrollIndicator={false}>
+                        <Text style={styles.aiTitle}>{aiRecipe.title}</Text>
+                        <Text style={styles.aiDescription}>{aiRecipe.description}</Text>
+                        
+                        <View style={styles.aiMetaRow}>
+                            <View style={styles.aiMetaItem}>
+                                <Ionicons name="time-outline" size={16} color="#E65100" />
+                                <Text style={styles.aiMetaText}>{aiRecipe.time}</Text>
+                            </View>
+                            <View style={styles.aiMetaItem}>
+                                <Ionicons name="flame-outline" size={16} color="#E65100" />
+                                <Text style={styles.aiMetaText}>{aiRecipe.calories}</Text>
+                            </View>
+                        </View>
+                        
+                        <Text style={styles.aiSectionTitle}>Ingredients</Text>
+                        {aiRecipe.ingredients.map((section: any, idx: number) => (
+                            <View key={idx}>
+                                <Text style={{fontWeight: 'bold', marginTop: 8}}>{section.title}</Text>
+                                {section.data.map((item: any, i: number) => (
+                                    <Text key={i} style={styles.aiListItem}>• {item.quantity} {item.name}</Text>
+                                ))}
+                            </View>
+                        ))}
+                        
+                        <Text style={styles.aiSectionTitle}>Steps</Text>
+                        {aiRecipe.steps.map((step: any, idx: number) => (
+                            <View key={idx} style={styles.stepItem}>
+                                <Text style={styles.stepNumber}>{idx + 1}</Text>
+                                <Text style={styles.stepText}>{step.instruction}</Text>
+                            </View>
+                        ))}
+
+                        <TouchableOpacity style={[styles.saveButton, { marginTop: 24 }]} onPress={handleSaveAiRecipe}>
+                            <Ionicons name="save-outline" size={20} color="#FFF" />
+                            <Text style={styles.saveButtonText}>Save Recipe</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                ) : null}
+            </View>
+          </View>
+      </Modal>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({

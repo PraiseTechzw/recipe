@@ -53,7 +53,7 @@ export const SyncService = {
     for (const recipe of unsyncedRecipes) {
       try {
         // Remove local-only fields and format for DB
-        const { id, remoteId, image, ...recipeData } = recipe;
+        const { id, remoteId, image, author, isTraditional, reviews, ...recipeData } = recipe;
         
         let imageUrl = typeof image === 'string' ? image : (image?.uri || null);
 
@@ -90,6 +90,8 @@ export const SyncService = {
           .insert([
             {
               ...recipeData,
+              is_traditional: isTraditional,
+              reviews_count: reviews || 0,
               author_id: userProfile.id, // Using the public ID
               original_id: id,
               image_url: imageUrl,
