@@ -102,38 +102,37 @@ export default function SavedScreen() {
   const CompactRecipeCard = ({ recipe, index }: { recipe: any, index: number }) => (
     <Link href={`/recipe/${recipe.id}`} asChild>
         <TouchableOpacity activeOpacity={0.9} style={{ marginBottom: 16 }}>
-            <Animated.View 
-                entering={FadeInUp.delay(index * 100).springify()} 
-                style={[styles.card, isDarkMode && styles.cardDark]}
-            >
-                <Image 
-                    source={{ uri: recipe.image }} 
-                    style={styles.cardImage} 
-                    contentFit="cover"
-                    transition={200}
-                />
-                <View style={styles.cardOverlay}>
-                    <View style={styles.cardBadge}>
-                        <Ionicons name="time-outline" size={12} color="#fff" />
-                        <Text style={styles.cardBadgeText}>{recipe.time}</Text>
+            <Animated.View entering={FadeInUp.delay(index * 100).springify()}>
+                <View style={[styles.card, isDarkMode && styles.cardDark]}>
+                    <Image 
+                        source={{ uri: recipe.image }} 
+                        style={styles.cardImage} 
+                        contentFit="cover"
+                        transition={200}
+                    />
+                    <View style={styles.cardOverlay}>
+                        <View style={styles.cardBadge}>
+                            <Ionicons name="time-outline" size={12} color="#fff" />
+                            <Text style={styles.cardBadgeText}>{recipe.time}</Text>
+                        </View>
                     </View>
-                </View>
-                
-                <View style={styles.cardContent}>
-                    <Text style={[styles.cardTitle, isDarkMode && styles.textDark]} numberOfLines={2}>
-                        {recipe.title}
-                    </Text>
                     
-                    <View style={styles.cardFooter}>
-                        <View style={styles.ratingContainer}>
-                            <Ionicons name="star" size={12} color="#FFD700" />
-                            <Text style={[styles.ratingText, isDarkMode && styles.textSubDark]}>
-                                {recipe.rating || 4.5}
+                    <View style={styles.cardContent}>
+                        <Text style={[styles.cardTitle, isDarkMode && styles.textDark]} numberOfLines={2}>
+                            {recipe.title}
+                        </Text>
+                        
+                        <View style={styles.cardFooter}>
+                            <View style={styles.ratingContainer}>
+                                <Ionicons name="star" size={12} color="#FFD700" />
+                                <Text style={[styles.ratingText, isDarkMode && styles.textSubDark]}>
+                                    {recipe.rating || 4.5}
+                                </Text>
+                            </View>
+                            <Text style={[styles.caloriesText, isDarkMode && styles.textSubDark]}>
+                               {recipe.calories !== 'N/A' ? recipe.calories : ''}
                             </Text>
                         </View>
-                        <Text style={[styles.caloriesText, isDarkMode && styles.textSubDark]}>
-                           {recipe.calories !== 'N/A' ? recipe.calories : ''}
-                        </Text>
                     </View>
                 </View>
             </Animated.View>
@@ -207,25 +206,27 @@ export default function SavedScreen() {
             <ActivityIndicator size="large" color="#E65100" />
         </View>
       ) : filteredRecipes.length === 0 ? (
-        <Animated.View entering={FadeInDown.springify()} style={styles.emptyContainer}>
-          <Image 
-            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2906/2906856.png' }} 
-            style={{ width: 120, height: 120, opacity: 0.5, marginBottom: 20 }}
-            contentFit="contain"
-          />
-          <Text style={[styles.emptyText, isDarkMode && styles.textDark]}>
-            {searchQuery ? 'No matches found' : i18n.t('noSavedRecipes')}
-          </Text>
-          <Text style={[styles.emptySubText, isDarkMode && styles.textSubDark]}>
-            {searchQuery ? 'Try a different search term' : i18n.t('saveRecipesMessage')}
-          </Text>
-          {!searchQuery && (
-            <Link href="/(tabs)/explore" asChild>
-                <TouchableOpacity style={styles.browseButton}>
-                    <Text style={styles.browseButtonText}>{i18n.t('browseRecipes')}</Text>
-                </TouchableOpacity>
-            </Link>
-          )}
+        <Animated.View entering={FadeInDown.springify()} style={{ flex: 1 }}>
+            <View style={styles.emptyContainer}>
+                <Image 
+                    source={{ uri: 'https://cdn-icons-png.flaticon.com/512/2906/2906856.png' }} 
+                    style={{ width: 120, height: 120, opacity: 0.5, marginBottom: 20 }}
+                    contentFit="contain"
+                />
+                <Text style={[styles.emptyText, isDarkMode && styles.textDark]}>
+                    {searchQuery ? 'No matches found' : i18n.t('noSavedRecipes')}
+                </Text>
+                <Text style={[styles.emptySubText, isDarkMode && styles.textSubDark]}>
+                    {searchQuery ? 'Try a different search term' : i18n.t('saveRecipesMessage')}
+                </Text>
+                {!searchQuery && (
+                    <Link href="/(tabs)/explore" asChild>
+                        <TouchableOpacity style={styles.browseButton}>
+                            <Text style={styles.browseButtonText}>{i18n.t('browseRecipes')}</Text>
+                        </TouchableOpacity>
+                    </Link>
+                )}
+            </View>
         </Animated.View>
       ) : (
         <ScrollView 

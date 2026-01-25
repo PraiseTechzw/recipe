@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import i18n from '../i18n';
@@ -7,7 +8,26 @@ import { useStore } from '../store/useStore';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { locale, setLocale } = useStore();
+  const { locale, setLocale, isDarkMode, toggleDarkMode } = useStore();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+        i18n.t('deleteAccount'),
+        'Are you sure you want to delete your account? This action cannot be undone.',
+        [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+                text: 'Delete', 
+                style: 'destructive',
+                onPress: () => {
+                    // Logic to delete account
+                    router.replace('/onboarding');
+                }
+            }
+        ]
+    );
+  };
 
   const changeLanguage = () => {
     const options = [
@@ -49,7 +69,12 @@ export default function SettingsScreen() {
                     <Ionicons name="moon-outline" size={22} color="#666" />
                     <Text style={styles.itemText}>{i18n.t('darkMode')}</Text>
                 </View>
-                <Switch value={false} trackColor={{false: '#eee', true: '#E65100'}} thumbColor="#fff" />
+                <Switch 
+                    value={isDarkMode} 
+                    onValueChange={toggleDarkMode}
+                    trackColor={{false: '#eee', true: '#E65100'}} 
+                    thumbColor="#fff" 
+                />
             </View>
 
             <View style={styles.item}>
@@ -57,7 +82,12 @@ export default function SettingsScreen() {
                     <Ionicons name="notifications-outline" size={22} color="#666" />
                     <Text style={styles.itemText}>{i18n.t('notifications')}</Text>
                 </View>
-                <Switch value={true} trackColor={{false: '#eee', true: '#E65100'}} thumbColor="#fff" />
+                <Switch 
+                    value={notificationsEnabled} 
+                    onValueChange={setNotificationsEnabled}
+                    trackColor={{false: '#eee', true: '#E65100'}} 
+                    thumbColor="#fff" 
+                />
             </View>
         </View>
 
@@ -112,7 +142,7 @@ export default function SettingsScreen() {
             </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.deleteButton}>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteAccount}>
             <Text style={styles.deleteText}>{i18n.t('deleteAccount')}</Text>
         </TouchableOpacity>
 

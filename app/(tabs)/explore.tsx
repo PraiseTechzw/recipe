@@ -240,34 +240,36 @@ export default function ExploreScreen() {
         {recipes.map((recipe, index) => (
             <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
                 <TouchableOpacity activeOpacity={0.9}>
-                    <Animated.View entering={FadeInDown.delay(delayBase + (index * 100)).springify()} style={styles.listCard}>
-                        <Image source={{ uri: recipe.image }} style={styles.listImage} contentFit="cover" transition={200} />
-                        <View style={styles.listContent}>
-                            <View style={styles.listHeader}>
-                                <Text style={styles.listTitle} numberOfLines={1}>{recipe.title}</Text>
-                                <TouchableOpacity style={styles.favoriteButtonSmall}>
-                                    <Ionicons name="heart-outline" size={16} color="#666" />
-                                </TouchableOpacity>
-                            </View>
-                            
-                            <Text style={styles.listDescription} numberOfLines={2}>{recipe.description}</Text>
-                            
-                            <View style={styles.listFooter}>
-                                <View style={styles.metaRow}>
-                                    <View style={styles.metaItem}>
-                                        <Ionicons name="time-outline" size={14} color="#888" />
-                                        <Text style={styles.metaText}>{recipe.time}</Text>
-                                    </View>
-                                    <View style={[styles.metaItem, { marginLeft: 12 }]}>
-                                        <Ionicons name="flame-outline" size={14} color="#888" />
-                                        <Text style={styles.metaText}>{recipe.calories}</Text>
-                                    </View>
+                    <Animated.View entering={FadeInDown.delay(delayBase + (index * 100)).springify()}>
+                        <View style={styles.listCard}>
+                            <Image source={{ uri: recipe.image }} style={styles.listImage} contentFit="cover" transition={200} />
+                            <View style={styles.listContent}>
+                                <View style={styles.listHeader}>
+                                    <Text style={styles.listTitle} numberOfLines={1}>{recipe.title}</Text>
+                                    <TouchableOpacity style={styles.favoriteButtonSmall}>
+                                        <Ionicons name="heart-outline" size={16} color="#666" />
+                                    </TouchableOpacity>
                                 </View>
                                 
-                                <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
-                                    <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
-                                        {recipe.category}
-                                    </Text>
+                                <Text style={styles.listDescription} numberOfLines={2}>{recipe.description}</Text>
+                                
+                                <View style={styles.listFooter}>
+                                    <View style={styles.metaRow}>
+                                        <View style={styles.metaItem}>
+                                            <Ionicons name="time-outline" size={14} color="#888" />
+                                            <Text style={styles.metaText}>{recipe.time}</Text>
+                                        </View>
+                                        <View style={[styles.metaItem, { marginLeft: 12 }]}>
+                                            <Ionicons name="flame-outline" size={14} color="#888" />
+                                            <Text style={styles.metaText}>{recipe.calories}</Text>
+                                        </View>
+                                    </View>
+                                    
+                                    <View style={[styles.tagBadge, { backgroundColor: recipe.category === 'Vegetarian' ? '#E8F5E9' : '#FFF3E0' }]}>
+                                        <Text style={[styles.tagText, { color: recipe.category === 'Vegetarian' ? '#2E7D32' : '#E65100' }]}>
+                                            {recipe.category}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
                         </View>

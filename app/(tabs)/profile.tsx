@@ -12,9 +12,52 @@ import { useStore } from '../../store/useStore';
 const { width } = Dimensions.get('window');
 
 export default function ProfileScreen() {
-  const { favorites, userProfile, isDarkMode, toggleDarkMode } = useStore();
+  const { favorites, userProfile, isDarkMode, toggleDarkMode, setLocale, locale } = useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+
+  const handleLogout = () => {
+    Alert.alert(
+      i18n.t('logOut'),
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Log Out', 
+          style: 'destructive',
+          onPress: () => {
+             // In a real app, clear auth tokens here
+             router.replace('/onboarding');
+          }
+        }
+      ]
+    );
+  };
+
+  const handleRateUs = async () => {
+    if (await StoreReview.hasAction()) {
+      StoreReview.requestReview();
+    } else {
+      Alert.alert('Rate Us', 'Please rate us on the App Store!');
+    }
+  };
+
+  const handleHelpCenter = () => {
+    Alert.alert(i18n.t('helpCenter'), 'Contact support at support@tasteofzimbabwe.com');
+  };
+
+  const handleLanguage = () => {
+    Alert.alert(
+        'Language', 
+        'Select Language', 
+        [
+            { text: 'English', onPress: () => setLocale('en') },
+            { text: 'Shona', onPress: () => setLocale('sn') },
+            { text: 'Ndebele', onPress: () => setLocale('nd') },
+            { text: 'Cancel', style: 'cancel' }
+        ]
+    );
+  };
 
   const currentLevel = getLevel(userProfile.xp);
   const nextLevel = getNextLevel(userProfile.xp);
@@ -52,40 +95,42 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
 
-                <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.profileContent}>
-                    <View style={styles.avatarWrapper}>
-                        <Image 
-                            source={{ uri: userProfile.avatar || 'https://i.pravatar.cc/150?img=12' }} 
-                            style={styles.avatar} 
-                        />
-                        <View style={styles.levelBadge}>
-                            <Text style={styles.levelText}>{currentLevel.level}</Text>
-                        </View>
-                        <TouchableOpacity style={styles.editButton} onPress={() => router.push('/edit-profile')}>
-                            <Ionicons name="pencil" size={16} color="#E65100" />
-                        </TouchableOpacity>
-                    </View>
-                    
-                    <Text style={styles.name}>{userProfile.name}</Text>
-                    <Text style={styles.title}>{currentLevel.title}</Text>
-                    
-                    {/* XP Progress Bar */}
-                    <View style={styles.xpContainer}>
-                        <View style={styles.xpInfo}>
-                            <Text style={styles.xpText}>{userProfile.xp} XP</Text>
-                            <Text style={styles.xpText}>{nextLevel ? `${nextLevel.minXP} XP` : 'MAX'}</Text>
-                        </View>
-                        <View style={styles.xpTrack}>
-                            <LinearGradient
-                                colors={['#FFD700', '#FFA000']}
-                                start={{ x: 0, y: 0 }}
-                                end={{ x: 1, y: 0 }}
-                                style={[styles.xpFill, { width: `${Math.min(xpProgress, 100)}%` }]}
+                <Animated.View entering={FadeInDown.delay(100).springify()}>
+                    <View style={styles.profileContent}>
+                        <View style={styles.avatarWrapper}>
+                            <Image 
+                                source={{ uri: userProfile.avatar || 'https://i.pravatar.cc/150?img=12' }} 
+                                style={styles.avatar} 
                             />
+                            <View style={styles.levelBadge}>
+                                <Text style={styles.levelText}>{currentLevel.level}</Text>
+                            </View>
+                            <TouchableOpacity style={styles.editButton} onPress={() => router.push('/edit-profile')}>
+                                <Ionicons name="pencil" size={16} color="#E65100" />
+                            </TouchableOpacity>
                         </View>
-                        <Text style={styles.xpNext}>
-                            {nextLevel ? `${nextLevel.minXP - userProfile.xp} XP to ${nextLevel.title}` : 'Max Level Reached!'}
-                        </Text>
+                        
+                        <Text style={styles.name}>{userProfile.name}</Text>
+                        <Text style={styles.title}>{currentLevel.title}</Text>
+                        
+                        {/* XP Progress Bar */}
+                        <View style={styles.xpContainer}>
+                            <View style={styles.xpInfo}>
+                                <Text style={styles.xpText}>{userProfile.xp} XP</Text>
+                                <Text style={styles.xpText}>{nextLevel ? `${nextLevel.minXP} XP` : 'MAX'}</Text>
+                            </View>
+                            <View style={styles.xpTrack}>
+                                <LinearGradient
+                                    colors={['#FFD700', '#FFA000']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 0 }}
+                                    style={[styles.xpFill, { width: `${Math.min(xpProgress, 100)}%` }]}
+                                />
+                            </View>
+                            <Text style={styles.xpNext}>
+                                {nextLevel ? `${nextLevel.minXP - userProfile.xp} XP to ${nextLevel.title}` : 'Max Level Reached!'}
+                            </Text>
+                        </View>
                     </View>
                 </Animated.View>
             </LinearGradient>
@@ -95,29 +140,31 @@ export default function ProfileScreen() {
         </View>
 
         {/* Stats Grid */}
-        <Animated.View entering={FadeInUp.delay(300).springify()} style={styles.statsGrid}>
-            <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-                <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
-                    <Ionicons name="restaurant" size={22} color="#2196F3" />
+        <Animated.View entering={FadeInUp.delay(300).springify()}>
+            <View style={styles.statsGrid}>
+                <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
+                    <View style={[styles.statIcon, { backgroundColor: '#E3F2FD' }]}>
+                        <Ionicons name="restaurant" size={22} color="#2196F3" />
+                    </View>
+                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>{favorites.length}</Text>
+                    <Text style={styles.statLabel}>{i18n.t('saved')}</Text>
                 </View>
-                <Text style={[styles.statValue, isDarkMode && styles.textDark]}>{favorites.length}</Text>
-                <Text style={styles.statLabel}>{i18n.t('saved')}</Text>
-            </View>
-            <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-                <View style={[styles.statIcon, { backgroundColor: '#F3E5F5' }]}>
-                    <Ionicons name="trophy" size={22} color="#9C27B0" />
+                <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
+                    <View style={[styles.statIcon, { backgroundColor: '#F3E5F5' }]}>
+                        <Ionicons name="trophy" size={22} color="#9C27B0" />
+                    </View>
+                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>
+                        #{Math.max(1, 1000 - Math.floor(userProfile.xp / 10))}
+                    </Text>
+                    <Text style={styles.statLabel}>{i18n.t('rank')}</Text>
                 </View>
-                <Text style={[styles.statValue, isDarkMode && styles.textDark]}>
-                    #{Math.max(1, 1000 - Math.floor(userProfile.xp / 10))}
-                </Text>
-                <Text style={styles.statLabel}>{i18n.t('rank')}</Text>
-            </View>
-            <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-                <View style={[styles.statIcon, { backgroundColor: '#FFF3E0' }]}>
-                    <Ionicons name="flame" size={22} color="#E65100" />
+                <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
+                    <View style={[styles.statIcon, { backgroundColor: '#FFF3E0' }]}>
+                        <Ionicons name="flame" size={22} color="#E65100" />
+                    </View>
+                    <Text style={[styles.statValue, isDarkMode && styles.textDark]}>3</Text>
+                    <Text style={styles.statLabel}>Day Streak</Text>
                 </View>
-                <Text style={[styles.statValue, isDarkMode && styles.textDark]}>3</Text>
-                <Text style={styles.statLabel}>Day Streak</Text>
             </View>
         </Animated.View>
 
@@ -142,24 +189,25 @@ export default function ProfileScreen() {
                         <Animated.View 
                             entering={FadeInRight.delay(400 + (i * 100)).springify()} 
                             key={badge.id} 
-                            style={[
+                        >
+                            <View style={[
                                 styles.badgeCard, 
                                 isDarkMode && styles.badgeCardDark,
                                 !isUnlocked && styles.badgeLocked
-                            ]}
-                        >
-                            <View style={[styles.badgeIconContainer, !isUnlocked && styles.badgeIconLocked]}>
-                                <Text style={styles.badgeEmoji}>{badge.icon}</Text>
-                                {isUnlocked && (
-                                    <View style={styles.checkBadge}>
-                                        <Ionicons name="checkmark" size={10} color="#fff" />
-                                    </View>
-                                )}
+                            ]}>
+                                <View style={[styles.badgeIconContainer, !isUnlocked && styles.badgeIconLocked]}>
+                                    <Text style={styles.badgeEmoji}>{badge.icon}</Text>
+                                    {isUnlocked && (
+                                        <View style={styles.checkBadge}>
+                                            <Ionicons name="checkmark" size={10} color="#fff" />
+                                        </View>
+                                    )}
+                                </View>
+                                <Text style={[styles.badgeName, isDarkMode && styles.textDark]} numberOfLines={1}>
+                                    {badge.name}
+                                </Text>
+                                <Text style={styles.badgeReward}>+{badge.xpReward} XP</Text>
                             </View>
-                            <Text style={[styles.badgeName, isDarkMode && styles.textDark]} numberOfLines={1}>
-                                {badge.name}
-                            </Text>
-                            <Text style={styles.badgeReward}>+{badge.xpReward} XP</Text>
                         </Animated.View>
                     );
                 })}
@@ -194,16 +242,17 @@ export default function ProfileScreen() {
                     color="#009688" 
                     bg={isDarkMode ? '#333' : '#E0F2F1'} 
                     isDark={isDarkMode}
+                    onPress={handleLanguage}
                 />
             </View>
 
             <Text style={styles.menuHeader}>SUPPORT</Text>
             <View style={[styles.menuGroup, isDarkMode && styles.menuGroupDark]}>
-                <MenuOption icon="help-circle-outline" label={i18n.t('helpCenter')} isDark={isDarkMode} />
-                <MenuOption icon="star-outline" label={i18n.t('rateUs')} isDark={isDarkMode} />
+                <MenuOption icon="help-circle-outline" label={i18n.t('helpCenter')} isDark={isDarkMode} onPress={handleHelpCenter} />
+                <MenuOption icon="star-outline" label={i18n.t('rateUs')} isDark={isDarkMode} onPress={handleRateUs} />
             </View>
 
-            <TouchableOpacity style={styles.logoutButton}>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
                 <Ionicons name="log-out-outline" size={20} color="#D32F2F" style={{ marginRight: 8 }} />
                 <Text style={styles.logoutText}>{i18n.t('logOut')}</Text>
             </TouchableOpacity>

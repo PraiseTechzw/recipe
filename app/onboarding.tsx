@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -13,6 +14,20 @@ export default function UserInfoScreen() {
   const [name, setName] = useState('');
   const [level, setLevel] = useState<'Beginner' | 'Home Cook' | 'Pro'>('Beginner');
   const [diet, setDiet] = useState<string[]>([]);
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled) {
+      setAvatar(result.assets[0].uri);
+    }
+  };
 
   const toggleDiet = (item: string) => {
     if (diet.includes(item)) {
@@ -31,7 +46,8 @@ export default function UserInfoScreen() {
     setUserProfile({
         name: name.trim(),
         chefLevel: level,
-        dietaryPreferences: diet
+        dietaryPreferences: diet,
+        avatar: avatar || undefined
     });
     
     // Go to Pantry Check next, instead of straight to tabs
@@ -64,6 +80,23 @@ export default function UserInfoScreen() {
         <View style={styles.header}>
             <Text style={styles.title}>{i18n.t('onboardingTitle')}</Text>
             <Text style={styles.subtitle}>{i18n.t('onboardingSubtitle')}</Text>
+        </View>
+
+        {/* Chef Avatar */}
+        <View style={styles.centerSection}>
+            <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+                {avatar ? (
+                    <Image source={{ uri: avatar }} style={styles.avatar} />
+                ) : (
+                    <View style={styles.avatarPlaceholder}>
+                        <Ionicons name="person" size={50} color="#E65100" />
+                    </View>
+                )}
+                <View style={styles.editIcon}>
+                    <Ionicons name="camera" size={18} color="#fff" />
+                </View>
+            </TouchableOpacity>
+            <Text style={styles.uploadText}>{i18n.t('uploadPhoto')}</Text>
         </View>
 
         {/* Name Input */}
@@ -213,6 +246,51 @@ const styles = StyleSheet.create({
     padding: 24,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
+  },
+  centerSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  avatarContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 12,
+    position: 'relative',
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#FFF3E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E65100',
+    borderStyle: 'dashed',
+  },
+  editIcon: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#E65100',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  uploadText: {
+    color: '#E65100',
+    fontWeight: '600',
+    fontSize: 16,
   },
   button: {
     backgroundColor: '#E65100',

@@ -61,6 +61,8 @@ const i18n = new I18n({
     searchPlaceholderHome: "Search for Sadza, Mopane worms...",
     onboardingTitle: "Tell us about you",
     onboardingSubtitle: "We'll personalize your recipe recommendations.",
+    chefAvatar: "Chef Avatar",
+    uploadPhoto: "Upload Photo",
     nameLabel: "What should we call you?",
     namePlaceholder: "Enter your name",
     experienceLabel: "Cooking Experience",
@@ -140,6 +142,9 @@ const i18n = new I18n({
     chefsTip: "Chef's Tip",
     finishCooking: "Finish Cooking",
     nextStep: "Next Step",
+    personalInfo: "Personal Information",
+    helpCenter: "Help Center",
+    rateUs: "Rate Us",
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",
