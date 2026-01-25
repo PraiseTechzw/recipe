@@ -1,11 +1,11 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useStore } from '../../store/useStore';
 
 export default function ProfileScreen() {
-  const { favorites } = useStore();
+  const { favorites, userProfile } = useStore();
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -19,8 +19,16 @@ export default function ProfileScreen() {
 
         <View style={styles.profileHeader}>
           <Image source={{ uri: 'https://i.pravatar.cc/150?img=12' }} style={styles.avatar} />
-          <Text style={styles.name}>Praise</Text>
-          <Text style={styles.bio}>Food Enthusiast • Zimbabwe</Text>
+          <Text style={styles.name}>{userProfile.name}</Text>
+          <Text style={styles.bio}>{userProfile.chefLevel} • Zimbabwe</Text>
+          
+          {/* XP Bar */}
+          <View style={styles.xpContainer}>
+             <View style={styles.xpBar}>
+                <View style={[styles.xpFill, { width: '40%' }]} />
+             </View>
+             <Text style={styles.xpText}>{userProfile.xp} XP / 1000 XP</Text>
+          </View>
         </View>
 
         <View style={styles.statsRow}>
@@ -30,14 +38,34 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>12</Text>
-            <Text style={styles.statLabel}>Cooked</Text>
+            <Text style={styles.statNumber}>#{Math.floor(Math.random() * 50) + 1}</Text>
+            <Text style={styles.statLabel}>Rank</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>5</Text>
-            <Text style={styles.statLabel}>Reviews</Text>
+            <Text style={styles.statNumber}>{userProfile.badges.length}</Text>
+            <Text style={styles.statLabel}>Badges</Text>
           </View>
+        </View>
+
+        {/* Gamification Section */}
+        <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Achievements</Text>
+                <TouchableOpacity>
+                    <Text style={styles.seeAll}>View All</Text>
+                </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesList}>
+                {['First Cook', 'Week Streak', 'Spice Master', 'Early Bird'].map((badge, i) => (
+                    <View key={i} style={[styles.badgeItem, i === 0 ? styles.badgeUnlocked : styles.badgeLocked]}>
+                        <View style={styles.badgeIcon}>
+                            <Text style={{fontSize: 20}}>{i === 0 ? '🍳' : '🔒'}</Text>
+                        </View>
+                        <Text style={styles.badgeName}>{badge}</Text>
+                    </View>
+                ))}
+            </ScrollView>
         </View>
 
         <View style={styles.section}>

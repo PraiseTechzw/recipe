@@ -195,6 +195,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#E65100',
   },
+  avatarContainer: {
+    position: 'relative',
+    width: 40,
+    height: 40,
+  },
   avatar: {
     width: 40,
     height: 40,
@@ -202,6 +207,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     borderWidth: 2,
     borderColor: '#fff',
+  },
+  levelBadge: {
+    position: 'absolute',
+    bottom: -4,
+    right: -4,
+    backgroundColor: '#E65100',
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#fff',
+  },
+  levelText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   greetingSection: {
     marginBottom: 32,
