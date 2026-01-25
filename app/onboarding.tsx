@@ -12,7 +12,7 @@ export default function UserInfoScreen() {
   const { setUserProfile, setHasOnboarded } = useStore();
   
   const [name, setName] = useState('');
-  // const [level, setLevel] = useState<'Beginner' | 'Home Cook' | 'Pro'>('Beginner');
+  const [level, setLevel] = useState<'Beginner' | 'Home Cook' | 'Pro'>('Beginner');
   const [diet, setDiet] = useState<string[]>([]);
   const [avatar, setAvatar] = useState<string | null>(null);
 

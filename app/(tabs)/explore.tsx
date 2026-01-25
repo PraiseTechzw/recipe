@@ -29,7 +29,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const { locale, setLocale } = useStore();
+  const { locale, setLocale, recipes } = useStore();
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'time' | 'calories' | 'rating'>('newest');
   
@@ -38,7 +38,7 @@ export default function ExploreScreen() {
   const [aiRecipe, setAiRecipe] = useState<any>(null);
   const [aiModalVisible, setAiModalVisible] = useState(false);
 
-  const filteredRecipes = searchRecipes(searchQuery, activeCategory).sort((a, b) => {
+  const filteredRecipes = searchRecipes(searchQuery, activeCategory, recipes).sort((a, b) => {
     switch (sortBy) {
         case 'time':
             return parseInt(a.time) - parseInt(b.time);
@@ -51,8 +51,8 @@ export default function ExploreScreen() {
     }
   });
   
-  const trendingRecipe = RECIPES.find(r => r.title.includes('Dovi')) || RECIPES[1];
-  const otherTrending = RECIPES.find(r => r.title.includes('Muriwo')) || RECIPES[2];
+  const trendingRecipe = recipes.find(r => r.title.includes('Dovi')) || recipes[1];
+  const otherTrending = recipes.find(r => r.title.includes('Muriwo')) || recipes[2];
 
   const toggleLanguage = () => {
     const locales = ['en', 'sn', 'nd'];
@@ -235,7 +235,10 @@ export default function ExploreScreen() {
     </Modal>
   );
 
-  const renderRecipeList = (recipes: typeof RECIPES, delayBase: number = 0) => (
+  const renderRecipeList = (recipes: typeof RECIPES, delayBase: number = 0) => {
+    if (!recipes || !Array.isArray(recipes)) return null;
+
+    return (
     <View style={styles.listContainer}>
         {recipes.map((recipe, index) => (
             <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>

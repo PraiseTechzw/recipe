@@ -1,7 +1,7 @@
-import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
 // Configure notification behavior
 Notifications.setNotificationHandler({
@@ -72,17 +72,25 @@ export const NotificationService = {
     
     if (hasDaily) return;
 
+    const trigger: any = Platform.OS === 'android' ? {
+      type: 'daily',
+      hour: 17,
+      minute: 0,
+      channelId: 'default',
+    } : {
+      type: 'calendar',
+      hour: 17,
+      minute: 0,
+      repeats: true,
+    };
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Time to cook! 🍳",
         body: "Discover a new Zimbabwean recipe for dinner tonight.",
         sound: true,
       },
-      trigger: {
-        hour: 17, // 5 PM
-        minute: 0,
-        repeats: true,
-      },
+      trigger,
     });
   },
 

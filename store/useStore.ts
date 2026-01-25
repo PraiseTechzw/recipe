@@ -1,8 +1,10 @@
+import { RECIPES } from '@/data/recipes';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { BADGES, getLevel } from '../constants/gamification';
-import { IngredientItem, ShoppingItem } from '../models/recipe';
+import { supabase } from '../lib/supabase';
+import { IngredientItem, Recipe, ShoppingItem } from '../models/recipe';
 
 interface UserStats {
   recipesCooked: number;
@@ -16,6 +18,10 @@ interface AppState {
   favorites: string[];
   toggleFavorite: (id: string) => void;
   isFavorite: (id: string) => boolean;
+
+  // Global Recipes (from Supabase)
+  recipes: Recipe[];
+  fetchRecipes: () => Promise<void>;
 
   // User Recipes
   myRecipes: Recipe[];
@@ -87,6 +93,64 @@ export const useStore = create<AppState>()(
         get().checkBadges();
       },
       isFavorite: (id) => get().favorites.includes(id),
+
+      // Global Recipes
+      recipes: RECIPES,
+      fetchRecipes: async () => {
+        try {
+            const { data, error } = await supabase
+                .from('recipes')
+                .select(`
+                    *,
+                    author:author_id (
+                        name,
+                        avatar_url
+                    )
+                `)
+                // We can filter by author_id if we only want official ones, 
+                // or fetch all public recipes. User asked for "Top Zimbabwean Recipes by Praisetech"
+                // but "also sync them with cloud".
+                // Let's fetch all recipes that are NOT current user's (since those are in myRecipes)
+                // Actually, let's just fetch everything for now and maybe filter in UI.
+                // But for "Top Recipes", let's assume they are the ones from Praisetech.
+                // .eq('author_id', 'praisetech-official'); 
+                
+            if (error) {
+                console.log('Supabase fetch error:', error.message);
+                return;
+            }
+
+            if (data && data.length > 0) {
+                const mappedRecipes: Recipe[] = data.map((r: any) => ({
+                    id: r.original_id || r.id,
+                    remoteId: r.id,
+                    title: r.title,
+                    description: r.description,
+                    image: r.image_url,
+                    category: r.category,
+                    tags: r.tags,
+                    time: r.time,
+                    servings: r.servings,
+                    calories: r.calories,
+                    ingredients: r.ingredients,
+                    steps: r.steps,
+                    isTraditional: r.is_traditional,
+                    rating: Number(r.rating),
+                    author: {
+                        name: r.author?.name || 'Chef',
+                        avatar: r.author?.avatar_url || 'https://i.pravatar.cc/150'
+                    }
+                }));
+                
+                // We want to combine these with local recipes or just use these?
+                // The prompt says "create... and sync them".
+                // If we replace `recipes` with fetched data, we get the cloud version.
+                set({ recipes: mappedRecipes });
+            }
+        } catch (e) {
+            console.log('Error in fetchRecipes:', e);
+        }
+      },
 
       // User Recipes
       myRecipes: [],
@@ -242,10 +306,6 @@ export const useStore = create<AppState>()(
             }
         });
       },
-
-      // Theme
-      isDarkMode: false,
-      toggleTheme: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 
       // Analytics
       viewHistory: [],

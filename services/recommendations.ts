@@ -1,5 +1,5 @@
-import { Recipe } from '../models/recipe';
 import { RECIPES } from '../data/recipes';
+import { Recipe } from '../models/recipe';
 
 // Simple hash function for daily rotation
 const getDailyHash = (str: string) => {
@@ -11,15 +11,16 @@ const getDailyHash = (str: string) => {
   return Math.abs(hash);
 };
 
-export const getRecipeOfTheDay = (): Recipe => {
+export const getRecipeOfTheDay = (sourceRecipes: Recipe[] = RECIPES): Recipe => {
   const today = new Date().toDateString(); // Updates every 24 hours
-  const index = getDailyHash(today) % RECIPES.length;
-  return RECIPES[index];
+  const index = getDailyHash(today) % sourceRecipes.length;
+  return sourceRecipes[index];
 };
 
 export const getRecommendedRecipes = (
   viewHistory: string[], 
-  categoryScores: Record<string, number>
+  categoryScores: Record<string, number>,
+  sourceRecipes: Recipe[] = RECIPES
 ): Recipe[] => {
   // 1. Identify top categories
   const sortedCategories = Object.entries(categoryScores)
@@ -29,7 +30,7 @@ export const getRecommendedRecipes = (
   const topCategory = sortedCategories[0];
 
   // 2. Filter recipes
-  let recommended = RECIPES.filter(r => {
+  let recommended = sourceRecipes.filter(r => {
     // Don't show recently viewed (top 3) to encourage discovery
     if (viewHistory.slice(0, 3).includes(r.id)) return false;
     
@@ -41,21 +42,21 @@ export const getRecommendedRecipes = (
 
   // 3. Fallback to random if not enough data
   if (recommended.length < 2) {
-    recommended = RECIPES.filter(r => !viewHistory.includes(r.id));
+    recommended = sourceRecipes.filter(r => !viewHistory.includes(r.id));
   }
 
   return recommended.slice(0, 5); // Return top 5
 };
 
-export const getRandomRecipe = (): Recipe => {
-  const index = Math.floor(Math.random() * RECIPES.length);
-  return RECIPES[index];
+export const getRandomRecipe = (sourceRecipes: Recipe[] = RECIPES): Recipe => {
+  const index = Math.floor(Math.random() * sourceRecipes.length);
+  return sourceRecipes[index];
 };
 
-export const searchRecipes = (query: string, categoryFilter?: string | null): Recipe[] => {
+export const searchRecipes = (query: string, categoryFilter?: string | null, sourceRecipes: Recipe[] = RECIPES): Recipe[] => {
   const lowerQuery = query.toLowerCase();
   
-  return RECIPES.filter(r => {
+  return sourceRecipes.filter(r => {
     const matchesSearch = 
       r.title.toLowerCase().includes(lowerQuery) || 
       r.ingredients.some(s => 

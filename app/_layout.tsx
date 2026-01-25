@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import i18n from '../i18n';
 import { NotificationService } from '../services/notificationService';
+import { SeedService } from '../services/seedService';
 import { SyncService } from '../services/syncService';
 import { useStore } from '../store/useStore';
 
@@ -13,11 +14,20 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const { isDarkMode, locale, setUserProfile } = useStore();
+  const { isDarkMode, locale, setUserProfile, fetchRecipes } = useStore();
 
   useEffect(() => {
     // 1. Sync Data
-    SyncService.syncRecipes().catch(e => console.log('Initial sync failed', e));
+    const initData = async () => {
+        try {
+            await SeedService.seedInitialData();
+            await fetchRecipes();
+            await SyncService.syncRecipes();
+        } catch (e) {
+            console.log('Initialization failed', e);
+        }
+    };
+    initData();
 
     // 2. Setup Notifications
     const setupNotifications = async () => {
