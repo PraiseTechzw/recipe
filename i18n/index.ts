@@ -5,6 +5,8 @@ const i18n = new I18n({
   en: {
     exploreSubtitle: "Discover",
     exploreTitle: "Explore Zimbabwe's Flavors",
+    appTitle: "ZimBites",
+    popular: "Popular Recipes",
     searchPlaceholder: "Search recipes, ingredients...",
     trending: "Trending this week",
     seeAll: "See All",
