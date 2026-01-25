@@ -28,6 +28,7 @@ interface AppState {
     xp: number;
     badges: string[];
     dietaryPreferences: string[];
+    avatar?: string;
   };
   setUserProfile: (profile: Partial<AppState['userProfile']>) => void;
   addXP: (amount: number) => void;

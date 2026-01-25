@@ -1,8 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useStore } from '../../store/useStore';
 
 export default function CreateScreen() {
+  const router = useRouter();
+  const { addXP } = useStore();
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  
+  const handleSubmit = () => {
+    if (!title || !description) {
+        Alert.alert('Missing Info', 'Please provide at least a title and description.');
+        return;
+    }
+    
+    // Mock submission
+    Alert.alert('Success', 'Your recipe has been submitted for review!', [
+        { 
+            text: 'OK', 
+            onPress: () => {
+                addXP(50); // Reward user
+                setTitle('');
+                setDescription('');
+                router.push('/(tabs)/profile');
+            }
+        }
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
@@ -27,6 +55,8 @@ export default function CreateScreen() {
             style={styles.input} 
             placeholder="e.g. Grandma's Sadza"
             placeholderTextColor="#999"
+            value={title}
+            onChangeText={setTitle}
           />
         </View>
 
@@ -58,6 +88,8 @@ export default function CreateScreen() {
             multiline
             numberOfLines={4}
             textAlignVertical="top"
+            value={description}
+            onChangeText={setDescription}
           />
         </View>
 
@@ -84,7 +116,7 @@ export default function CreateScreen() {
         </View>
 
         {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton}>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
             <Text style={styles.submitButtonText}>Submit Recipe</Text>
         </TouchableOpacity>
 

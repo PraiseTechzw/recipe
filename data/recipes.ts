@@ -143,5 +143,5 @@ export const CATEGORIES = [
   { id: '1', name: 'Grains', subtitle: 'Zviyo', icon: 'grass' },
   { id: '2', name: 'Relishes', subtitle: 'Muriwo', icon: 'local-florist' },
   { id: '3', name: 'Meats', subtitle: 'Nyama', icon: 'restaurant' },
-  { id: '4', name: 'Snacks', subtitle: 'Maheu', icon: 'cookie' },
+  { id: '4', name: 'Drinks', subtitle: 'Zvinwiwa', icon: 'local-bar' },
 ];
