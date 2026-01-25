@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, TouchableOpacity, View } from 'react-native';
+import i18n from '../../i18n';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -75,7 +76,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: i18n.t('home'),
           tabBarIcon: ({ color }) => <Ionicons size={24} name="home" color={color} />,
         }}
       />
@@ -83,7 +84,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
+          title: i18n.t('explore'),
           tabBarIcon: ({ color }) => <Ionicons size={24} name="compass" color={color} />,
         }}
       />
@@ -102,7 +103,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="saved"
         options={{
-          title: 'Saved',
+          title: i18n.t('saved'),
           tabBarIcon: ({ color }) => <Ionicons size={24} name="heart" color={color} />,
         }}
       />
@@ -110,7 +111,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: i18n.t('profile'),
           tabBarIcon: ({ color }) => <Ionicons size={24} name="person" color={color} />,
         }}
       />

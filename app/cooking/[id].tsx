@@ -1,10 +1,12 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { RECIPES } from '../../data/recipes';
+import i18n from '../../i18n';
+import { supabase } from '../../lib/supabase';
 
 const { width } = Dimensions.get('window');
 
@@ -12,16 +14,53 @@ export default function CookingModeScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  
-  const recipe = RECIPES.find((r) => r.id === id);
+  const [recipe, setRecipe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchRecipe();
+  }, [id]);
+
+  const fetchRecipe = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('recipes')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (data) {
+        setRecipe(data);
+      } else {
+        const local = RECIPES.find((r) => r.id === id);
+        setRecipe(local);
+      }
+    } catch (e) {
+      console.error(e);
+      const local = RECIPES.find((r) => r.id === id);
+      setRecipe(local);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#E65100" />
+      </View>
+    );
+  }
 
   if (!recipe || !recipe.steps) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text>Recipe not found</Text>
-        <TouchableOpacity onPress={() => router.back()}>
-            <Text>Go Back</Text>
-        </TouchableOpacity>
+        <View style={styles.center}>
+            <Text>{i18n.t('recipeNotFound')}</Text>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 20 }}>
+                <Text style={{ color: '#E65100' }}>{i18n.t('goBack')}</Text>
+            </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -53,7 +92,7 @@ export default function CookingModeScreen() {
           <Ionicons name="close" size={28} color="#333" />
         </TouchableOpacity>
         
-        <Text style={styles.headerTitle}>COOKING MODE</Text>
+        <Text style={styles.headerTitle}>{i18n.t('cookingMode')}</Text>
         
         <View style={styles.timerPill}>
           <Ionicons name="timer-outline" size={16} color="#E65100" />
@@ -67,9 +106,9 @@ export default function CookingModeScreen() {
         <View style={styles.progressSection}>
             <View style={styles.stepIndicator}>
                 <Text style={styles.stepText}>
-                    <Text style={styles.stepHighlight}>Step {currentStepIndex + 1}</Text> of {steps.length}
+                    <Text style={styles.stepHighlight}>{i18n.t('step')} {currentStepIndex + 1}</Text> {i18n.t('of')} {steps.length}
                 </Text>
-                <Text style={styles.timeText}>~5 mins</Text>
+                <Text style={styles.timeText}>~5 {i18n.t('mins')}</Text>
             </View>
             
             <View style={styles.progressBarContainer}>

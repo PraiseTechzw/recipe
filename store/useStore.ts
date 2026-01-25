@@ -42,6 +42,12 @@ interface AppState {
   // Session
   sessionStartTime: number;
   setSessionStartTime: (time: number) => void;
+
+  // Settings
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
+  locale: string;
+  setLocale: (locale: string) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -106,6 +112,11 @@ export const useStore = create<AppState>()(
         return { userProfile: { ...state.userProfile, badges: [...state.userProfile.badges, badgeId] } };
       }),
 
+      // Theme
+      isDarkMode: false,
+      toggleTheme: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+
+      // Analytics
       viewHistory: [],
       categoryScores: {},
       logRecipeView: (id, category) => set((state) => {
@@ -124,6 +135,12 @@ export const useStore = create<AppState>()(
 
       sessionStartTime: Date.now(),
       setSessionStartTime: (time) => set({ sessionStartTime: time }),
+
+      // Settings
+      isDarkMode: false,
+      toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+      locale: 'en',
+      setLocale: (locale) => set({ locale }),
     }),
     {
       name: 'recipe-app-storage',

@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import i18n from '../../i18n';
 import { supabase } from '../../lib/supabase';
 import { useStore } from '../../store/useStore';
 
@@ -140,7 +141,7 @@ export default function CreateScreen() {
           <Text style={styles.label}>{i18n.t('ingredients')}</Text>
           <TextInput 
             style={[styles.input, styles.textArea]} 
-            placeholder="Enter ingredients (one per line)"
+            placeholder={i18n.t('ingredientsPlaceholder')}
             placeholderTextColor="#999"
             multiline
             numberOfLines={4}
@@ -155,7 +156,7 @@ export default function CreateScreen() {
           <Text style={styles.label}>{i18n.t('steps')}</Text>
           <TextInput 
             style={[styles.input, styles.textArea]} 
-            placeholder="Enter steps (one per line)"
+            placeholder={i18n.t('stepsPlaceholder')}
             placeholderTextColor="#999"
             multiline
             numberOfLines={4}

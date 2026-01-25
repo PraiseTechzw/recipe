@@ -10,8 +10,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AdBanner } from '../../components/AdBanner';
 import { CATEGORIES, RECIPES } from '../../data/recipes';
 import i18n from '../../i18n';
+import { supabase } from '../../lib/supabase';
 import { generateRecipeFromImage } from '../../services/ai';
 import { searchRecipes } from '../../services/recommendations';
+import { useStore } from '@/store/useStore';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 48) / 2;
@@ -27,7 +29,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [locale, setLocale] = useState(i18n.locale); // State to trigger re-render on language change
+  const { locale, setLocale } = useStore();
   
   // AI State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -41,11 +43,10 @@ export default function ExploreScreen() {
 
   const toggleLanguage = () => {
     const locales = ['en', 'sn', 'nd'];
-    const currentIndex = locales.indexOf(i18n.locale); // Use current i18n.locale
+    const currentIndex = locales.indexOf(locale);
     const nextIndex = (currentIndex + 1) % locales.length;
     const nextLocale = locales[nextIndex];
-    i18n.locale = nextLocale;
-    setLocale(nextLocale); // Trigger re-render
+    setLocale(nextLocale);
   };
 
   const handleScanIngredients = async () => {
@@ -107,14 +108,6 @@ export default function ExploreScreen() {
         Alert.alert('Success', 'Recipe saved to your collection!');
         setAiModalVisible(false);
     } catch (error) {
-                }
-            ]);
-
-        if (error) throw error;
-        
-        Alert.alert('Success', 'Recipe saved to your collection!');
-        setAiModalVisible(false);
-    } catch (error) {
         console.error(error);
         Alert.alert('Note', 'Recipe generated! Configure Supabase to save it permanently.');
     }
@@ -139,8 +132,8 @@ export default function ExploreScreen() {
                 {isGenerating ? (
                     <View style={styles.loadingContainer}>
                         <ActivityIndicator size="large" color="#E65100" />
-                        <Text style={styles.loadingText}>Analyzing ingredients & creating recipe...</Text>
-                        <Text style={styles.loadingSubText}>Powered by Gemini AI</Text>
+                        <Text style={styles.loadingText}>{i18n.t('analyzing')}</Text>
+                        <Text style={styles.loadingSubText}>{i18n.t('poweredBy')}</Text>
                     </View>
                 ) : aiRecipe ? (
                     <>
@@ -178,7 +171,7 @@ export default function ExploreScreen() {
                     <View style={styles.modalActions}>
                         <TouchableOpacity style={styles.saveButton} onPress={handleSaveAiRecipe}>
                             <Ionicons name="save-outline" size={20} color="#fff" />
-                            <Text style={styles.saveButtonText}>Save Recipe</Text>
+                            <Text style={styles.saveButtonText}>{i18n.t('saveRecipe')}</Text>
                         </TouchableOpacity>
                     </View>
                     </>

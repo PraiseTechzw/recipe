@@ -96,7 +96,7 @@ export default function RecipeDetailScreen() {
     if (!recipe) return;
     const allIngredients = recipe.ingredients.flatMap((s: any) => s.data);
     addToShoppingList(allIngredients);
-    Alert.alert("Success", i18n.t('ingredients') + " added to " + i18n.t('shoppingList'));
+    Alert.alert(i18n.t('success'), i18n.t('ingredients') + " " + i18n.t('addedTo') + " " + i18n.t('shoppingList'));
   };
 
   const toggleIngredient = (name: string) => {
@@ -114,7 +114,7 @@ export default function RecipeDetailScreen() {
   }
 
   if (!recipe) {
-    return <View style={styles.center}><Text>Recipe not found</Text></View>;
+    return <View style={styles.center}><Text>{i18n.t('recipeNotFound')}</Text></View>;
   }
 
   return (
@@ -186,19 +186,25 @@ export default function RecipeDetailScreen() {
         <View style={styles.contentContainer}>
           {activeTab === 'ingredients' ? (
             <View>
-              {recipe.ingredients.map((section: any, index: number) => (
+              {recipe.ingredients.map((section: IngredientSection, index: number) => (
                 <View key={index} style={styles.section}>
                   <Text style={styles.sectionTitle}>{section.title}</Text>
-                  {section.data.map((item: string, i: number) => (
-                    <TouchableOpacity key={i} style={styles.ingredientRow} onPress={() => toggleIngredient(item)}>
-                      <View style={[styles.checkbox, checkedIngredients.has(item) && styles.checkboxChecked]}>
-                        {checkedIngredients.has(item) && <Ionicons name="checkmark" size={14} color="#fff" />}
+                  {section.data.map((item: any, i: number) => {
+                    const name = typeof item === 'string' ? item : item.name;
+                    const quantity = typeof item === 'object' && item.quantity ? item.quantity : '';
+                    const isChecked = checkedIngredients.has(name);
+                    
+                    return (
+                    <TouchableOpacity key={i} style={styles.ingredientRow} onPress={() => toggleIngredient(name)}>
+                      <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
+                        {isChecked && <Ionicons name="checkmark" size={14} color="#fff" />}
                       </View>
-                      <Text style={[styles.ingredientText, checkedIngredients.has(item) && styles.ingredientTextChecked]}>
-                        {item}
+                      <Text style={[styles.ingredientText, isChecked && styles.ingredientTextChecked]}>
+                        {quantity ? `${quantity} ` : ''}{name}
                       </Text>
                     </TouchableOpacity>
-                  ))}
+                    );
+                  })}
                 </View>
               ))}
               
@@ -209,17 +215,23 @@ export default function RecipeDetailScreen() {
             </View>
           ) : (
             <View>
-              {recipe.steps.map((item: string, index: number) => (
+              {recipe.steps.map((item: any, index: number) => {
+                const instruction = typeof item === 'string' ? item : item.instruction;
+                const description = typeof item === 'object' ? item.description : null;
+                
+                return (
                 <View key={index} style={styles.stepItem}>
                   <View style={styles.stepNumberContainer}>
                     <Text style={styles.stepNumber}>{index + 1}</Text>
                     <View style={styles.stepLine} />
                   </View>
                   <View style={styles.stepContent}>
-                    <Text style={styles.stepText}>{item}</Text>
+                    <Text style={styles.stepText}>{instruction}</Text>
+                    {description && <Text style={{ fontSize: 14, color: '#666', marginTop: 4 }}>{description}</Text>}
                   </View>
                 </View>
-              ))}
+                );
+              })}
             </View>
           )}
         </View>

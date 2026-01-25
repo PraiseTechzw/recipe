@@ -8,7 +8,7 @@ import i18n from '../../i18n';
 import { useStore } from '../../store/useStore';
 
 export default function ProfileScreen() {
-  const { favorites, userProfile } = useStore();
+  const { favorites, userProfile, isDarkMode, toggleDarkMode } = useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
@@ -87,14 +87,14 @@ export default function ProfileScreen() {
                 </TouchableOpacity>
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesList}>
-                {['First Cook', 'Week Streak', 'Spice Master', 'Early Bird', 'Pro Chef'].map((badge, i) => {
+                {['firstCook', 'weekStreak', 'spiceMaster', 'earlyBird', 'proChef'].map((badgeKey, i) => {
                     const isUnlocked = i === 0; // Mock unlock status
                     return (
                         <View key={i} style={[styles.badgeItem, !isUnlocked && styles.badgeLocked]}>
                             <View style={[styles.badgeIcon, !isUnlocked && styles.badgeIconLocked]}>
                                 <Text style={{fontSize: 24}}>{isUnlocked ? '🏆' : '🔒'}</Text>
                             </View>
-                            <Text style={styles.badgeName}>{badge}</Text>
+                            <Text style={styles.badgeName}>{i18n.t(badgeKey)}</Text>
                         </View>
                     );
                 })}
@@ -112,9 +112,9 @@ export default function ProfileScreen() {
                         <Ionicons name="moon-outline" size={20} color="#7B1FA2" />
                     </View>
                     <Text style={styles.menuText}>{i18n.t('darkMode')}</Text>
-                    <Switch value={false} trackColor={{false: '#eee', true: '#E65100'}} thumbColor="#fff" />
-                </View>
+                <Switch value={isDarkMode} onValueChange={toggleDarkMode} trackColor={{false: '#eee', true: '#E65100'}} thumbColor="#fff" />
             </View>
+        </View>
 
             <Text style={styles.menuHeader}>{i18n.t('support')}</Text>
             <View style={styles.menuGroup}>

@@ -95,6 +95,7 @@ const i18n = new I18n({
     recipeNotFound: "Recipe not found",
     createTitle: "Share Your Recipe",
     createSubtitle: "Join the community of Zimbabwean chefs",
+    slogan: "Zvinonaka zveChinyakare, Mukicheni Yemazuva Ano",
     addPhoto: "Add Cover Photo",
     recipeTitle: "Recipe Title",
     recipeTitlePlaceholder: "e.g. Grandma's Sadza",
@@ -111,7 +112,19 @@ const i18n = new I18n({
     success: "Success",
     recipeCreated: "Your recipe has been created and synced!",
     error: "Error",
-    createError: "Failed to create recipe. Please ensure Supabase is configured.",
+  createError: "Failed to create recipe. Please ensure Supabase is configured.",
+    mealieMeal: "Mealie Meal",
+    beef: "Beef",
+    chicken: "Chicken",
+    tomatoes: "Tomatoes",
+    onions: "Onions",
+    greens: "Greens (Covo/Rape)",
+    peanutButter: "Peanut Butter",
+    kapenta: "Kapenta",
+    beans: "Beans",
+    oil: "Cooking Oil",
+    salt: "Salt",
+    garlic: "Garlic",
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",
@@ -198,7 +211,37 @@ const i18n = new I18n({
     helpCenter: "Rubatsiro",
     rateUs: "Tipe Maonero",
     logOut: "Buda",
+    recipeNotFound: "Resipi haisi kuwanikwa",
+    addedTo: "zvaiswa ku",
     createTitle: "Govera Resipi Yako",
+    nextStep: "Danho Rinotevera",
+    firstCook: "Mubiki Mutsva",
+    weekStreak: "Vhiki Yakatevedzana",
+    spiceMaster: "Nyanzvi yeZvinonhuwira",
+    earlyBird: "Muka Mangwanani",
+    proChef: "Mubiki Mukuru",
+    createSubtitle: "Join the community of Zimbabwean chefs",
+    slogan: "Zvinonaka zveChinyakare, Mukicheni Yemazuva Ano",
+    ingredientsPlaceholder: "Nyora zvinoshandiswa (mutsara mumwe pachimwe)",
+    stepsPlaceholder: "Nyora matanho (mutsara mumwe pachimwe)",
+    permissionNeeded: "Mvumo Inodiwa",
+    cameraPermission: "Mvumo yekamera inodiwa kuti utore mifananidzo yezvinoshandiswa.",
+    cameraError: "Pane chakanganisika pakuvhura kamera.",
+    generateError: "Tatadza kugadzira resipi. Edza zvakare.",
+    failedToSave: "Tatadza kuchengeta resipi.",
+    savedSuccess: "Resipi yachengetwa!",
+    mealieMeal: "Upfu",
+    beef: "Nyama yemombe",
+    chicken: "Huku",
+    tomatoes: "Madomasi",
+    onions: "Hanyanisi",
+    greens: "Muriwo",
+    peanutButter: "Dovi",
+    kapenta: "Matemba",
+    beans: "Bhinzi",
+    oil: "Mafuta",
+    salt: "Munyu",
+    garlic: "Garlic",
   },
   nd: {
     exploreTitle: "Hlola Nambitha zeZimbabwe",
@@ -288,7 +331,21 @@ const i18n = new I18n({
     rateUs: "Silinganise",
     logOut: "Phuma",
     createTitle: "Yabelana Iresiphi Yakho",
+    home: "Ekhaya",
+    explore: "Hlola",
+    saved: "Okugciniweyo",
+    profile: "Iphrofayili",
+    goBack: "Buyela Emuva",
+    cookingMode: "UKUPHEKA",
+    step: "Isinyathelo",
+    of: "sama",
+    mins: "imizuzu",
+    chefsTip: "Ithiphu kaShefu",
+    voiceCommands: "IMIYALELO YEZWI IYASEBENZA",
+    finishCooking: "Qeda Ukupheka",
+    nextStep: "Isinyathelo Esilandelayo",
     createSubtitle: "Hlanganyela umphakathi wabapheki baseZimbabwe",
+    slogan: "Ukunambitheka Kwesintu, Ekhishini Yesimanje",
     addPhoto: "Faka Isithombe Sekhava",
     recipeTitle: "Isihloko seresiphi",
     recipeTitlePlaceholder: "isib. Isitshwala sikaGogo",
@@ -306,6 +363,18 @@ const i18n = new I18n({
     recipeCreated: "Iresiphi yakho idaliwe futhi yagcinwa!",
     error: "Iphutha",
     createError: "Ihlulekile ukudala iresiphi. Hlola iSupabase.",
+    mealieMeal: "Impuphu",
+    beef: "Inyama yenkomo",
+    chicken: "Inkukhu",
+    tomatoes: "Amatamatisi",
+    onions: "Anyanisi",
+    greens: "Imibhida",
+    peanutButter: "Idobi",
+    kapenta: "Ikapenta",
+    beans: "Indumba",
+    oil: "Amafutha",
+    salt: "Isawudo",
+    garlic: "Igalikhi",
   }
 });
 
@@ -313,5 +382,36 @@ const i18n = new I18n({
 const deviceLocale = getLocales()[0]?.languageCode ?? 'en';
 i18n.locale = deviceLocale;
 i18n.enableFallback = true;
+i18n.defaultLocale = 'en';
+
+// Monkey-patch i18n.t to log missing translations
+const originalT = i18n.t;
+i18n.t = function(scope, options) {
+  // Check if translation exists in current locale (if not default)
+  if (i18n.locale !== i18n.defaultLocale) {
+    const parts = typeof scope === 'string' ? scope.split('.') : [];
+    let current: any = i18n.translations[i18n.locale];
+    let exists = true;
+    
+    for (const part of parts) {
+      if (current && typeof current === 'object' && part in current) {
+        current = current[part];
+      } else {
+        exists = false;
+        break;
+      }
+    }
+    
+    if (!exists) {
+      console.warn(`[MISSING TRANSLATION] Scope: "${scope}", Locale: "${i18n.locale}" (Falling back to default)`);
+    }
+  }
+
+  const result = originalT.call(i18n, scope, options);
+  if (typeof result === 'string' && result.startsWith('[missing "')) {
+    console.warn(`[MISSING TRANSLATION] Scope: "${scope}", Locale: "${i18n.locale}"`);
+  }
+  return result;
+};
 
 export default i18n;

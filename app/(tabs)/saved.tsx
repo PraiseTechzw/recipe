@@ -63,7 +63,7 @@ export default function SavedScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{i18n.t('savedRecipes')}</Text>
-        <Text style={styles.headerSubtitle}>{allRecipes.length} items</Text>
+        <Text style={styles.headerSubtitle}>{allRecipes.length} {i18n.t('items')}</Text>
       </View>
 
       {loading ? (

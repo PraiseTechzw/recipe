@@ -1,24 +1,24 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useStore } from '../store/useStore';
 import i18n from '../i18n';
+import { useStore } from '../store/useStore';
 
 const COMMON_INGREDIENTS = [
-    { id: 'mealie-meal', name: 'Mealie Meal', icon: '🍚' },
-    { id: 'beef', name: 'Beef', icon: '🥩' },
-    { id: 'chicken', name: 'Chicken', icon: '🍗' },
-    { id: 'tomatoes', name: 'Tomatoes', icon: '🍅' },
-    { id: 'onions', name: 'Onions', icon: '🧅' },
-    { id: 'greens', name: 'Greens (Covo/Rape)', icon: '🥬' },
-    { id: 'peanut-butter', name: 'Peanut Butter', icon: '🥜' },
-    { id: 'kapenta', name: 'Kapenta', icon: '🐟' },
-    { id: 'beans', name: 'Beans', icon: '🫘' },
-    { id: 'oil', name: 'Cooking Oil', icon: '🫗' },
-    { id: 'salt', name: 'Salt', icon: '🧂' },
-    { id: 'garlic', name: 'Garlic', icon: '🧄' },
+    { id: 'mealie-meal', key: 'mealieMeal', icon: '🍚' },
+    { id: 'beef', key: 'beef', icon: '🥩' },
+    { id: 'chicken', key: 'chicken', icon: '🍗' },
+    { id: 'tomatoes', key: 'tomatoes', icon: '🍅' },
+    { id: 'onions', key: 'onions', icon: '🧅' },
+    { id: 'greens', key: 'greens', icon: '🥬' },
+    { id: 'peanut-butter', key: 'peanutButter', icon: '🥜' },
+    { id: 'kapenta', key: 'kapenta', icon: '🐟' },
+    { id: 'beans', key: 'beans', icon: '🫘' },
+    { id: 'oil', key: 'oil', icon: '🫗' },
+    { id: 'salt', key: 'salt', icon: '🧂' },
+    { id: 'garlic', key: 'garlic', icon: '🧄' },
 ];
 
 export default function PantryCheckScreen() {
@@ -62,7 +62,7 @@ export default function PantryCheckScreen() {
                 onPress={() => toggleIngredient(item.id)}
             >
                 <Text style={styles.icon}>{item.icon}</Text>
-                <Text style={[styles.name, selected.has(item.id) && styles.nameSelected]}>{item.name}</Text>
+                <Text style={[styles.name, selected.has(item.id) && styles.nameSelected]}>{i18n.t(item.key)}</Text>
                 {selected.has(item.id) && (
                     <View style={styles.checkIcon}>
                         <Ionicons name="checkmark-circle" size={20} color="#E65100" />

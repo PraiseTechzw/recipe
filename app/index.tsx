@@ -6,6 +6,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from '../components/Logo';
 import { useStore } from '../store/useStore';
+import i18n from '@/i18n';
 
 export default function AnimatedSplashScreen() {
   const router = useRouter();
@@ -52,7 +53,7 @@ export default function AnimatedSplashScreen() {
             <Ionicons name="restaurant" size={80} color="#E65100" />
         </View>
         <Text style={styles.title}>TASTE OF ZIMBABWE</Text>
-        <Text style={styles.subtitle}>Traditional Flavors, Modern Kitchen</Text>
+        <Text style={styles.subtitle}>{i18n.t('slogan')}</Text>
       </Animated.View>
       
       <View style={styles.footer}>
