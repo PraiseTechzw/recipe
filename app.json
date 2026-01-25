@@ -1,17 +1,19 @@
 {
   "expo": {
-    "name": "recipe",
-    "slug": "recipe",
-    "version": "1.0.0",
+    "name": "Zimbabwe Traditional Recipes",
+    "slug": "tasteofzimbabwe",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "recipe",
+    "scheme": "tasteofzimbabwe",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.appixiasoftwares.tasteofzimbabwe"
     },
     "android": {
+      "package": "com.appixiasoftwares.tasteofzimbabwe",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

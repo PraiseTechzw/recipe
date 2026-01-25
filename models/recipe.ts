@@ -1,0 +1,31 @@
+export interface IngredientItem {
+  name: string;
+  quantity?: string;
+  description?: string;
+}
+
+export interface IngredientSection {
+  title: string;
+  data: IngredientItem[];
+}
+
+export interface Step {
+  instruction: string;
+}
+
+export interface Recipe {
+  id: string;
+  title: string;
+  description: string;
+  image: any; // Using require() or uri string
+  category: string;
+  tags: string[];
+  time: string;
+  servings: number;
+  calories: string; // e.g. "520 Kcal"
+  ingredients: IngredientSection[];
+  steps: Step[];
+  isTraditional: boolean;
+  rating?: number;
+  reviews?: number;
+}

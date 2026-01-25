@@ -1,98 +1,260 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { StyleSheet, ScrollView, View, Text, TextInput, FlatList, Image, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { RECIPES, CATEGORIES } from '../../data/recipes';
+import RecipeCard from '../../components/RecipeCard';
+import { Colors } from '../../constants/theme';
 import { Link } from 'expo-router';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const trendingRecipe = RECIPES[1]; // Dovi
+  const popularRecipes = RECIPES.filter(r => r.id !== '2');
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Explore Zimbabwe's Flavors</Text>
+        </View>
+
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
+          <TextInput 
+            placeholder="Search recipes, ingredients..." 
+            style={styles.searchInput}
+            placeholderTextColor="#999"
+          />
+          <TouchableOpacity>
+             <Ionicons name="options-outline" size={20} color={Colors.light.tint} />
+          </TouchableOpacity>
+        </View>
+
+        {/* Filters */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll} contentContainerStyle={styles.filtersContent}>
+          <TouchableOpacity style={[styles.filterChip, styles.filterChipActive]}>
+            <Text style={[styles.filterText, styles.filterTextActive]}>All</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterChip}>
+            <Text style={styles.filterText}>Quick Meals</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterChip}>
+            <Text style={styles.filterText}>Vegetarian</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.filterChip}>
+             <Text style={styles.filterText}>Ceremonial</Text>
+          </TouchableOpacity>
+        </ScrollView>
+
+        {/* Trending */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Trending this week</Text>
+          <TouchableOpacity>
+            <Text style={styles.seeAll}>See All</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.trendingContainer}>
+           <Link href={`/recipe/${trendingRecipe.id}`} asChild>
+             <TouchableOpacity style={styles.trendingCard}>
+               <Image source={{ uri: trendingRecipe.image }} style={styles.trendingImage} />
+               <View style={styles.trendingOverlay}>
+                 <Text style={styles.trendingLabel}>↗ TRENDING</Text>
+                 <Text style={styles.trendingTitle}>{trendingRecipe.title}</Text>
+                 <Text style={styles.trendingMeta}>{trendingRecipe.time} • {trendingRecipe.calories}</Text>
+               </View>
+             </TouchableOpacity>
+           </Link>
+           {/* Duplicate for demo scroll */}
+           <Link href={`/recipe/${trendingRecipe.id}`} asChild>
+             <TouchableOpacity style={[styles.trendingCard, { marginLeft: 16 }]}>
+               <Image source={{ uri: RECIPES[2].image }} style={styles.trendingImage} />
+               <View style={styles.trendingOverlay}>
+                 <Text style={styles.trendingLabel}>↗ HEALTHY</Text>
+                 <Text style={styles.trendingTitle}>{RECIPES[2].title}</Text>
+                 <Text style={styles.trendingMeta}>{RECIPES[2].time} • {RECIPES[2].calories}</Text>
+               </View>
+             </TouchableOpacity>
+           </Link>
+        </ScrollView>
+
+        {/* Categories */}
+        <Text style={[styles.sectionTitle, { marginTop: 24, paddingHorizontal: 16 }]}>Categories</Text>
+        <View style={styles.categoriesContainer}>
+          {CATEGORIES.map((cat) => (
+            <TouchableOpacity key={cat.id} style={styles.categoryItem}>
+              <View style={styles.categoryIconContainer}>
+                <MaterialIcons name={cat.icon as any} size={24} color="#E65100" />
+              </View>
+              <Text style={styles.categoryName}>{cat.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Popular Recipes */}
+        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
+          <Text style={styles.sectionTitle}>Popular Recipes</Text>
+          <TouchableOpacity>
+             <MaterialIcons name="filter-list" size={24} color="#666" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.popularList}>
+          {popularRecipes.map(recipe => (
+            <RecipeCard key={recipe.id} recipe={recipe} />
+          ))}
+        </View>
+
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  searchContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+  },
+  filtersScroll: {
+    marginTop: 16,
+    paddingLeft: 16,
+  },
+  filtersContent: {
+    paddingRight: 16,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  filterChipActive: {
+    backgroundColor: '#E65100',
+    borderColor: '#E65100',
+  },
+  filterText: {
+    color: '#666',
+    fontWeight: '600',
+  },
+  filterTextActive: {
+    color: '#fff',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  seeAll: {
+    color: '#E65100',
+    fontWeight: '600',
+  },
+  trendingContainer: {
+    paddingHorizontal: 16,
+  },
+  trendingCard: {
+    width: 280,
+    height: 180,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  trendingImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  trendingOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.4)', // Gradient simulation
+  },
+  trendingLabel: {
+    color: '#FFA726',
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  trendingTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  trendingMeta: {
+    color: '#eee',
+    fontSize: 12,
+  },
+  categoriesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+  },
+  categoryItem: {
     alignItems: 'center',
     gap: 8,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  categoryIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FFF3E0', // Light orange
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  categoryName: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#333',
+  },
+  popularList: {
+    paddingHorizontal: 16,
   },
 });
