@@ -147,6 +147,7 @@ const i18n = new I18n({
     personalInfo: "Personal Information",
     helpCenter: "Help Center",
     rateUs: "Rate Us",
+    refreshed: "Refreshed",
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",
