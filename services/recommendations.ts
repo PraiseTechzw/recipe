@@ -48,6 +48,22 @@ export const getRecommendedRecipes = (
   return recommended.slice(0, 5); // Return top 5
 };
 
+export const getPantryMatches = (pantry: string[], sourceRecipes: Recipe[] = RECIPES): Recipe[] => {
+  if (!pantry || pantry.length === 0) return [];
+  
+  const lowerPantry = pantry.map(p => p.toLowerCase());
+  
+  return sourceRecipes.filter(r => {
+    // Flatten all ingredients from all sections
+    const allIngredients = r.ingredients.flatMap(section => section.data.map(item => item.name.toLowerCase()));
+    
+    // Check for at least one match
+    return allIngredients.some(ing => 
+      lowerPantry.some(pantryItem => ing.includes(pantryItem) || pantryItem.includes(ing))
+    );
+  }).slice(0, 5); // Limit to 5 matches
+};
+
 export const getRandomRecipe = (sourceRecipes: Recipe[] = RECIPES): Recipe => {
   const index = Math.floor(Math.random() * sourceRecipes.length);
   return sourceRecipes[index];
