@@ -212,8 +212,8 @@ export default function ProfileScreen() {
         <View style={styles.section}>
             <View style={styles.sectionHeader}>
                 <Text style={[styles.sectionTitle, isDarkMode && styles.textDark]}>{i18n.t('achievements')}</Text>
-                <TouchableOpacity>
-                    <Text style={styles.seeAll}>{userProfile.badges.length}/{BADGES.length}</Text>
+                <TouchableOpacity onPress={() => router.push('/achievements')}>
+                    <Text style={styles.seeAll}>{userProfile.badges.length}/{BADGES.length} &gt;</Text>
                 </TouchableOpacity>
             </View>
             <ScrollView 
