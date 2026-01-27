@@ -1,488 +1,708 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Link, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Logo from '../../components/Logo';
-import { RECIPES } from '../../data/recipes';
-import i18n from '../../i18n';
-import { getRecipeOfTheDay, getRecommendedRecipes } from '../../services/recommendations';
-import { useStore } from '../../store/useStore';
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { Link, useRouter } from "expo-router";
+import { useEffect, useRef, useState } from "react";
+import {
+  Animated,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { EmptyState } from "../../components/feedback/EmptyState";
+import { Skeleton } from "../../components/feedback/Skeleton";
+import Logo from "../../components/Logo";
+import { RecipeCardUI } from "../../components/ui/RecipeCardUI";
+import { SectionHeader } from "../../components/ui/SectionHeader";
+import { RECIPES } from "../../data/recipes";
+import i18n from "../../i18n";
+import { HapticService } from "../../services/haptics";
+import {
+  getPantryMatches,
+  getRecipeOfTheDay,
+  getRecommendedRecipes,
+} from "../../services/recommendations";
+import { ToastService } from "../../services/toast";
+import { useStore } from "../../store/useStore";
+import { useTheme } from "../../theme/useTheme";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { viewHistory, categoryScores, hasOnboarded, shoppingList, userProfile } = useStore();
-  
+  const { colors, spacing, typography, shadows } = useTheme();
+  const {
+    viewHistory,
+    categoryScores,
+    hasOnboarded,
+    shoppingList,
+    userProfile,
+    pantry,
+  } = useStore();
+
+  const [featuredRecipes, setFeaturedRecipes] = useState(RECIPES.slice(0, 3));
+  const [dailyPick, setDailyPick] = useState(RECIPES[1]);
+  const [pantryRecipes, setPantryRecipes] = useState<typeof RECIPES>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
   // Onboarding Check
   useEffect(() => {
     if (!hasOnboarded) {
-        // Redirect to Onboarding Flow instead of just Pantry Check
-        const timer = setTimeout(() => {
-            router.replace('/onboarding');
-        }, 100);
-        return () => clearTimeout(timer);
+      const timer = setTimeout(() => {
+        router.replace("/onboarding");
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [hasOnboarded]);
 
-  // Smart Algorithms
-  const [featuredRecipes, setFeaturedRecipes] = useState(RECIPES.slice(0, 3));
-  const [dailyPick, setDailyPick] = useState(RECIPES[1]);
-
-  useEffect(() => {
-    // 1. Daily Rotation (Deterministic)
+  const loadData = async () => {
+    // 1. Daily Rotation
     setDailyPick(getRecipeOfTheDay());
 
-    // 2. Smart Recommendations based on user history
+    // 2. Smart Recommendations
     const smartRecs = getRecommendedRecipes(viewHistory, categoryScores);
     if (smartRecs.length > 0) {
-        setFeaturedRecipes(smartRecs.slice(0, 5));
+      setFeaturedRecipes(smartRecs.slice(0, 5));
     }
-  }, [viewHistory, categoryScores]);
+
+    // 3. Pantry Matches
+    const matched = getPantryMatches(pantry);
+    setPantryRecipes(matched);
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      await loadData();
+      // Simulate network delay for skeletons
+      setTimeout(() => {
+        setIsLoading(false);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start();
+      }, 1000);
+    };
+    init();
+  }, [viewHistory, categoryScores, pantry]);
+
+  const onRefresh = async () => {
+    HapticService.selection();
+    setRefreshing(true);
+    await loadData();
+    // Simulate refresh delay
+    setTimeout(() => {
+      setRefreshing(false);
+      ToastService.success(
+        i18n.t("refreshed") || "Refreshed",
+        "Latest recipes loaded",
+      );
+      HapticService.success();
+    }, 1000);
+  };
+
+  const handleRecipePress = (id: string) => {
+    HapticService.light();
+    router.push(`/recipe/${id}`);
+  };
+
+  const renderFeaturedSkeleton = () => (
+    <View style={{ flexDirection: "row", gap: 16, paddingHorizontal: 20 }}>
+      {[1, 2].map((i) => (
+        <View key={i} style={{ width: 280 }}>
+          <Skeleton
+            height={180}
+            borderRadius={12}
+            style={{ marginBottom: 12 }}
+          />
+          <Skeleton width="80%" height={20} style={{ marginBottom: 8 }} />
+          <Skeleton width="40%" height={16} />
+        </View>
+      ))}
+    </View>
+  );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      edges={["top"]}
+    >
       <View style={styles.contentContainer}>
-        
         {/* Header */}
         <View style={styles.header}>
           <Logo size="medium" />
           <View style={styles.headerRight}>
-              <TouchableOpacity 
-                  style={styles.iconButton} 
-                  onPress={() => router.push('/shopping-list')}
-              >
-                  <Ionicons name="basket-outline" size={24} color="#333" />
-                  {shoppingList.length > 0 && <View style={styles.badge} />}
-              </TouchableOpacity>
-              
-              <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-                  <View style={styles.avatarContainer}>
-                    <Image source={{ uri: 'https://i.pravatar.cc/150?img=12' }} style={styles.avatar} />
-                    <View style={styles.levelBadge}>
-                        <Text style={styles.levelText}>{userProfile.chefLevel.charAt(0)}</Text>
-                    </View>
-                  </View>
-              </TouchableOpacity>
-            </View>
-        </View>
-
-        <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Greeting & Search */}
-        <View style={styles.greetingSection}>
-            <Text style={styles.mainGreeting}>{i18n.t('greeting')}, {userProfile.name}!</Text>
-            <Text style={styles.subGreeting}>{i18n.t('subGreeting')}</Text>
-            
-            <Link href="/(tabs)/explore" asChild>
-                <TouchableOpacity style={styles.searchBar}>
-                    <Ionicons name="search" size={24} color="#E65100" />
-                    <Text style={styles.placeholderText}>{i18n.t('searchPlaceholderHome')}</Text>
-                    <LinearGradient
-                        colors={['#FF8C00', '#E65100']}
-                        style={styles.aiButtonHome}
-                    >
-                        <Ionicons name="scan-outline" size={18} color="#fff" />
-                    </LinearGradient>
-                </TouchableOpacity>
-            </Link>
-        </View>
-
-        {/* Featured Section */}
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{i18n.t('featured')}</Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/explore')}>
-                <Text style={styles.seeAll}>{i18n.t('seeAll')}</Text>
+            <TouchableOpacity
+              style={[
+                styles.iconButton,
+                { backgroundColor: colors.surface },
+                shadows.small,
+              ]}
+              onPress={() => {
+                HapticService.selection();
+                router.push("/shopping-list");
+              }}
+              accessibilityLabel="Shopping List"
+            >
+              <Ionicons name="basket-outline" size={24} color={colors.text} />
+              {shoppingList.length > 0 && (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.surface,
+                    },
+                  ]}
+                />
+              )}
             </TouchableOpacity>
-        </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={styles.featuredList}>
-            {featuredRecipes.map((recipe) => (
-                <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
-                    <TouchableOpacity style={styles.featuredCard}>
-                        <View style={styles.imageContainer}>
-                            <Image source={{ uri: recipe.image }} style={styles.featuredImage} contentFit="cover" />
-                            <View style={styles.ratingBadge}>
-                                <Ionicons name="star" size={12} color="#E65100" />
-                                <Text style={styles.ratingText}>{recipe.rating || 4.8}</Text>
-                            </View>
-                        </View>
-                        <Text style={styles.featuredTitle} numberOfLines={2}>{recipe.title}</Text>
-                        <View style={styles.metaRow}>
-                            <View style={styles.authorRow}>
-                                <Image source={{ uri: recipe.author?.avatar }} style={styles.smallAvatar} />
-                                <Text style={styles.authorName} numberOfLines={1}>{recipe.author?.name}</Text>
-                            </View>
-                            <View style={styles.metaItem}>
-                                <Ionicons name="time-outline" size={14} color="#757575" />
-                                <Text style={styles.metaText}>{recipe.time}</Text>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                </Link>
-            ))}
-        </ScrollView>
-
-        {/* Recipe of the Day */}
-        <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{i18n.t('recipeOfTheDay')}</Text>
-        </View>
-        
-        <Link href={`/recipe/${dailyPick.id}`} asChild>
-            <TouchableOpacity style={styles.dailyCard}>
-                <Image source={{ uri: dailyPick.image }} style={styles.dailyImage} contentFit="cover" transition={1000} />
-                <LinearGradient 
-                    colors={['transparent', 'rgba(0,0,0,0.6)', 'rgba(0,0,0,0.9)']} 
-                    style={styles.dailyOverlay}
+            <TouchableOpacity
+              onPress={() => {
+                HapticService.selection();
+                router.push("/(tabs)/profile");
+              }}
+              accessibilityLabel="Profile"
+            >
+              <View style={styles.avatarContainer}>
+                <Image
+                  source={{
+                    uri:
+                      userProfile.avatar || "https://i.pravatar.cc/150?img=12",
+                  }}
+                  style={[styles.avatar, { borderColor: colors.surface }]}
+                />
+                <View
+                  style={[
+                    styles.levelBadge,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.surface,
+                    },
+                  ]}
                 >
+                  <Text style={styles.levelText}>
+                    {userProfile.chefLevel.charAt(0)}
+                  </Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView
+          style={{ flex: 1 }}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+            />
+          }
+        >
+          {/* Greeting & Search */}
+          <Animated.View
+            style={[styles.greetingSection, { opacity: fadeAnim }]}
+          >
+            <Text style={[styles.mainGreeting, { color: colors.text }]}>
+              {i18n.t("greeting")}, {userProfile.name}!
+            </Text>
+            <Text style={[styles.subGreeting, { color: colors.textSecondary }]}>
+              {i18n.t("subGreeting")}
+            </Text>
+
+            <Link href="/(tabs)/explore" asChild>
+              <TouchableOpacity
+                style={[
+                  styles.searchBar,
+                  { backgroundColor: colors.surfaceVariant },
+                ]}
+              >
+                <Ionicons name="search" size={24} color={colors.primary} />
+                <Text
+                  style={[
+                    styles.placeholderText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  {i18n.t("searchPlaceholderHome")}
+                </Text>
+                <LinearGradient
+                  colors={[colors.primary, colors.secondary]}
+                  style={styles.aiButtonHome}
+                >
+                  <Ionicons name="scan-outline" size={18} color="#fff" />
+                </LinearGradient>
+              </TouchableOpacity>
+            </Link>
+          </Animated.View>
+
+          {/* Featured Section */}
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <SectionHeader
+              title={i18n.t("featured")}
+              actionLabel={i18n.t("seeAll")}
+              onAction={() => router.push("/(tabs)/explore")}
+              style={{ paddingHorizontal: 20 }}
+            />
+
+            {isLoading ? (
+              renderFeaturedSkeleton()
+            ) : featuredRecipes.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={{ marginHorizontal: -20 }}
+                contentContainerStyle={styles.featuredList}
+              >
+                {featuredRecipes.map((recipe) => (
+                  <TouchableOpacity
+                    key={recipe.id}
+                    style={[
+                      styles.featuredCard,
+                      { backgroundColor: colors.surface },
+                    ]}
+                    onPress={() => handleRecipePress(recipe.id)}
+                    activeOpacity={0.9}
+                  >
+                    <View style={styles.imageContainer}>
+                      <Image
+                        source={{ uri: recipe.image }}
+                        style={styles.featuredImage}
+                        contentFit="cover"
+                      />
+                      <View style={styles.ratingBadge}>
+                        <Ionicons name="star" size={12} color="#E65100" />
+                        <Text style={styles.ratingText}>
+                          {recipe.rating || 4.8}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text
+                      style={[styles.featuredTitle, { color: colors.text }]}
+                      numberOfLines={2}
+                    >
+                      {recipe.title}
+                    </Text>
+                    <View style={styles.metaRow}>
+                      <View style={styles.authorRow}>
+                        <Image
+                          source={{ uri: recipe.author?.avatar }}
+                          style={styles.smallAvatar}
+                        />
+                        <Text
+                          style={[
+                            styles.authorName,
+                            { color: colors.textSecondary },
+                          ]}
+                          numberOfLines={1}
+                        >
+                          {recipe.author?.name}
+                        </Text>
+                      </View>
+                      <View style={styles.metaItem}>
+                        <Ionicons
+                          name="time-outline"
+                          size={14}
+                          color={colors.textSecondary}
+                        />
+                        <Text
+                          style={[
+                            styles.metaText,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {recipe.time}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : (
+              <EmptyState
+                title="No featured recipes"
+                icon="restaurant-outline"
+                style={{ height: 200 }}
+              />
+            )}
+          </Animated.View>
+
+          {/* Recipe of the Day */}
+          <Animated.View style={{ opacity: fadeAnim, marginTop: 24 }}>
+            <SectionHeader
+              title={i18n.t("recipeOfTheDay")}
+              style={{ paddingHorizontal: 20 }}
+            />
+
+            <View style={{ paddingHorizontal: 20 }}>
+              {isLoading ? (
+                <View>
+                  <Skeleton height={250} borderRadius={16} />
+                </View>
+              ) : dailyPick ? (
+                <TouchableOpacity
+                  style={styles.dailyCard}
+                  onPress={() => handleRecipePress(dailyPick.id)}
+                  activeOpacity={0.95}
+                >
+                  <Image
+                    source={{ uri: dailyPick.image }}
+                    style={styles.dailyImage}
+                    contentFit="cover"
+                    transition={1000}
+                  />
+                  <LinearGradient
+                    colors={[
+                      "transparent",
+                      "rgba(0,0,0,0.6)",
+                      "rgba(0,0,0,0.9)",
+                    ]}
+                    style={styles.dailyOverlay}
+                  >
                     <View style={styles.dailyHeader}>
-                        <View style={styles.dailyBadge}>
-                            <Text style={styles.dailyBadgeText}>DAILY PICK</Text>
-                        </View>
-                        <View style={styles.authorContainer}>
-                            <Image source={{ uri: dailyPick.author?.avatar }} style={styles.mediumAvatar} />
-                            <Text style={styles.authorNameLight}>{dailyPick.author?.name}</Text>
-                        </View>
+                      <View style={styles.dailyBadge}>
+                        <Text style={styles.dailyBadgeText}>DAILY PICK</Text>
+                      </View>
+                      <View style={styles.authorContainer}>
+                        <Image
+                          source={{ uri: dailyPick.author?.avatar }}
+                          style={styles.mediumAvatar}
+                        />
+                        <Text style={styles.authorNameLight}>
+                          {dailyPick.author?.name}
+                        </Text>
+                      </View>
                     </View>
                     <Text style={styles.dailyTitle}>{dailyPick.title}</Text>
-                    <Text style={styles.dailyDesc} numberOfLines={1}>{dailyPick.description}</Text>
-                </LinearGradient>
-            </TouchableOpacity>
-        </Link>
-        </ScrollView>
+                    <Text style={styles.dailyDesc} numberOfLines={1}>
+                      {dailyPick.description}
+                    </Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+          </Animated.View>
 
+          {/* Cook with your Pantry */}
+          <Animated.View style={{ opacity: fadeAnim, marginTop: 32 }}>
+            <SectionHeader
+              title="Cook with your Pantry"
+              style={{ paddingHorizontal: 20 }}
+            />
+
+            <View style={{ paddingHorizontal: 20 }}>
+              {pantry.length === 0 ? (
+                <EmptyState
+                  title="Your pantry is empty"
+                  description="Add ingredients to get personalized recommendations."
+                  icon="basket-outline"
+                  actionLabel="Check Pantry"
+                  onAction={() => {
+                    HapticService.selection();
+                    router.push("/pantry-check");
+                  }}
+                  style={{
+                    backgroundColor: colors.surfaceVariant,
+                    borderRadius: 12,
+                    padding: 24,
+                  }}
+                />
+              ) : pantryRecipes.length > 0 ? (
+                <View style={{ gap: 16 }}>
+                  {pantryRecipes.map((recipe) => (
+                    <RecipeCardUI
+                      key={recipe.id}
+                      title={recipe.title}
+                      imageUrl={recipe.image}
+                      duration={parseInt(recipe.time) || 30}
+                      difficulty="Medium" // Hardcoded for now as it's not in model
+                      rating={recipe.rating}
+                      onPress={() => handleRecipePress(recipe.id)}
+                    />
+                  ))}
+                </View>
+              ) : (
+                <EmptyState
+                  title="No matches found"
+                  description="Try adding more ingredients to your pantry."
+                  icon="nutrition-outline"
+                  actionLabel="Update Pantry"
+                  onAction={() => {
+                    HapticService.selection();
+                    router.push("/pantry-check");
+                  }}
+                  style={{
+                    backgroundColor: colors.surfaceVariant,
+                    borderRadius: 12,
+                    padding: 24,
+                  }}
+                />
+              )}
+            </View>
+          </Animated.View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
 }
 
-
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
   },
   contentContainer: {
     flex: 1,
-    paddingHorizontal: 20,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 10,
     marginBottom: 16,
+    paddingHorizontal: 20,
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 12,
   },
   iconButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    position: 'relative',
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
   },
   badge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
+    position: "absolute",
+    top: 10,
+    right: 10,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E65100',
+    backgroundColor: "#E65100",
+    borderWidth: 1,
+    borderColor: "#fff",
   },
   avatarContainer: {
-    position: 'relative',
-    width: 40,
-    height: 40,
+    position: "relative",
   },
   avatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#eee',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   levelBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: '#E65100',
+    position: "absolute",
+    bottom: -2,
+    right: -2,
     width: 18,
     height: 18,
     borderRadius: 9,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: '#fff',
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
   levelText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 10,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   greetingSection: {
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingHorizontal: 20,
   },
   mainGreeting: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontWeight: "bold",
     marginBottom: 4,
   },
   subGreeting: {
     fontSize: 16,
-    color: '#8D6E63',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
+    borderRadius: 16,
     gap: 12,
-    borderWidth: 1,
-    borderColor: '#F0F0F0',
   },
   placeholderText: {
     flex: 1,
-    color: '#999',
     fontSize: 16,
-    fontWeight: '500',
   },
   aiButtonHome: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#E65100',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    marginTop: 8,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    letterSpacing: -0.5,
-  },
-  seeAll: {
-    fontSize: 14,
-    color: '#E65100',
-    fontWeight: '600',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
   featuredList: {
-    paddingHorizontal: 20,
-    paddingBottom: 24, // Increased for shadow visibility
+    paddingLeft: 20,
+    paddingRight: 20,
+    gap: 16,
   },
   featuredCard: {
-    width: 260, // Slightly wider for better layout
-    marginRight: 20, // More space between cards
-    backgroundColor: '#fff',
-    borderRadius: 24,
+    width: 280,
+    borderRadius: 20,
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#F5F5F5',
+    shadowRadius: 12,
+    elevation: 4,
+    marginBottom: 20,
   },
   imageContainer: {
-    position: 'relative',
+    width: "100%",
+    height: 180,
+    borderRadius: 16,
+    overflow: "hidden",
     marginBottom: 12,
-    borderRadius: 20,
-    overflow: 'hidden',
+    position: "relative",
   },
   featuredImage: {
-    width: '100%',
-    height: 150,
-    borderRadius: 20,
+    width: "100%",
+    height: "100%",
   },
   ratingBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
+    position: "absolute",
+    top: 12,
+    left: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
     gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   ratingText: {
     fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "700",
+    color: "#333",
   },
   featuredTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontSize: 18,
+    fontWeight: "700",
     marginBottom: 8,
-    height: 44,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   authorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   smallAvatar: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#eee',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
   },
   authorName: {
-    fontSize: 12,
-    color: '#555',
-    fontWeight: '500',
-    flex: 1,
+    fontSize: 14,
+    fontWeight: "500",
   },
   metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
   },
   metaText: {
     fontSize: 12,
-    color: '#757575',
+    fontWeight: "500",
   },
   dailyCard: {
-    flex: 1,
-    width: '100%',
-    borderRadius: 30,
-    marginBottom: 10,
-    overflow: 'hidden',
-    position: 'relative',
-    minHeight: 220,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: '#F5F5F5',
+    height: 300,
+    borderRadius: 24,
+    overflow: "hidden",
+    position: "relative",
   },
   dailyImage: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   dailyOverlay: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 24,
-    paddingTop: 80, // Extended gradient area
-    justifyContent: 'flex-end',
+    height: "100%",
+    justifyContent: "flex-end",
+    padding: 20,
   },
   dailyHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 12,
   },
-  authorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  mediumAvatar: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#fff',
-  },
-  authorNameLight: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
   dailyBadge: {
-    backgroundColor: '#E65100',
-    alignSelf: 'flex-start',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 10,
-    shadowColor: '#E65100',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderRadius: 8,
   },
   dailyBadgeText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  authorContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+  },
+  mediumAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+  },
+  authorNameLight: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   dailyTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#fff',
-    marginBottom: 6,
-    letterSpacing: -0.5,
-    textShadowColor: 'rgba(0,0,0,0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#fff",
+    marginBottom: 8,
+    lineHeight: 32,
   },
   dailyDesc: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.95)',
-    lineHeight: 20,
+    fontSize: 16,
+    color: "rgba(255,255,255,0.9)",
+    marginBottom: 8,
   },
 });
