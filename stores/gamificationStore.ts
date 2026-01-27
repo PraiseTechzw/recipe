@@ -12,15 +12,6 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 const generateAvatarSeed = () => Math.random().toString(36).substring(7);
 
-const getStartOfWeek = () => {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
-
 // ============================================================================
 // STATE INTERFACE
 // ============================================================================
