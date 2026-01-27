@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, ViewStyle } from 'react-native';
-import { useTheme } from '@/theme/useTheme';
+import { useTheme } from "@/theme/useTheme";
+import React, { useEffect, useRef } from "react";
+import { Animated, ViewStyle } from "react-native";
 
 interface SkeletonProps {
   width?: number | string;
@@ -9,7 +9,12 @@ interface SkeletonProps {
   style?: ViewStyle;
 }
 
-export function Skeleton({ width = '100%', height = 20, borderRadius, style }: SkeletonProps) {
+export function Skeleton({
+  width = "100%",
+  height = 20,
+  borderRadius,
+  style,
+}: SkeletonProps) {
   const { colors, radius } = useTheme();
   const opacity = useRef(new Animated.Value(0.3)).current;
 
@@ -26,7 +31,7 @@ export function Skeleton({ width = '100%', height = 20, borderRadius, style }: S
           duration: 800,
           useNativeDriver: true,
         }),
-      ])
+      ]),
     ).start();
   }, []);
 
@@ -38,7 +43,7 @@ export function Skeleton({ width = '100%', height = 20, borderRadius, style }: S
           height,
           borderRadius: borderRadius || radius.s,
           backgroundColor: colors.surfaceVariant,
-          opacity,
+          opacity: opacity as any,
         },
         style,
       ]}
