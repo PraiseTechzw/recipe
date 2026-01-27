@@ -1,6 +1,6 @@
 import { useStore } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
@@ -15,12 +15,12 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AdBanner } from "../../components/AdBanner";
-import { CATEGORIES, RECIPES } from "../../data/recipes";
+import { RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { generateRecipeFromImage } from "../../services/ai";
@@ -390,7 +390,39 @@ export default function ExploreScreen() {
   );
 
   const renderContent = () => {
-    if (searchQuery.length > 0 || activeCategory !== "All") {
+    if (isLoading || isSearching) {
+      return (
+        <View style={{ padding: 16, gap: 16 }}>
+          <Skeleton height={200} borderRadius={16} />
+          <Skeleton height={120} borderRadius={16} />
+          <Skeleton height={120} borderRadius={16} />
+        </View>
+      );
+    }
+
+    if (error) {
+      return <ErrorState message={error} onRetry={() => setError(null)} />;
+    }
+
+    if (debouncedQuery.length > 0 || activeCategory !== "All") {
+      if (filteredRecipes.length === 0) {
+        return (
+          <EmptyState
+            title={i18n.t("noResults") || "No recipes found"}
+            description={
+              i18n.t("tryDifferentSearch") ||
+              "Try adjusting your search or filters"
+            }
+            icon="search"
+            actionLabel="Clear Filters"
+            onAction={() => {
+              setSearchQuery("");
+              setActiveCategory("All");
+            }}
+          />
+        );
+      }
+
       return (
         <Animated.View
           entering={FadeInDown.duration(400)}
@@ -400,6 +432,9 @@ export default function ExploreScreen() {
             <Text style={styles.sectionTitle}>
               {filteredRecipes.length} {i18n.t("results")}
             </Text>
+            <TouchableOpacity onPress={() => setSortModalVisible(true)}>
+              <Ionicons name="filter" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
           </View>
           {renderRecipeList(filteredRecipes, 100)}
         </Animated.View>
@@ -441,8 +476,17 @@ export default function ExploreScreen() {
                   style={styles.trendingOverlay}
                 >
                   <View style={styles.trendingTag}>
-                    <Ionicons name="trending-up" size={12} color="#E65100" />
-                    <Text style={styles.trendingTagText}>
+                    <Ionicons
+                      name="trending-up"
+                      size={12}
+                      color={colors.primary}
+                    />
+                    <Text
+                      style={[
+                        styles.trendingTagText,
+                        { color: colors.primary },
+                      ]}
+                    >
                       {i18n.t("trendingTag")}
                     </Text>
                   </View>
@@ -497,51 +541,12 @@ export default function ExploreScreen() {
 
         <AdBanner />
 
-        {/* Categories Circles */}
-        <Animated.View entering={FadeInDown.delay(400).duration(500)}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{i18n.t("categories")}</Text>
-          </View>
-          <View style={styles.categoriesRow}>
-            {CATEGORIES.map((cat, index) => {
-              const style = CATEGORY_STYLES[cat.name] || {
-                bg: "#F5F5F5",
-                color: "#666",
-                icon: "restaurant",
-              };
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={styles.categoryCircleItem}
-                  onPress={() => setActiveCategory(cat.name)}
-                  activeOpacity={0.7}
-                >
-                  <Animated.View
-                    entering={FadeInDown.delay(500 + index * 100).springify()}
-                    style={[
-                      styles.categoryCircle,
-                      { backgroundColor: style.bg },
-                    ]}
-                  >
-                    <MaterialIcons
-                      name={style.icon}
-                      size={28}
-                      color={style.color}
-                    />
-                  </Animated.View>
-                  <Text style={styles.categoryLabel}>{cat.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Animated.View>
-
         {/* Popular Recipes List */}
         <Animated.View entering={FadeInDown.delay(600).duration(500)}>
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
             <Text style={styles.sectionTitle}>{i18n.t("popularRecipes")}</Text>
             <TouchableOpacity onPress={() => setSortModalVisible(true)}>
-              <Ionicons name="filter" size={20} color="#666" />
+              <Ionicons name="filter" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -567,89 +572,61 @@ export default function ExploreScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={22}
-            color="#C26A00"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            placeholder={i18n.t("searchPlaceholder")}
-            style={styles.searchInput}
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 ? (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Ionicons name="close-circle" size={20} color="#999" />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={handleScanIngredients}>
-              <LinearGradient
-                colors={["#FF8C00", "#E65100"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.aiScanButton}
-              >
-                <Ionicons name="scan-outline" size={20} color="#fff" />
-                <View style={styles.aiBadge}>
-                  <Text style={styles.aiBadgeText}>AI</Text>
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
+        <View
+          style={{
+            paddingHorizontal: 16,
+            marginBottom: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <SearchInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onClear={() => setSearchQuery("")}
+              placeholder={i18n.t("searchPlaceholder")}
+            />
+          </View>
+          <TouchableOpacity onPress={handleScanIngredients}>
+            <LinearGradient
+              colors={[colors.primaryLight, colors.primary]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.aiScanButton}
+            >
+              <Ionicons name="scan-outline" size={20} color="#fff" />
+              <View style={styles.aiBadge}>
+                <Text style={styles.aiBadgeText}>AI</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
-        {/* Filters */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.filtersScroll}
-          contentContainerStyle={styles.filtersContent}
+          contentContainerStyle={{
+            paddingHorizontal: 16,
+            gap: 8,
+            paddingBottom: 8,
+          }}
+          style={{ marginBottom: 8, flexGrow: 0 }}
         >
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeCategory === "All" && styles.filterChipActive,
-            ]}
+          <Chip
+            label={i18n.t("all") || "All"}
+            selected={activeCategory === "All"}
             onPress={() => setActiveCategory("All")}
-          >
-            <Text
-              style={[
-                styles.filterText,
-                activeCategory === "All" && styles.filterTextActive,
-              ]}
-            >
-              {i18n.t("all")}
-            </Text>
-          </TouchableOpacity>
-
-          {["Traditional", "Dinner", "Stew", "Vegetarian", "High Protein"].map(
-            (filter) => {
-              return (
-                <TouchableOpacity
-                  key={filter}
-                  style={[
-                    styles.filterChip,
-                    activeCategory === filter && styles.filterChipActive,
-                  ]}
-                  onPress={() => setActiveCategory(filter)}
-                >
-                  <Text
-                    style={[
-                      styles.filterText,
-                      activeCategory === filter && styles.filterTextActive,
-                    ]}
-                  >
-                    {filter}
-                  </Text>
-                </TouchableOpacity>
-              );
-            },
-          )}
+          />
+          {CATEGORIES.map((cat) => (
+            <Chip
+              key={cat.id}
+              label={cat.name}
+              selected={activeCategory === cat.name}
+              onPress={() => setActiveCategory(cat.name)}
+            />
+          ))}
         </ScrollView>
 
         {renderContent()}
