@@ -1,90 +1,72 @@
-import { useGamificationStore } from '@/stores/gamificationStore';
-import { ACHIEVEMENTS, LEVEL_XP_THRESHOLDS } from '@/engines/gamificationEngine';
-import { Achievement } from '@/types/gamification';
-
-// ============================================================================
-// SELECTORS
-// ============================================================================
+import {
+    ACHIEVEMENTS,
+    LEVEL_XP_THRESHOLDS,
+} from "@/engines/gamificationEngine";
+import { useGamificationStore } from "@/stores/gamificationStore";
 
 /**
- * Returns the current progress to the next level.
- * @returns { currentLevelXp, xpToNextLevel, progressPercent }
+ * Returns the progress percentage to the next level (0-1).
  */
-export const useLevelProgress = () => {
-  const xp = useGamificationStore((state) => state.xp);
-  const level = useGamificationStore((state) => state.level);
+export const selectProgressToNextLevel = (
+  xp: number,
+  level: number,
+): number => {
+  // If max level in static table
+  if (level >= LEVEL_XP_THRESHOLDS.length) {
+    // For infinite levels, we can just show progress within the current calculated bracket
+    // Or just return 1 if we treat 20 as max for UI purposes
+    // But since we have a formula, let's try to show progress.
 
-  // Get threshold for current level (start) and next level (end)
-  // Arrays are 0-indexed, Level 1 corresponds to index 0 (0 XP)
-  // Level 2 corresponds to index 1 (100 XP)
-  
-  // XP required to reach CURRENT level (floor)
-  const currentLevelFloor = getXpThresholdForLevel(level);
-  
-  // XP required to reach NEXT level (ceiling)
-  const nextLevelCeiling = getXpThresholdForLevel(level + 1);
+    // XP for current level start
+    const currentLevelXP = Math.floor(100 * Math.pow(level - 1, 1.5));
+    // XP for next level start
+    const nextLevelXP = Math.floor(100 * Math.pow(level, 1.5));
 
-  const xpInCurrentLevel = xp - currentLevelFloor;
-  const xpRequiredForNextLevel = nextLevelCeiling - currentLevelFloor;
-  
-  const progressPercent = Math.min(
-    100, 
-    Math.max(0, (xpInCurrentLevel / xpRequiredForNextLevel) * 100)
-  );
+    const needed = nextLevelXP - currentLevelXP;
+    const gained = xp - currentLevelXP;
+
+    return Math.min(1, Math.max(0, gained / needed));
+  }
+
+  const currentLevelXP = LEVEL_XP_THRESHOLDS[level - 1];
+  const nextLevelXP = LEVEL_XP_THRESHOLDS[level];
+
+  const needed = nextLevelXP - currentLevelXP;
+  const gained = xp - currentLevelXP;
+
+  return Math.min(1, Math.max(0, gained / needed));
+};
+
+/**
+ * Returns list of unlocked badge objects.
+ */
+export const selectUnlockedBadges = (unlockedIds: string[]) => {
+  return ACHIEVEMENTS.filter((a) => unlockedIds.includes(a.id)).map((a) => ({
+    id: a.id,
+    title: a.title,
+    icon: a.badgeIcon,
+    rarity: a.rarity,
+  }));
+};
+
+/**
+ * Hook to access gamification UI data easily.
+ */
+export const useGamificationData = () => {
+  const xp = useGamificationStore((s) => s.xp);
+  const level = useGamificationStore((s) => s.level);
+  const achievements = useGamificationStore((s) => s.achievements);
+  const weeklyXp = useGamificationStore((s) => s.weeklyXp);
+  const chefName = useGamificationStore((s) => s.chefName);
 
   return {
-    currentLevelXp: xpInCurrentLevel,
-    xpToNextLevel: xpRequiredForNextLevel - xpInCurrentLevel,
-    progressPercent,
-    totalXp: xp,
-    level
+    level,
+    xp,
+    weeklyXp,
+    chefName,
+    progress: selectProgressToNextLevel(xp, level),
+    badges: selectUnlockedBadges(achievements),
+    totalBadgesCount: ACHIEVEMENTS.length,
+    unlockedBadgesCount: achievements.length,
   };
 };
-
-/**
- * Returns a list of all unlocked badges with their details.
- */
-export const useUnlockedBadges = (): Achievement[] => {
-  const unlockedIds = useGamificationStore((state) => state.achievements);
-  return ACHIEVEMENTS.filter((achievement) => unlockedIds.includes(achievement.id));
-};
-
-/**
- * Returns a list of locked achievements (next goals).
- */
-export const useLockedAchievements = (): Achievement[] => {
-  const unlockedIds = useGamificationStore((state) => state.achievements);
-  return ACHIEVEMENTS.filter((achievement) => !unlockedIds.includes(achievement.id));
-};
-
-/**
- * Returns the user's weekly XP status.
- */
-export const useWeeklyProgress = () => {
-    const weeklyXp = useGamificationStore((state) => state.weeklyXp);
-    return { weeklyXp };
-};
-
-/**
- * Returns the user's chef identity.
- */
-export const useChefIdentity = () => {
-    const chefId = useGamificationStore((state) => state.chefId);
-    const chefName = useGamificationStore((state) => state.chefName);
-    return { chefId, chefName };
-};
-
-
-// ============================================================================
-// HELPERS
-// ============================================================================
-
-function getXpThresholdForLevel(level: number): number {
-  if (level <= 0) return 0;
-  if (level <= LEVEL_XP_THRESHOLDS.length) {
-    return LEVEL_XP_THRESHOLDS[level - 1];
-  }
-  
-  // Fallback Formula: XP = 100 * (L-1)^1.5
-  return Math.floor(100 * Math.pow(level - 1, 1.5));
-}
