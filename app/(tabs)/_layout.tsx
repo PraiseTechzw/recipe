@@ -109,6 +109,14 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: 'Leaders',
+          tabBarIcon: ({ color }) => <Ionicons size={24} name="trophy" color={color} />,
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: i18n.t('profile'),
