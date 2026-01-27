@@ -1,6 +1,4 @@
-import {
-    processGamificationEvent
-} from "@/engines/gamificationEngine";
+import { processGamificationEvent } from "@/engines/gamificationEngine";
 import {
     ExtendedUserStats,
     GamificationEvent,
@@ -20,6 +18,7 @@ interface GamificationState extends UserGamificationState {
   // Identity
   chefId: string | null;
   chefName: string | null;
+  avatarSeed: string | null;
 
   // Weekly Tracking
   weeklyXp: number;
@@ -45,6 +44,7 @@ export const useGamificationStore = create<GamificationState>()(
       // Initial State
       chefId: null,
       chefName: null,
+      avatarSeed: null,
       xp: 0,
       level: 1,
       achievements: [],
@@ -67,14 +67,18 @@ export const useGamificationStore = create<GamificationState>()(
 
       // Actions
       initChefIdentity: () => {
-        const currentId = get().chefId;
-        if (!currentId) {
+        const state = get();
+        if (!state.chefId) {
           // Generate a simple UUID-like string
           const newId =
             "chef_" +
             Date.now().toString(36) +
             Math.random().toString(36).substr(2, 9);
           set({ chefId: newId });
+        }
+
+        if (!state.avatarSeed) {
+          set({ avatarSeed: generateAvatarSeed() });
         }
       },
 
@@ -123,6 +127,7 @@ export const useGamificationStore = create<GamificationState>()(
       partialize: (state) => ({
         chefId: state.chefId,
         chefName: state.chefName,
+        avatarSeed: state.avatarSeed,
         xp: state.xp,
         level: state.level,
         achievements: state.achievements,
