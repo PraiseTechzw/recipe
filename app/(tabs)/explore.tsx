@@ -56,7 +56,7 @@ export default function ExploreScreen() {
   >("newest");
 
   // Data State
-  const [isLoading, setIsLoading] = useState(false); // For initial load or major transitions
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { locale, setLocale } = useStore();
