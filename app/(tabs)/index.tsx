@@ -32,7 +32,7 @@ import { useTheme } from "../../theme/useTheme";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { colors, spacing, typography } = useTheme();
+  const { colors, spacing, typography, shadows } = useTheme();
   const {
     viewHistory,
     categoryScores,
@@ -138,7 +138,11 @@ export default function HomeScreen() {
           <Logo size="medium" />
           <View style={styles.headerRight}>
             <TouchableOpacity
-              style={styles.iconButton}
+              style={[
+                styles.iconButton,
+                { backgroundColor: colors.surface },
+                shadows.small,
+              ]}
               onPress={() => {
                 HapticService.selection();
                 router.push("/shopping-list");
@@ -146,7 +150,17 @@ export default function HomeScreen() {
               accessibilityLabel="Shopping List"
             >
               <Ionicons name="basket-outline" size={24} color={colors.text} />
-              {shoppingList.length > 0 && <View style={styles.badge} />}
+              {shoppingList.length > 0 && (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.surface,
+                    },
+                  ]}
+                />
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -158,13 +172,19 @@ export default function HomeScreen() {
             >
               <View style={styles.avatarContainer}>
                 <Image
-                  source={{ uri: "https://i.pravatar.cc/150?img=12" }}
-                  style={styles.avatar}
+                  source={{
+                    uri:
+                      userProfile.avatar || "https://i.pravatar.cc/150?img=12",
+                  }}
+                  style={[styles.avatar, { borderColor: colors.surface }]}
                 />
                 <View
                   style={[
                     styles.levelBadge,
-                    { backgroundColor: colors.primary },
+                    {
+                      backgroundColor: colors.primary,
+                      borderColor: colors.surface,
+                    },
                   ]}
                 >
                   <Text style={styles.levelText}>
@@ -216,7 +236,7 @@ export default function HomeScreen() {
                   {i18n.t("searchPlaceholderHome")}
                 </Text>
                 <LinearGradient
-                  colors={[colors.primary, "#E65100"]}
+                  colors={[colors.primary, colors.secondary]}
                   style={styles.aiButtonHome}
                 >
                   <Ionicons name="scan-outline" size={18} color="#fff" />
@@ -464,14 +484,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
     position: "relative",
   },
   badge: {
@@ -649,7 +663,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   dailyBadge: {
-    backgroundColor: "#E65100",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -673,7 +686,7 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "#fff",
+    borderColor: "#FFFFFF",
   },
   authorNameLight: {
     color: "#fff",
