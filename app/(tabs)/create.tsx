@@ -5,14 +5,14 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
@@ -141,6 +141,7 @@ export default function CreateScreen() {
   };
 
   const handleRemoveStep = (index: number) => {
+    HapticService.light();
     const newSteps = [...steps];
     newSteps.splice(index, 1);
     setSteps(newSteps);

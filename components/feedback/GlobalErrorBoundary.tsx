@@ -43,7 +43,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           <ScrollView contentContainerStyle={styles.content}>
             <Text style={styles.title}>Oops! Something went wrong.</Text>
             <Text style={styles.message}>
-              We're sorry, but the app encountered an unexpected error.
+              We&apos;re sorry, but the app encountered an unexpected error.
             </Text>
             {this.state.error && (
               <View style={styles.errorBox}>
