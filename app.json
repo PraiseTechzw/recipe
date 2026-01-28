@@ -18,9 +18,9 @@
       "package": "com.appixiasoftwares.tasteofzimbabwe",
       "versionCode": 2,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#E6F4FE",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "monochromeImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
@@ -43,7 +43,7 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 570,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {

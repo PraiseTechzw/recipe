@@ -2,7 +2,6 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import * as Updates from 'expo-updates';
 import { Button } from '../ui/Button'; // Assuming we have this from previous steps
-import { COLORS } from '@/theme/tokens'; // Direct import or useTheme hook (but hook can't be used in class easily without wrapper)
 
 interface Props {
   children: ReactNode;
@@ -30,7 +29,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   handleRestart = async () => {
     try {
       await Updates.reloadAsync();
-    } catch (e) {
+    } catch {
       // Fallback if Updates not available (e.g. dev mode)
       this.setState({ hasError: false, error: null });
     }
@@ -43,7 +42,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           <ScrollView contentContainerStyle={styles.content}>
             <Text style={styles.title}>Oops! Something went wrong.</Text>
             <Text style={styles.message}>
-              We're sorry, but the app encountered an unexpected error.
+              We&apos;re sorry, but the app encountered an unexpected error.
             </Text>
             {this.state.error && (
               <View style={styles.errorBox}>

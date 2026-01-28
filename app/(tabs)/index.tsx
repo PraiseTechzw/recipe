@@ -4,13 +4,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    Animated,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Animated,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState } from "../../components/feedback/EmptyState";
@@ -18,13 +18,12 @@ import { Skeleton } from "../../components/feedback/Skeleton";
 import Logo from "../../components/Logo";
 import { RecipeCardUI } from "../../components/ui/RecipeCardUI";
 import { SectionHeader } from "../../components/ui/SectionHeader";
-import { RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
 import { HapticService } from "../../services/haptics";
 import {
-    getPantryMatches,
-    getRecipeOfTheDay,
-    getRecommendedRecipes,
+  getPantryMatches,
+  getRecipeOfTheDay,
+  getRecommendedRecipes,
 } from "../../services/recommendations";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
@@ -40,11 +39,12 @@ export default function HomeScreen() {
     shoppingList,
     userProfile,
     pantry,
+    recipes,
   } = useStore();
 
-  const [featuredRecipes, setFeaturedRecipes] = useState(RECIPES.slice(0, 3));
-  const [dailyPick, setDailyPick] = useState(RECIPES[1]);
-  const [pantryRecipes, setPantryRecipes] = useState<typeof RECIPES>([]);
+  const [featuredRecipes, setFeaturedRecipes] = useState(recipes.slice(0, 3));
+  const [dailyPick, setDailyPick] = useState(recipes[1] || recipes[0]);
+  const [pantryRecipes, setPantryRecipes] = useState<typeof recipes>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -62,16 +62,20 @@ export default function HomeScreen() {
 
   const loadData = async () => {
     // 1. Daily Rotation
-    setDailyPick(getRecipeOfTheDay());
+    setDailyPick(getRecipeOfTheDay(recipes));
 
     // 2. Smart Recommendations
-    const smartRecs = getRecommendedRecipes(viewHistory, categoryScores);
+    const smartRecs = getRecommendedRecipes(
+      viewHistory,
+      categoryScores,
+      recipes,
+    );
     if (smartRecs.length > 0) {
       setFeaturedRecipes(smartRecs.slice(0, 5));
     }
 
     // 3. Pantry Matches
-    const matched = getPantryMatches(pantry);
+    const matched = getPantryMatches(pantry, recipes);
     setPantryRecipes(matched);
   };
 
@@ -89,7 +93,7 @@ export default function HomeScreen() {
       }, 1000);
     };
     init();
-  }, [viewHistory, categoryScores, pantry]);
+  }, [viewHistory, categoryScores, pantry, recipes]);
 
   const onRefresh = async () => {
     HapticService.selection();
@@ -109,6 +113,12 @@ export default function HomeScreen() {
   const handleRecipePress = (id: string) => {
     HapticService.light();
     router.push(`/recipe/${id}`);
+  };
+
+  const getDifficulty = (stepsCount: number): string => {
+    if (stepsCount <= 5) return "Easy";
+    if (stepsCount <= 10) return "Medium";
+    return "Hard";
   };
 
   const renderFeaturedSkeleton = () => (
@@ -171,13 +181,26 @@ export default function HomeScreen() {
               accessibilityLabel="Profile"
             >
               <View style={styles.avatarContainer}>
-                <Image
-                  source={{
-                    uri:
-                      userProfile.avatar || "https://i.pravatar.cc/150?img=12",
-                  }}
-                  style={[styles.avatar, { borderColor: colors.surface }]}
-                />
+                {userProfile.avatar ? (
+                  <Image
+                    source={{ uri: userProfile.avatar }}
+                    style={[styles.avatar, { borderColor: colors.surface }]}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.avatar,
+                      {
+                        borderColor: colors.surface,
+                        backgroundColor: colors.primary,
+                        justifyContent: "center",
+                        alignItems: "center",
+                      },
+                    ]}
+                  >
+                    <Ionicons name="person" size={20} color="#fff" />
+                  </View>
+                )}
                 <View
                   style={[
                     styles.levelBadge,
@@ -219,30 +242,57 @@ export default function HomeScreen() {
               {i18n.t("subGreeting")}
             </Text>
 
-            <Link href="/(tabs)/explore" asChild>
-              <TouchableOpacity
-                style={[
-                  styles.searchBar,
-                  { backgroundColor: colors.surfaceVariant },
-                ]}
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Link
+                href={{
+                  pathname: "/(tabs)/explore",
+                  params: { autoFocus: "true" },
+                }}
+                asChild
               >
-                <Ionicons name="search" size={24} color={colors.primary} />
-                <Text
+                <TouchableOpacity
                   style={[
-                    styles.placeholderText,
-                    { color: colors.textSecondary },
+                    styles.searchBar,
+                    {
+                      backgroundColor: colors.surfaceVariant,
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                    },
                   ]}
                 >
-                  {i18n.t("searchPlaceholderHome")}
-                </Text>
-                <LinearGradient
-                  colors={[colors.primary, colors.secondary]}
-                  style={styles.aiButtonHome}
-                >
-                  <Ionicons name="scan-outline" size={18} color="#fff" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </Link>
+                  <Ionicons
+                    name="search"
+                    size={24}
+                    color={colors.primary}
+                    style={{ marginRight: 12 }}
+                  />
+                  <Text
+                    style={[
+                      styles.placeholderText,
+                      {
+                        color: colors.textSecondary,
+                        textAlignVertical: "center", // Android fix
+                        includeFontPadding: false, // Android fix
+                      },
+                    ]}
+                  >
+                    {i18n.t("searchPlaceholderHome")}
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+
+              <Link href="/(ai-chef)" asChild>
+                <TouchableOpacity activeOpacity={0.8}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.secondary]}
+                    style={styles.aiButtonHome}
+                  >
+                    <Ionicons name="scan-outline" size={24} color="#fff" />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </Animated.View>
 
           {/* Featured Section */}
@@ -285,7 +335,7 @@ export default function HomeScreen() {
                       <View style={styles.ratingBadge}>
                         <Ionicons name="star" size={12} color="#E65100" />
                         <Text style={styles.ratingText}>
-                          {recipe.rating || 4.8}
+                          {recipe.rating ? recipe.rating.toFixed(1) : "New"}
                         </Text>
                       </View>
                     </View>
@@ -391,7 +441,14 @@ export default function HomeScreen() {
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
-              ) : null}
+              ) : (
+                <EmptyState
+                  title="No Daily Pick"
+                  description="Check back later for today's featured recipe."
+                  icon="calendar-outline"
+                  style={{ height: 250, borderRadius: 24 }}
+                />
+              )}
             </View>
           </Animated.View>
 
@@ -427,7 +484,7 @@ export default function HomeScreen() {
                       title={recipe.title}
                       imageUrl={recipe.image}
                       duration={parseInt(recipe.time) || 30}
-                      difficulty="Medium" // Hardcoded for now as it's not in model
+                      difficulty={getDifficulty(recipe.steps.length)}
                       rating={recipe.rating}
                       onPress={() => handleRecipePress(recipe.id)}
                     />
@@ -548,7 +605,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 16,
-    gap: 12,
   },
   placeholderText: {
     flex: 1,

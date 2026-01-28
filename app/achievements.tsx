@@ -3,20 +3,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-    ACHIEVEMENTS,
-    LEVEL_XP_THRESHOLDS,
-} from "@/engines/gamificationEngine";
-import { useGamificationStore } from "@/stores/gamificationStore";
+import { BADGES, getLevel } from "../constants/gamification";
+import { useStore } from "../store/useStore";
 
 const { width } = Dimensions.get("window");
 
@@ -27,52 +24,29 @@ export default function AchievementsScreen() {
   const router = useRouter();
   const [filter, setFilter] = useState<FilterType>("All");
 
-  const { xp, level, achievements: unlockedIds } = useGamificationStore();
+  const { userProfile } = useStore();
+  const { xp, badges: unlockedIds } = userProfile;
+  const levelInfo = getLevel(xp);
+  const level = levelInfo.level;
 
   // -------------------------------------------------------------------------
   // HELPERS
   // -------------------------------------------------------------------------
 
   // Calculate Progress to Next Level
-  // Note: Level is 1-based.
-  // If level <= 20, use table.
-  // If level > 20, use formula: XP = 100 * (L-1)^1.5
-  // We need current level base XP and next level XP.
-
-  const getLevelInfo = (lvl: number) => {
-    let currentLevelStart = 0;
-    let nextLevelStart = 100; // Default fallback
-
-    if (lvl <= 20) {
-      // Array index 0 -> Level 1 (0 XP)
-      // Array index 1 -> Level 2 (100 XP)
-      // So Level L start is index L-1
-      currentLevelStart = LEVEL_XP_THRESHOLDS[lvl - 1] || 0;
-      nextLevelStart = LEVEL_XP_THRESHOLDS[lvl] || 999999999;
-    } else {
-      // Formula: XP = 100 * (L-1)^1.5
-      currentLevelStart = Math.floor(100 * Math.pow(lvl - 1, 1.5));
-      nextLevelStart = Math.floor(100 * Math.pow(lvl, 1.5));
-    }
-
-    return { currentLevelStart, nextLevelStart };
-  };
-
-  const { currentLevelStart, nextLevelStart } = getLevelInfo(level);
+  const nextLevelXP = levelInfo.nextLevelXP || levelInfo.minXP + 1000;
+  const currentLevelXP = levelInfo.minXP;
 
   const progressPercent = Math.min(
     100,
-    Math.max(
-      0,
-      ((xp - currentLevelStart) / (nextLevelStart - currentLevelStart)) * 100,
-    ),
+    Math.max(0, ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100),
   );
 
   // -------------------------------------------------------------------------
   // FILTERING
   // -------------------------------------------------------------------------
 
-  const filteredAchievements = ACHIEVEMENTS.filter((item) => {
+  const filteredAchievements = BADGES.filter((item) => {
     const isUnlocked = unlockedIds.includes(item.id);
     if (filter === "Unlocked") return isUnlocked;
     if (filter === "Locked") return !isUnlocked;
@@ -89,7 +63,19 @@ export default function AchievementsScreen() {
   });
 
   const unlockedCount = unlockedIds.length;
-  const totalCount = ACHIEVEMENTS.length;
+  const totalCount = BADGES.length;
+
+  function getCategoryColor(
+    category: string,
+  ): import("react-native").ColorValue | undefined {
+    throw new Error("Function not implemented.");
+  }
+
+  function getCategoryColor(
+    category: string,
+  ): import("react-native").ColorValue | undefined {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -127,7 +113,7 @@ export default function AchievementsScreen() {
             <View style={styles.xpInfo}>
               <Text style={styles.xpTotalText}>{xp.toLocaleString()} XP</Text>
               <Text style={styles.xpNextText}>
-                Next Level: {nextLevelStart.toLocaleString()} XP
+                Next Level: {nextLevelXP.toLocaleString()} XP
               </Text>
 
               <View style={styles.progressBarBg}>
@@ -139,7 +125,7 @@ export default function AchievementsScreen() {
                 />
               </View>
               <Text style={styles.progressText}>
-                {Math.floor(nextLevelStart - xp)} XP to go
+                {Math.floor(nextLevelXP - xp)} XP to go
               </Text>
             </View>
           </View>
@@ -160,24 +146,18 @@ export default function AchievementsScreen() {
                 No badges unlocked yet. Get cooking!
               </Text>
             ) : (
-              ACHIEVEMENTS.filter((a) => unlockedIds.includes(a.id)).map(
-                (badge) => (
-                  <View key={badge.id} style={styles.badgeItem}>
-                    <View
-                      style={[
-                        styles.badgeIconContainer,
-                        { backgroundColor: getRarityColor(badge.rarity) },
-                      ]}
-                    >
-                      <Ionicons
-                        name={badge.badgeIcon as any}
-                        size={24}
-                        color="#FFF"
-                      />
-                    </View>
+              BADGES.filter((a) => unlockedIds.includes(a.id)).map((badge) => (
+                <View key={badge.id} style={styles.badgeItem}>
+                  <View
+                    style={[
+                      styles.badgeIconContainer,
+                      { backgroundColor: getCategoryColor(badge.category) },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 24 }}>{badge.icon}</Text>
                   </View>
-                ),
-              )
+                </View>
+              ))
             )}
           </View>
         </View>
@@ -212,22 +192,22 @@ export default function AchievementsScreen() {
                   style={[
                     styles.iconCircle,
                     isUnlocked
-                      ? { backgroundColor: getRarityColor(item.rarity) }
+                      ? { backgroundColor: getCategoryColor(item.category) }
                       : styles.iconLocked,
                   ]}
                 >
-                  <Ionicons
-                    name={isUnlocked ? (item.badgeIcon as any) : "lock-closed"}
-                    size={24}
-                    color={isUnlocked ? "#FFF" : "#999"}
-                  />
+                  {isUnlocked ? (
+                    <Text style={{ fontSize: 24 }}>{item.icon}</Text>
+                  ) : (
+                    <Ionicons name="lock-closed" size={24} color="#999" />
+                  )}
                 </View>
 
                 <View style={styles.rowContent}>
                   <Text
                     style={[styles.rowTitle, !isUnlocked && styles.textLocked]}
                   >
-                    {item.title}
+                    {item.name}
                   </Text>
                   <Text style={styles.rowDesc} numberOfLines={2}>
                     {item.description}
@@ -247,19 +227,6 @@ export default function AchievementsScreen() {
       </ScrollView>
     </View>
   );
-}
-
-function getRarityColor(rarity: string) {
-  switch (rarity) {
-    case "common":
-      return "#4FC3F7"; // Light Blue
-    case "rare":
-      return "#FFB74D"; // Orange
-    case "epic":
-      return "#AB47BC"; // Purple
-    default:
-      return "#999";
-  }
 }
 
 const styles = StyleSheet.create({

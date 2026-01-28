@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
     ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -88,11 +89,98 @@ export default function CreateScreen() {
     return isValid;
   };
 
+  const performScan = async (useCamera: boolean) => {
+    try {
+      let result;
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.5,
+        base64: true,
+      };
+
+      if (useCamera) {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) {
+          Alert.alert("Permission needed", "Camera permission is required.");
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync(options);
+      } else {
+        result = await ImagePicker.launchImageLibraryAsync(options);
+      }
+
+      if (result.canceled || !result.assets[0].base64) return;
+
+      setIsGenerating(true);
+      const asset = result.assets[0];
+
+      // Call AI
+      const recipe = await generateRecipeFromImage(asset.base64);
+
+      // Populate
+      setTitle(recipe.title);
+      setDescription(recipe.description);
+      setTime(recipe.time);
+
+      const s = parseInt(recipe.servings) || 2;
+      setServings(s.toString());
+
+      // Ingredients: API {name, quantity} -> UI string
+      setIngredients(
+        recipe.ingredients.map((i: any) => `${i.quantity} ${i.name}`),
+      );
+
+      // Steps: API string[] -> UI string[]
+      setSteps(recipe.steps);
+
+      // Image
+      setImage(asset.uri);
+
+      ToastService.success("Magic Chef", "Recipe generated successfully!");
+      HapticService.success();
+    } catch (e) {
+      console.error(e);
+      Alert.alert("AI Error", "Could not generate recipe. Please try again.");
+      HapticService.error();
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAIScan = async () => {
+    // Check offline
+    const isOnline = await SyncService.checkConnectivity();
+    if (!isOnline) {
+      Alert.alert("Offline", "AI Chef requires an internet connection.");
+      return;
+    }
+
+    HapticService.selection();
+
+    // Ask: Camera or Gallery?
+    Alert.alert(
+      "Magic AI Chef",
+      "Take a photo of your ingredients to generate a recipe!",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Camera",
+          onPress: () => performScan(true),
+        },
+        {
+          text: "Gallery",
+          onPress: () => performScan(false),
+        },
+      ],
+    );
+  };
+
   const pickImage = async () => {
     HapticService.light();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.5, // Compression hint: reduced quality
@@ -115,10 +203,12 @@ export default function CreateScreen() {
   };
 
   const handleAddIngredient = () => {
+    HapticService.selection();
     setIngredients([...ingredients, ""]);
   };
 
   const handleRemoveIngredient = (index: number) => {
+    HapticService.light();
     const newIngredients = [...ingredients];
     newIngredients.splice(index, 1);
     setIngredients(newIngredients);
@@ -134,10 +224,12 @@ export default function CreateScreen() {
   };
 
   const handleAddStep = () => {
+    HapticService.selection();
     setSteps([...steps, ""]);
   };
 
   const handleRemoveStep = (index: number) => {
+    HapticService.light();
     const newSteps = [...steps];
     newSteps.splice(index, 1);
     setSteps(newSteps);
@@ -154,10 +246,12 @@ export default function CreateScreen() {
 
   const handleSubmit = async () => {
     if (!validate()) {
+      HapticService.error();
       ToastService.error(i18n.t("validationError"), i18n.t("checkFields"));
       return;
     }
 
+    HapticService.light();
     setIsSubmitting(true);
 
     try {
@@ -192,14 +286,20 @@ export default function CreateScreen() {
       // Save to local store
       addRecipe(newRecipe);
 
-      // Attempt to sync (if service exists)
-      SyncService.syncRecipes().catch((err) =>
-        console.log("Background sync failed", err),
-      );
+      // Check connectivity for feedback
+      const isOnline = await SyncService.checkConnectivity();
+
+      if (isOnline) {
+        // Attempt to sync
+        SyncService.syncRecipes().catch((err) =>
+          console.log("Background sync failed", err),
+        );
+        ToastService.success(i18n.t("success"), i18n.t("recipeCreated"));
+      } else {
+        ToastService.info(i18n.t("savedLocally"), i18n.t("syncLater"));
+      }
 
       addXP(50);
-
-      ToastService.success(i18n.t("success"), i18n.t("recipeCreated"));
 
       setTimeout(() => {
         setTitle("");
@@ -235,6 +335,22 @@ export default function CreateScreen() {
               {i18n.t("createSubtitle")}
             </Text>
           </View>
+
+          {/* AI Magic Button */}
+          <TouchableOpacity
+            style={[styles.aiButton, isGenerating && { opacity: 0.7 }]}
+            onPress={handleAIScan}
+            disabled={isGenerating || isSubmitting}
+          >
+            {isGenerating ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="sparkles" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.aiButtonText}>Magic AI Chef</Text>
+              </>
+            )}
+          </TouchableOpacity>
 
           {/* Image Upload */}
           <View>

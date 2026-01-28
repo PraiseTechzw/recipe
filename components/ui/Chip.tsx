@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import { Text, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/useTheme';
 
 interface ChipProps {

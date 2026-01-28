@@ -10,7 +10,7 @@ interface SegmentedControlProps {
 }
 
 export function SegmentedControl({ values, selectedIndex, onChange, style }: SegmentedControlProps) {
-  const { colors, spacing, radius, typography } = useTheme();
+  const { colors, radius, typography } = useTheme();
 
   return (
     <View style={[
