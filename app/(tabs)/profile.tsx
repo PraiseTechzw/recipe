@@ -245,7 +245,7 @@ export default function ProfileScreen() {
 
         {/* Sync Status Widget */}
         <Animated.View entering={FadeInUp.delay(200).springify()}>
-          <View style={styles.syncWidget}>
+          <View style={[styles.syncWidget, isDarkMode && styles.syncWidgetDark]}>
             <View style={styles.syncInfo}>
               <Text style={[styles.syncTitle, isDarkMode && styles.textDark]}>
                 Sync Status
@@ -921,5 +921,102 @@ const styles = StyleSheet.create({
     color: "#D32F2F",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  miniBadgesSection: {
+    width: '100%',
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    marginTop: 12,
+  },
+  miniBadgesHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  miniBadgesTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  miniBadgesLink: {
+    color: '#fff',
+    fontSize: 12,
+    opacity: 0.8,
+  },
+  miniBadgesList: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  miniBadgeItem: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniBadgeIcon: {
+    fontSize: 18,
+  },
+  noBadgesText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontStyle: 'italic',
+  },
+  syncWidget: {
+    marginHorizontal: 20,
+    marginTop: -20,
+    marginBottom: 20,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    zIndex: 2,
+  },
+  syncWidgetDark: {
+    backgroundColor: '#1E1E1E',
+  },
+  syncInfo: {
+    flex: 1,
+  },
+  syncTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 4,
+  },
+  syncSubtitle: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 2,
+  },
+  syncButton: {
+    backgroundColor: '#E65100',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    minWidth: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  syncButtonDisabled: {
+    opacity: 0.7,
+  },
+  syncButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
