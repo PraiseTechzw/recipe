@@ -282,13 +282,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </Link>
 
-              <Link
-                href={{
-                  pathname: "/(tabs)/explore",
-                  params: { openScan: "true" },
-                }}
-                asChild
-              >
+              <Link href="/(ai-chef)" asChild>
                 <TouchableOpacity activeOpacity={0.8}>
                   <LinearGradient
                     colors={[colors.primary, colors.secondary]}

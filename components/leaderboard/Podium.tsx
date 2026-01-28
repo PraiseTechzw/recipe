@@ -1,9 +1,8 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, ViewStyle } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { LeaderboardEntry } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
-import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Image, StyleSheet, Text, View, ViewStyle } from "react-native";
 
 interface PodiumProps {
   topThree: LeaderboardEntry[];
@@ -20,7 +19,10 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
   const second = topThree[1];
   const third = topThree[2];
 
-  const renderPodiumStep = (entry: LeaderboardEntry | undefined, rank: number) => {
+  const renderPodiumStep = (
+    entry: LeaderboardEntry | undefined,
+    rank: number,
+  ) => {
     if (!entry) return <View style={styles.emptyStep} />;
 
     const isFirst = rank === 1;
@@ -33,29 +35,36 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
     const borderColor = isFirst ? "#FFD700" : isSecond ? "#C0C0C0" : "#CD7F32";
     const rankColor = isFirst ? "#FFD700" : isSecond ? "#C0C0C0" : "#CD7F32";
 
-    const score = mode === "weekly" ? entry.weekly_xp : entry.total_xp;
+    const score = (mode === "weekly" ? entry.weekly_xp : entry.total_xp) || 0;
 
     return (
-      <View style={[styles.stepContainer, { zIndex: isFirst ? 10 : 1 }]}>
+      <Animated.View
+        entering={FadeInDown.delay(rank * 100).springify()}
+        style={[styles.stepContainer, { zIndex: isFirst ? 10 : 1 }]}
+      >
         {/* Avatar Section */}
         <View style={[styles.avatarWrapper, { marginBottom: spacing.s }]}>
           {isFirst && (
-            <Ionicons 
-              name="crown" 
-              size={24} 
-              color="#FFD700" 
-              style={styles.crown} 
-            />
+            <Animated.View entering={ZoomIn.delay(400).springify()}>
+              <Ionicons
+                name="crown"
+                size={24}
+                color="#FFD700"
+                style={styles.crown}
+              />
+            </Animated.View>
           )}
-          <View style={[
-            styles.avatarBorder, 
-            { 
-              width: avatarSize + 6, 
-              height: avatarSize + 6,
-              borderRadius: (avatarSize + 6) / 2,
-              borderColor: borderColor,
-            }
-          ]}>
+          <View
+            style={[
+              styles.avatarBorder,
+              {
+                width: avatarSize + 6,
+                height: avatarSize + 6,
+                borderRadius: (avatarSize + 6) / 2,
+                borderColor: borderColor,
+              },
+            ]}
+          >
             <Image
               source={{
                 uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.chefs?.avatar_seed || entry.chef_id}`,
@@ -78,28 +87,22 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
           {entry.chefs?.chef_name || "Chef"}
         </Text>
         <Text style={[typography.caption, { color: colors.textSecondary }]}>
-          {score} XP
+          {score.toLocaleString()} XP
         </Text>
-      </View>
+      </Animated.View>
     );
   };
 
   return (
     <View style={[styles.container, style]}>
       {/* 2nd Place (Left) */}
-      <View style={styles.sideColumn}>
-        {renderPodiumStep(second, 2)}
-      </View>
+      <View style={styles.sideColumn}>{renderPodiumStep(second, 2)}</View>
 
       {/* 1st Place (Center) */}
-      <View style={styles.centerColumn}>
-        {renderPodiumStep(first, 1)}
-      </View>
+      <View style={styles.centerColumn}>{renderPodiumStep(first, 1)}</View>
 
       {/* 3rd Place (Right) */}
-      <View style={styles.sideColumn}>
-        {renderPodiumStep(third, 3)}
-      </View>
+      <View style={styles.sideColumn}>{renderPodiumStep(third, 3)}</View>
     </View>
   );
 }

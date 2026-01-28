@@ -86,6 +86,14 @@ export default function RootLayout() {
                 gestureEnabled: false,
               }}
             />
+            <Stack.Screen
+              name="(ai-chef)"
+              options={{
+                presentation: "fullScreenModal",
+                headerShown: false,
+                gestureEnabled: false,
+              }}
+            />
           </Stack>
         </View>
         <StatusBar style="auto" />

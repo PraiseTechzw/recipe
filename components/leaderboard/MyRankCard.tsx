@@ -16,7 +16,7 @@ export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
 
   if (!userRank && !entry) return null;
 
-  const score = entry ? (mode === "weekly" ? entry.weekly_xp : entry.total_xp) : 0;
+  const score = entry ? ((mode === "weekly" ? entry.weekly_xp : entry.total_xp) || 0) : 0;
 
   return (
     <View style={[

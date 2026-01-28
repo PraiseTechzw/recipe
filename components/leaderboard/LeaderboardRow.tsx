@@ -1,8 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { LeaderboardEntry } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
+import React from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
 import { LevelPill } from "../ui/LevelPill";
 
 interface LeaderboardRowProps {
@@ -12,23 +11,35 @@ interface LeaderboardRowProps {
   mode: "weekly" | "allTime";
 }
 
-export function LeaderboardRow({ item, rank, isMe, mode }: LeaderboardRowProps) {
+export const LeaderboardRow = React.memo(function LeaderboardRow({
+  item,
+  rank,
+  isMe,
+  mode,
+}: LeaderboardRowProps) {
   const { colors, typography, spacing, radius } = useTheme();
 
-  const score = mode === "weekly" ? item.weekly_xp : item.total_xp;
+  const score = (mode === "weekly" ? item.weekly_xp : item.total_xp) || 0;
 
   return (
-    <View style={[
-      styles.container,
-      isMe && { backgroundColor: colors.primary + "10" } // 10% opacity primary
-    ]}>
+    <View
+      style={[
+        styles.container,
+        isMe && { backgroundColor: colors.primary + "10" }, // 10% opacity primary
+      ]}
+      accessible={true}
+      accessibilityLabel={`Rank ${rank}, ${item.chefs?.chef_name || "Chef"}, Level ${item.level || 1}, ${score.toLocaleString()} XP`}
+      accessibilityRole="text"
+    >
       {/* Rank */}
       <View style={styles.rankContainer}>
-        <Text style={[
-          typography.body, 
-          styles.rankText,
-          isMe && { color: colors.primary, fontWeight: "bold" }
-        ]}>
+        <Text
+          style={[
+            typography.body,
+            styles.rankText,
+            isMe && { color: colors.primary, fontWeight: "bold" },
+          ]}
+        >
           {rank}
         </Text>
       </View>
@@ -44,29 +55,38 @@ export function LeaderboardRow({ item, rank, isMe, mode }: LeaderboardRowProps) 
       {/* Info */}
       <View style={styles.infoContainer}>
         <View style={styles.nameRow}>
-          <Text 
+          <Text
             style={[
-              typography.body, 
+              typography.body,
               styles.nameText,
-              isMe && { color: colors.primary, fontWeight: "700" }
-            ]} 
+              isMe && { color: colors.primary, fontWeight: "700" },
+            ]}
             numberOfLines={1}
           >
             {item.chefs?.chef_name || "Chef"}
           </Text>
           {isMe && (
-            <View style={[styles.youBadge, { backgroundColor: colors.primary }]}>
+            <View
+              style={[styles.youBadge, { backgroundColor: colors.primary }]}
+            >
               <Text style={styles.youText}>YOU</Text>
             </View>
           )}
         </View>
-        <LevelPill level={item.level} style={{ transform: [{ scale: 0.8 }], alignSelf: 'flex-start', marginLeft: -4 }} />
+        <LevelPill
+          level={item.level || 1}
+          style={{
+            transform: [{ scale: 0.8 }],
+            alignSelf: "flex-start",
+            marginLeft: -4,
+          }}
+        />
       </View>
 
       {/* Score */}
       <View style={styles.scoreContainer}>
         <Text style={[typography.h4, { color: colors.text }]}>
-          {score}
+          {score.toLocaleString()}
         </Text>
         <Text style={[typography.caption, { color: colors.textSecondary }]}>
           XP
@@ -74,7 +94,7 @@ export function LeaderboardRow({ item, rank, isMe, mode }: LeaderboardRowProps) 
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

@@ -51,6 +51,7 @@ class LeaderboardRealtimeService {
       if (allTimeError) throw allTimeError;
 
       store.setTopAllTime((allTime || []) as unknown as LeaderboardEntry[]);
+      store.setLeaderboardLastUpdated(Date.now());
     } catch (err: any) {
       console.error("Leaderboard fetch error:", err);
       store.setLeaderboardError(err.message || "Failed to fetch leaderboard");
@@ -144,7 +145,13 @@ class LeaderboardRealtimeService {
           }
         },
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          useStore.getState().setLeaderboardLive(true);
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          useStore.getState().setLeaderboardLive(false);
+        }
+      });
   }
 
   /**
@@ -154,6 +161,7 @@ class LeaderboardRealtimeService {
     if (this.channel) {
       supabase.removeChannel(this.channel);
       this.channel = null;
+      useStore.getState().setLeaderboardLive(false);
     }
   }
 }

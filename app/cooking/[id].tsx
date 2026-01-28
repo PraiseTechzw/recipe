@@ -5,27 +5,27 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Dimensions,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Dimensions,
+    Modal,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Animated, {
-  Easing,
-  FadeIn,
-  FadeInDown,
-  FadeOut,
-  Layout,
-  SlideInDown,
-  useAnimatedStyle,
-  useSharedValue,
-  withDelay,
-  withTiming,
+    Easing,
+    FadeIn,
+    FadeInDown,
+    FadeOut,
+    Layout,
+    SlideInDown,
+    useAnimatedStyle,
+    useSharedValue,
+    withDelay,
+    withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
@@ -110,7 +110,10 @@ const ConfettiSystem = () => {
 
 export default function CookingModeScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const { id, recipeParams } = useLocalSearchParams<{
+    id: string;
+    recipeParams: string;
+  }>();
   const { addXP, incrementStat, recipes, myRecipes } = useStore();
 
   // State
@@ -170,6 +173,19 @@ export default function CookingModeScreen() {
   const fetchRecipe = async () => {
     setLoading(true);
     setError(null);
+
+    // 0. Check Params (AI Recipe)
+    if (recipeParams) {
+      try {
+        const parsed = JSON.parse(recipeParams);
+        setRecipe(parsed);
+        setLoading(false);
+        return;
+      } catch (e) {
+        console.error("Failed to parse recipe params", e);
+      }
+    }
+
     const recipeId = Array.isArray(id) ? id[0] : id;
 
     // 1. Check Store (Offline First)

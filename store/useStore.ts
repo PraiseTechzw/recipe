@@ -169,6 +169,8 @@ interface AppState {
   userRank: number | null;
   isLeaderboardLoading: boolean;
   leaderboardError: string | null;
+  isLeaderboardLive: boolean;
+  leaderboardLastUpdated: number;
   setTopWeekly: (entries: LeaderboardEntry[]) => void;
   setTopAllTime: (entries: LeaderboardEntry[]) => void;
   setNeighbors: (entries: LeaderboardEntry[]) => void;
@@ -176,6 +178,7 @@ interface AppState {
   upsertLeaderboardEntry: (entry: LeaderboardEntry) => void;
   setLeaderboardLoading: (loading: boolean) => void;
   setLeaderboardError: (error: string | null) => void;
+  setLeaderboardLive: (live: boolean) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -538,6 +541,7 @@ export const useStore = create<AppState>()(
       userRank: null,
       isLeaderboardLoading: false,
       leaderboardError: null,
+      leaderboardLastUpdated: 0,
       setTopWeekly: (entries: LeaderboardEntry[]) =>
         set({ topWeekly: entries }),
       setTopAllTime: (entries: LeaderboardEntry[]) =>
@@ -574,6 +578,9 @@ export const useStore = create<AppState>()(
         set({ isLeaderboardLoading: loading }),
       setLeaderboardError: (error: string | null) =>
         set({ leaderboardError: error }),
+      setLeaderboardLive: (live: boolean) => set({ isLeaderboardLive: live }),
+      setLeaderboardLastUpdated: (time: number) =>
+        set({ leaderboardLastUpdated: time }),
     }),
     {
       name: "recipe-app-storage",

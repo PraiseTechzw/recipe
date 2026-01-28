@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -18,6 +17,7 @@ import { useTheme } from "@/theme/useTheme";
 
 // Components
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { Skeleton } from "@/components/feedback/Skeleton";
 import { LeaderboardRow } from "@/components/leaderboard/LeaderboardRow";
 import { MyRankCard } from "@/components/leaderboard/MyRankCard";
 import { Podium } from "@/components/leaderboard/Podium";
@@ -34,6 +34,7 @@ export default function LeaderboardScreen() {
   // Local State
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
   const [filterMode, setFilterMode] = useState<"global" | "friends">("global");
+  const [refreshing, setRefreshing] = useState(false);
 
   // Store Selectors
   const topWeekly = useStore((state) => state.topWeekly);
@@ -43,6 +44,8 @@ export default function LeaderboardScreen() {
   const isLoading = useStore((state) => state.isLeaderboardLoading);
   const error = useStore((state) => state.leaderboardError);
   const userProfile = useStore((state) => state.userProfile);
+  const isLive = useStore((state) => state.isLeaderboardLive);
+  const lastUpdated = useStore((state) => state.leaderboardLastUpdated);
 
   // Derived Data
   const fullData = activeTab === "weekly" ? topWeekly : topAllTime;
@@ -93,7 +96,7 @@ export default function LeaderboardScreen() {
             <Text style={[typography.body, { color: colors.textSecondary }]}>
               {activeTab === "weekly" ? "This Week" : "All Time Legends"}
             </Text>
-            {!error && (
+            {isLive && !error && (
               <View
                 style={[
                   styles.liveBadge,
@@ -166,8 +169,33 @@ export default function LeaderboardScreen() {
       {/* 3) Top 3 Podium */}
       {isLoading && fullData.length === 0 ? (
         <View style={styles.podiumSkeleton}>
-          {/* Simple skeleton placeholder */}
-          <ActivityIndicator size="large" color={colors.primary} />
+          <View style={{ alignItems: "center", marginBottom: 20 }}>
+            <Skeleton
+              width={60}
+              height={60}
+              borderRadius={30}
+              style={{ marginBottom: 8 }}
+            />
+            <Skeleton width={70} height={12} />
+          </View>
+          <View style={{ alignItems: "center", marginHorizontal: 20 }}>
+            <Skeleton
+              width={80}
+              height={80}
+              borderRadius={40}
+              style={{ marginBottom: 8 }}
+            />
+            <Skeleton width={90} height={16} />
+          </View>
+          <View style={{ alignItems: "center", marginBottom: 20 }}>
+            <Skeleton
+              width={60}
+              height={60}
+              borderRadius={30}
+              style={{ marginBottom: 8 }}
+            />
+            <Skeleton width={70} height={12} />
+          </View>
         </View>
       ) : (
         topThree.length > 0 && (
@@ -293,9 +321,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   podiumSkeleton: {
-    height: 200,
+    height: 180,
+    flexDirection: "row",
+    alignItems: "flex-end",
     justifyContent: "center",
-    alignItems: "center",
+    paddingBottom: 20,
   },
   podium: {
     marginTop: 10,

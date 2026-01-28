@@ -5,18 +5,20 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
 import { Recipe } from "../../models/recipe";
+import { generateRecipeFromImage } from "../../services/ai";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
@@ -86,6 +88,93 @@ export default function CreateScreen() {
 
     setErrors(newErrors);
     return isValid;
+  };
+
+  const performScan = async (useCamera: boolean) => {
+    try {
+      let result;
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.5,
+        base64: true,
+      };
+
+      if (useCamera) {
+        const perm = await ImagePicker.requestCameraPermissionsAsync();
+        if (!perm.granted) {
+          Alert.alert("Permission needed", "Camera permission is required.");
+          return;
+        }
+        result = await ImagePicker.launchCameraAsync(options);
+      } else {
+        result = await ImagePicker.launchImageLibraryAsync(options);
+      }
+
+      if (result.canceled || !result.assets[0].base64) return;
+
+      setIsGenerating(true);
+      const asset = result.assets[0];
+
+      // Call AI
+      const recipe = await generateRecipeFromImage(asset.base64);
+
+      // Populate
+      setTitle(recipe.title);
+      setDescription(recipe.description);
+      setTime(recipe.time);
+
+      const s = parseInt(recipe.servings) || 2;
+      setServings(s.toString());
+
+      // Ingredients: API {name, quantity} -> UI string
+      setIngredients(
+        recipe.ingredients.map((i: any) => `${i.quantity} ${i.name}`),
+      );
+
+      // Steps: API string[] -> UI string[]
+      setSteps(recipe.steps);
+
+      // Image
+      setImage(asset.uri);
+
+      ToastService.success("Magic Chef", "Recipe generated successfully!");
+      HapticService.success();
+    } catch (e) {
+      console.error(e);
+      Alert.alert("AI Error", "Could not generate recipe. Please try again.");
+      HapticService.error();
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAIScan = async () => {
+    // Check offline
+    const isOnline = await SyncService.checkConnectivity();
+    if (!isOnline) {
+      Alert.alert("Offline", "AI Chef requires an internet connection.");
+      return;
+    }
+
+    HapticService.selection();
+
+    // Ask: Camera or Gallery?
+    Alert.alert(
+      "Magic AI Chef",
+      "Take a photo of your ingredients to generate a recipe!",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Camera",
+          onPress: () => performScan(true),
+        },
+        {
+          text: "Gallery",
+          onPress: () => performScan(false),
+        },
+      ],
+    );
   };
 
   const pickImage = async () => {
@@ -247,6 +336,22 @@ export default function CreateScreen() {
               {i18n.t("createSubtitle")}
             </Text>
           </View>
+
+          {/* AI Magic Button */}
+          <TouchableOpacity
+            style={[styles.aiButton, isGenerating && { opacity: 0.7 }]}
+            onPress={handleAIScan}
+            disabled={isGenerating || isSubmitting}
+          >
+            {isGenerating ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="sparkles" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.aiButtonText}>Magic AI Chef</Text>
+              </>
+            )}
+          </TouchableOpacity>
 
           {/* Image Upload */}
           <View>
