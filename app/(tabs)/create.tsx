@@ -115,10 +115,12 @@ export default function CreateScreen() {
   };
 
   const handleAddIngredient = () => {
+    HapticService.selection();
     setIngredients([...ingredients, ""]);
   };
 
   const handleRemoveIngredient = (index: number) => {
+    HapticService.light();
     const newIngredients = [...ingredients];
     newIngredients.splice(index, 1);
     setIngredients(newIngredients);
@@ -134,6 +136,7 @@ export default function CreateScreen() {
   };
 
   const handleAddStep = () => {
+    HapticService.selection();
     setSteps([...steps, ""]);
   };
 
@@ -154,10 +157,12 @@ export default function CreateScreen() {
 
   const handleSubmit = async () => {
     if (!validate()) {
+      HapticService.error();
       ToastService.error(i18n.t("validationError"), i18n.t("checkFields"));
       return;
     }
 
+    HapticService.light();
     setIsSubmitting(true);
 
     try {
