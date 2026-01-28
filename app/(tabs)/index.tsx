@@ -4,13 +4,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  Animated,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Animated,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState } from "../../components/feedback/EmptyState";
@@ -22,9 +22,9 @@ import { RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
 import { HapticService } from "../../services/haptics";
 import {
-  getPantryMatches,
-  getRecipeOfTheDay,
-  getRecommendedRecipes,
+    getPantryMatches,
+    getRecipeOfTheDay,
+    getRecommendedRecipes,
 } from "../../services/recommendations";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
@@ -250,7 +250,10 @@ export default function HomeScreen() {
             <SectionHeader
               title={i18n.t("featured")}
               actionLabel={i18n.t("seeAll")}
-              onAction={() => router.push("/(tabs)/explore")}
+              onAction={() => {
+                HapticService.selection();
+                router.push("/(tabs)/explore");
+              }}
               style={{ paddingHorizontal: 20 }}
             />
 

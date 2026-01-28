@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
 import { Recipe } from "../../models/recipe";
+import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
@@ -88,6 +89,7 @@ export default function CreateScreen() {
   };
 
   const pickImage = async () => {
+    HapticService.light();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -108,6 +110,7 @@ export default function CreateScreen() {
   };
 
   const removeImage = () => {
+    HapticService.selection();
     setImage(null);
   };
 

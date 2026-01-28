@@ -3,6 +3,8 @@ import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { Chip } from "@/components/ui/Chip";
 import { SearchInput } from "@/components/ui/SearchInput";
+import { HapticService } from "@/services/haptics";
+import { ToastService } from "@/services/toast";
 import { useStore } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,7 +32,6 @@ import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { generateRecipeFromImage } from "../../services/ai";
 import { searchRecipes } from "../../services/recommendations";
-import { ToastService } from "@/services/toast";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
@@ -113,6 +114,7 @@ export default function ExploreScreen() {
   };
 
   const handleScanIngredients = async () => {
+    HapticService.light();
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
@@ -156,6 +158,7 @@ export default function ExploreScreen() {
   };
 
   const handleSaveAiRecipe = async () => {
+    HapticService.success();
     if (!aiRecipe) return;
 
     try {
@@ -377,7 +380,12 @@ export default function ExploreScreen() {
             <Text style={styles.sectionTitle}>
               {filteredRecipes.length} {i18n.t("results")}
             </Text>
-            <TouchableOpacity onPress={() => setSortModalVisible(true)}>
+            <TouchableOpacity
+              onPress={() => {
+                HapticService.selection();
+                setSortModalVisible(true);
+              }}
+            >
               <Ionicons name="filter" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -490,7 +498,12 @@ export default function ExploreScreen() {
         <Animated.View entering={FadeInDown.delay(600).duration(500)}>
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
             <Text style={styles.sectionTitle}>{i18n.t("popularRecipes")}</Text>
-            <TouchableOpacity onPress={() => setSortModalVisible(true)}>
+            <TouchableOpacity
+              onPress={() => {
+                HapticService.selection();
+                setSortModalVisible(true);
+              }}
+            >
               <Ionicons name="filter" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
@@ -562,14 +575,20 @@ export default function ExploreScreen() {
           <Chip
             label={i18n.t("all") || "All"}
             selected={activeCategory === "All"}
-            onPress={() => setActiveCategory("All")}
+            onPress={() => {
+              HapticService.selection();
+              setActiveCategory("All");
+            }}
           />
           {CATEGORIES.map((cat) => (
             <Chip
               key={cat.id}
               label={cat.name}
               selected={activeCategory === cat.name}
-              onPress={() => setActiveCategory(cat.name)}
+              onPress={() => {
+                HapticService.selection();
+                setActiveCategory(cat.name);
+              }}
             />
           ))}
         </ScrollView>
