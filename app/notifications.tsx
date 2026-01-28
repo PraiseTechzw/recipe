@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Alert, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationService } from '../services/notificationService';
+import { useTheme } from '../theme/useTheme';
 
 const NOTIFICATIONS = [
     {
@@ -34,6 +35,7 @@ const NOTIFICATIONS = [
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { colors, typography, spacing } = useTheme();
 
   const handleTestNotification = async () => {
     await NotificationService.sendLocalNotification(
@@ -44,14 +46,14 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{i18n.t('notifications')}</Text>
-        <TouchableOpacity onPress={handleTestNotification}>
-            <Ionicons name="notifications-outline" size={24} color="#333" />
+        <Text style={[typography.h3, { color: colors.text }]}>{i18n.t('notifications')}</Text>
+        <TouchableOpacity onPress={handleTestNotification} hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
+            <Ionicons name="notifications-outline" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -60,7 +62,14 @@ export default function NotificationsScreen() {
         keyExtractor={item => item.id}
         contentContainerStyle={styles.list}
         renderItem={({ item }) => (
-            <TouchableOpacity style={[styles.item, !item.read && styles.itemUnread]}>
+            <TouchableOpacity 
+                activeOpacity={0.7}
+                style={[
+                    styles.item, 
+                    { borderBottomColor: colors.border },
+                    !item.read && { backgroundColor: colors.surface }
+                ]}
+            >
                 <View style={[styles.iconBox, { backgroundColor: item.type === 'achievement' ? '#FFF3E0' : '#E3F2FD' }]}>
                     <Ionicons 
                         name={item.type === 'achievement' ? 'trophy' : item.type === 'recipe' ? 'restaurant' : 'newspaper'} 
@@ -69,11 +78,11 @@ export default function NotificationsScreen() {
                     />
                 </View>
                 <View style={styles.content}>
-                    <Text style={[styles.title, !item.read && styles.titleUnread]}>{item.title}</Text>
-                    <Text style={styles.message} numberOfLines={2}>{item.message}</Text>
-                    <Text style={styles.time}>{item.time}</Text>
+                    <Text style={[typography.h4, { color: colors.text }, !item.read && { fontWeight: 'bold' }]}>{item.title}</Text>
+                    <Text style={[typography.body, { color: colors.textSecondary }]} numberOfLines={2}>{item.message}</Text>
+                    <Text style={[typography.caption, { color: colors.textTertiary }]}>{item.time}</Text>
                 </View>
-                {!item.read && <View style={styles.dot} />}
+                {!item.read && <View style={[styles.dot, { backgroundColor: colors.primary }]} />}
             </TouchableOpacity>
         )}
       />
