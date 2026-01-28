@@ -18,7 +18,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
 import { Recipe } from "../../models/recipe";
-import { generateRecipeFromImage } from "../../services/ai";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";

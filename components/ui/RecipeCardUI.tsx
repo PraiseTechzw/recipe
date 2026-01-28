@@ -38,12 +38,12 @@ export function RecipeCardUI({
           style={styles.image} 
           resizeMode="cover"
         />
-        {xp && (
+        {!!xp && (
           <View style={[styles.badgeContainer, { top: spacing.s, left: spacing.s }]}>
             <XPBadge xp={xp} />
           </View>
         )}
-        {onFavoritePress && (
+        {!!onFavoritePress && (
           <TouchableOpacity 
             onPress={onFavoritePress}
             style={[
@@ -84,7 +84,7 @@ export function RecipeCardUI({
               {difficulty}
             </Text>
           </View>
-          {rating && (
+          {!!rating && (
             <View style={styles.metaItem}>
               <Ionicons name="star" size={14} color={colors.warning} />
               <Text style={[typography.caption, { color: colors.textSecondary, marginLeft: 4 }]}>
