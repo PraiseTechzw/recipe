@@ -1,13 +1,57 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useState, useRef } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, LayoutAnimation } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as Haptics from 'expo-haptics';
+import Animated, { FadeIn, FadeOut, Layout } from 'react-native-reanimated';
+import Toast from 'react-native-toast-message';
+
 import i18n from '../i18n';
 import { useStore } from '../store/useStore';
+import { ToastService } from '../services/toast';
 
 export default function ShoppingListScreen() {
   const router = useRouter();
-  const { shoppingList, toggleShoppingItem, removeFromShoppingList, clearShoppingList } = useStore();
+  const { shoppingList, addToShoppingList, toggleShoppingItem, removeFromShoppingList, clearShoppingList } = useStore();
+  const [newItemName, setNewItemName] = useState('');
+  const [showCompleted, setShowCompleted] = useState(true);
+  
+  // Group items
+  const pendingItems = shoppingList.filter(item => !item.checked);
+  const completedItems = shoppingList.filter(item => item.checked);
+
+  const handleAddItem = () => {
+    if (!newItemName.trim()) return;
+    
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    addToShoppingList([{ name: newItemName.trim(), quantity: '1' }]);
+    setNewItemName('');
+    ToastService.success(i18n.t('addedTo') + ' ' + i18n.t('shoppingList'), newItemName.trim());
+  };
+
+  const handleToggle = (id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    toggleShoppingItem(id);
+  };
+
+  const handleDelete = (item: { id: string, name: string, quantity?: string }) => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    removeFromShoppingList(item.id);
+    
+    Toast.show({
+      type: 'success',
+      text1: i18n.t('removed'),
+      text2: item.name,
+      action: {
+        label: i18n.t('undo') || 'Undo',
+        onPress: () => {
+          addToShoppingList([{ name: item.name, quantity: item.quantity || '1' }]);
+        }
+      }
+    });
+  };
 
   const handleClear = () => {
     Alert.alert(
@@ -20,54 +64,135 @@ export default function ShoppingListScreen() {
     );
   };
 
-  return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.title}>{i18n.t('shoppingList')}</Text>
-        <TouchableOpacity onPress={handleClear} disabled={shoppingList.length === 0}>
-            <Text style={[styles.clearText, shoppingList.length === 0 && styles.disabledText]}>{i18n.t('clear')}</Text>
-        </TouchableOpacity>
-      </View>
+  const renderRightActions = (item: any) => {
+    return (
+      <TouchableOpacity 
+        style={styles.deleteAction} 
+        onPress={() => handleDelete(item)}
+      >
+        <Ionicons name="trash-outline" size={24} color="#fff" />
+      </TouchableOpacity>
+    );
+  };
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {shoppingList.length === 0 ? (
-            <View style={styles.emptyState}>
-                <View style={styles.emptyIcon}>
-                    <Ionicons name="basket-outline" size={48} color="#BDBDBD" />
-                </View>
-                <Text style={styles.emptyTitle}>{i18n.t('emptyList')}</Text>
-                <Text style={styles.emptyText}>{i18n.t('emptyListMessage')}</Text>
-                <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/(tabs)/explore')}>
-                    <Text style={styles.browseButtonText}>{i18n.t('browseRecipes')}</Text>
-                </TouchableOpacity>
+  const ShoppingItemRow = ({ item }: { item: any }) => (
+    <Swipeable renderRightActions={() => renderRightActions(item)}>
+      <Animated.View 
+        layout={Layout.springify()} 
+        entering={FadeIn} 
+        exiting={FadeOut}
+        style={[styles.itemRow, item.checked && styles.itemChecked]}
+      >
+        <TouchableOpacity 
+          style={styles.itemContent}
+          onPress={() => handleToggle(item.id)}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, item.checked && styles.checkboxChecked]}>
+            {item.checked && <Ionicons name="checkmark" size={16} color="#fff" />}
+          </View>
+          <View style={styles.itemInfo}>
+            <Text style={[styles.itemName, item.checked && styles.textChecked]}>{item.name}</Text>
+            {item.quantity && <Text style={styles.itemQuantity}>{item.quantity}</Text>}
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
+    </Swipeable>
+  );
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.title}>{i18n.t('shoppingList')}</Text>
+          <TouchableOpacity onPress={handleClear} disabled={shoppingList.length === 0}>
+              <Text style={[styles.clearText, shoppingList.length === 0 && styles.disabledText]}>{i18n.t('clear')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+            {/* Quick Add Input */}
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder={i18n.t('addItem') || "Add item..."}
+                value={newItemName}
+                onChangeText={setNewItemName}
+                onSubmitEditing={handleAddItem}
+                returnKeyType="done"
+              />
+              <TouchableOpacity 
+                style={[styles.addButton, !newItemName.trim() && styles.addButtonDisabled]} 
+                onPress={handleAddItem}
+                disabled={!newItemName.trim()}
+              >
+                <Ionicons name="add" size={24} color="#fff" />
+              </TouchableOpacity>
             </View>
-        ) : (
-            <View style={styles.list}>
-                {shoppingList.map((item) => (
-                    <TouchableOpacity 
-                        key={item.id} 
-                        style={[styles.itemRow, item.checked && styles.itemChecked]}
-                        onPress={() => toggleShoppingItem(item.id)}
-                    >
-                        <View style={[styles.checkbox, item.checked && styles.checkboxChecked]}>
-                            {item.checked && <Ionicons name="checkmark" size={16} color="#fff" />}
-                        </View>
-                        <View style={styles.itemInfo}>
-                            <Text style={[styles.itemName, item.checked && styles.textChecked]}>{item.name}</Text>
-                            {item.quantity && <Text style={styles.itemQuantity}>{item.quantity}</Text>}
-                        </View>
-                        <TouchableOpacity onPress={() => removeFromShoppingList(item.id)} style={styles.deleteButton}>
-                            <Ionicons name="trash-outline" size={20} color="#FF5252" />
-                        </TouchableOpacity>
+
+            {shoppingList.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <View style={styles.emptyIcon}>
+                        <Ionicons name="basket-outline" size={48} color="#BDBDBD" />
+                    </View>
+                    <Text style={styles.emptyTitle}>{i18n.t('emptyList')}</Text>
+                    <Text style={styles.emptyText}>{i18n.t('emptyListMessage')}</Text>
+                    <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/(tabs)/explore')}>
+                        <Text style={styles.browseButtonText}>{i18n.t('browseRecipes')}</Text>
                     </TouchableOpacity>
-                ))}
-            </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+                </View>
+            ) : (
+                <View style={styles.listContainer}>
+                    {/* Pending Items */}
+                    <View style={styles.section}>
+                      {pendingItems.map((item) => (
+                        <ShoppingItemRow key={item.id} item={item} />
+                      ))}
+                    </View>
+
+                    {/* Completed Items */}
+                    {completedItems.length > 0 && (
+                      <View style={styles.completedSection}>
+                        <TouchableOpacity 
+                          style={styles.sectionHeader} 
+                          onPress={() => {
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+                            setShowCompleted(!showCompleted);
+                          }}
+                        >
+                          <Text style={styles.sectionTitle}>
+                            {i18n.t('completed') || 'Completed'} ({completedItems.length})
+                          </Text>
+                          <Ionicons 
+                            name={showCompleted ? "chevron-up" : "chevron-down"} 
+                            size={20} 
+                            color="#757575" 
+                          />
+                        </TouchableOpacity>
+                        
+                        {showCompleted && (
+                          <View style={styles.section}>
+                            {completedItems.map((item) => (
+                              <ShoppingItemRow key={item.id} item={item} />
+                            ))}
+                          </View>
+                        )}
+                      </View>
+                    )}
+                </View>
+            )}
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
@@ -85,6 +210,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#F0F0F0',
     backgroundColor: '#fff',
+    zIndex: 10,
   },
   backButton: {
     padding: 4,
@@ -104,13 +230,50 @@ const styles = StyleSheet.create({
   },
   content: {
     flexGrow: 1,
+    paddingBottom: 40,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    padding: 16,
+    backgroundColor: '#fff',
+    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    height: 44,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 22,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    marginRight: 12,
+  },
+  addButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#E65100',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#E65100',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  addButtonDisabled: {
+    backgroundColor: '#FFCCBC',
+    shadowOpacity: 0,
+    elevation: 0,
   },
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,
-    marginTop: 100,
+    marginTop: 60,
   },
   emptyIcon: {
     width: 80,
@@ -145,26 +308,42 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  list: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+  listContainer: {
+    paddingBottom: 20,
   },
-  itemRow: {
+  section: {
+    marginBottom: 10,
+  },
+  completedSection: {
+    marginTop: 10,
+  },
+  sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: '#FAFAFA',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#757575',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  itemRow: {
     backgroundColor: '#fff',
+    marginBottom: 1,
+  },
+  itemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    backgroundColor: '#fff',
   },
   itemChecked: {
-    backgroundColor: '#F9F9F9',
-    opacity: 0.8,
+    backgroundColor: '#FAFAFA',
   },
   checkbox: {
     width: 24,
@@ -197,7 +376,11 @@ const styles = StyleSheet.create({
     color: '#757575',
     marginTop: 2,
   },
-  deleteButton: {
-    padding: 8,
+  deleteAction: {
+    backgroundColor: '#FF5252',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
   },
 });
