@@ -12,8 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link } from "expo-router";
-import { useEffect, useState } from "react";
+import { Link, useLocalSearchParams } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -22,6 +22,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -38,6 +39,11 @@ const CARD_WIDTH = (width - 48) / 2;
 
 export default function ExploreScreen() {
   const { colors } = useTheme();
+  const { autoFocus, openScan } = useLocalSearchParams<{
+    autoFocus: string;
+    openScan: string;
+  }>();
+  const searchInputRef = useRef<TextInput>(null);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");

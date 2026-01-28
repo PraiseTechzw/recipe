@@ -242,30 +242,63 @@ export default function HomeScreen() {
               {i18n.t("subGreeting")}
             </Text>
 
-            <Link href="/(tabs)/explore" asChild>
-              <TouchableOpacity
-                style={[
-                  styles.searchBar,
-                  { backgroundColor: colors.surfaceVariant },
-                ]}
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Link
+                href={{
+                  pathname: "/(tabs)/explore",
+                  params: { autoFocus: "true" },
+                }}
+                asChild
               >
-                <Ionicons name="search" size={24} color={colors.primary} />
-                <Text
+                <TouchableOpacity
                   style={[
-                    styles.placeholderText,
-                    { color: colors.textSecondary },
+                    styles.searchBar,
+                    {
+                      backgroundColor: colors.surfaceVariant,
+                      flex: 1,
+                      flexDirection: "row",
+                      alignItems: "center",
+                    },
                   ]}
                 >
-                  {i18n.t("searchPlaceholderHome")}
-                </Text>
-                <LinearGradient
-                  colors={[colors.primary, colors.secondary]}
-                  style={styles.aiButtonHome}
-                >
-                  <Ionicons name="scan-outline" size={18} color="#fff" />
-                </LinearGradient>
-              </TouchableOpacity>
-            </Link>
+                  <Ionicons
+                    name="search"
+                    size={24}
+                    color={colors.primary}
+                    style={{ marginRight: 12 }}
+                  />
+                  <Text
+                    style={[
+                      styles.placeholderText,
+                      {
+                        color: colors.textSecondary,
+                        textAlignVertical: "center", // Android fix
+                        includeFontPadding: false, // Android fix
+                      },
+                    ]}
+                  >
+                    {i18n.t("searchPlaceholderHome")}
+                  </Text>
+                </TouchableOpacity>
+              </Link>
+
+              <Link
+                href={{
+                  pathname: "/(tabs)/explore",
+                  params: { openScan: "true" },
+                }}
+                asChild
+              >
+                <TouchableOpacity activeOpacity={0.8}>
+                  <LinearGradient
+                    colors={[colors.primary, colors.secondary]}
+                    style={styles.aiButtonHome}
+                  >
+                    <Ionicons name="scan-outline" size={24} color="#fff" />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </Link>
+            </View>
           </Animated.View>
 
           {/* Featured Section */}
@@ -578,7 +611,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 16,
-    gap: 12,
   },
   placeholderText: {
     flex: 1,
