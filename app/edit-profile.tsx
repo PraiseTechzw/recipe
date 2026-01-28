@@ -11,7 +11,7 @@ export default function EditProfileScreen() {
   const { userProfile, setUserProfile } = useStore();
   
   const [name, setName] = useState(userProfile.name);
-  const [chefLevel, setChefLevel] = useState(userProfile.chefLevel);
+  const chefLevel = userProfile.chefLevel;
   const [avatar, setAvatar] = useState(userProfile.avatar);
   const [bio, setBio] = useState(userProfile.bio || '');
 

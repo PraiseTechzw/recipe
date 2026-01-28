@@ -1,4 +1,5 @@
 import { SortModal } from "@/components/features/SortModal";
+import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { Chip } from "@/components/ui/Chip";
@@ -11,7 +12,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useRouter } from "expo-router";
+import { Link } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -36,19 +37,8 @@ import { searchRecipes } from "../../services/recommendations";
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
 
-const CATEGORY_STYLES: Record<
-  string,
-  { bg: string; color: string; icon: any }
-> = {
-  Grains: { bg: "#FFF3E0", color: "#E65100", icon: "grain" },
-  Relishes: { bg: "#E8F5E9", color: "#2E7D32", icon: "grass" },
-  Meats: { bg: "#FFEBEE", color: "#C62828", icon: "restaurant-menu" },
-  Drinks: { bg: "#FFFDE7", color: "#F9A825", icon: "local-bar" },
-};
-
 export default function ExploreScreen() {
-  const router = useRouter();
-  const { colors, spacing } = useTheme();
+  const { colors } = useTheme();
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
@@ -63,10 +53,10 @@ export default function ExploreScreen() {
   >("newest");
 
   // Data State
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { locale, setLocale } = useStore();
+  const { setLocale } = useStore();
 
   // AI State
   const [isGenerating, setIsGenerating] = useState(false);

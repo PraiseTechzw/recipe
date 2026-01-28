@@ -7,14 +7,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import { useEffect, useState } from "react";
-import {
-    Dimensions,
-    Share,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, {
     Extrapolation,
     FadeInDown,
@@ -57,8 +50,6 @@ const getAdjustedQuantity = (qty: string, mult: number) => {
   }
   return qty;
 };
-
-const { width } = Dimensions.get("window");
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -160,7 +151,7 @@ export default function RecipeDetailScreen() {
     if (recipe) {
       logRecipeView(recipe.id, recipe.category);
     }
-  }, [id, recipe]);
+  }, [id, recipe, logRecipeView]);
 
   const handleToggleFavorite = async () => {
     if (!recipe) return;

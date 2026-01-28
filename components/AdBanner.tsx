@@ -9,11 +9,12 @@ let TestIds: any = null;
 try {
   // We use require() inside a try-catch because the library initializes native modules on import
   // which causes a crash in Expo Go
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mobileAds = require('react-native-google-mobile-ads');
   BannerAd = mobileAds.BannerAd;
   BannerAdSize = mobileAds.BannerAdSize;
   TestIds = mobileAds.TestIds;
-} catch (error) {
+} catch {
   // Fallback for Expo Go or when native module is missing
   console.log('AdMob module not found (running in Expo Go?)');
 }

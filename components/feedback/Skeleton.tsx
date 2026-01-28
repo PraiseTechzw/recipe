@@ -33,7 +33,7 @@ export function Skeleton({
         }),
       ]),
     ).start();
-  }, []);
+  }, [opacity]);
 
   return (
     <Animated.View

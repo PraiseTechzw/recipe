@@ -1,5 +1,5 @@
-import { getLocales } from 'expo-localization';
-import { I18n } from 'i18n-js/src';
+import { getLocales } from "expo-localization";
+import { I18n } from "i18n-js/src";
 
 const i18n = new I18n({
   en: {
@@ -39,9 +39,11 @@ const i18n = new I18n({
     clearListConfirm: "Are you sure you want to clear your shopping list?",
     cancel: "Cancel",
     emptyList: "Your list is empty",
-    emptyListMessage: "Add ingredients from recipes to help you shop for your next meal.",
+    emptyListMessage:
+      "Add ingredients from recipes to help you shop for your next meal.",
     pantryCheck: "What's in your kitchen?",
-    pantrySubtitle: "Select ingredients you have, and we'll suggest recipes you can cook right now.",
+    pantrySubtitle:
+      "Select ingredients you have, and we'll suggest recipes you can cook right now.",
     skip: "Skip for now",
     showRecipes: "Show Recipes",
     profile: "Profile",
@@ -121,7 +123,8 @@ const i18n = new I18n({
     success: "Success",
     recipeCreated: "Your recipe has been created and synced!",
     error: "Error",
-  createError: "Failed to create recipe. Please ensure Supabase is configured.",
+    createError:
+      "Failed to create recipe. Please ensure Supabase is configured.",
     ingredientsPlaceholder: "One per line (e.g. 2 cups flour)",
     stepsPlaceholder: "One per line (e.g. Mix ingredients)",
     mealieMeal: "Mealie Meal",
@@ -164,6 +167,10 @@ const i18n = new I18n({
     favorites: "Favorites",
     removed: "Removed",
     removedFrom: "Removed from",
+    required: "Required",
+    invalidNumber: "Invalid number",
+    atLeastOneIngredient: "Add at least one ingredient",
+    atLeastOneStep: "Add at least one step",
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",
@@ -255,6 +262,33 @@ const i18n = new I18n({
     addedTo: "zvaiswa ku",
     createTitle: "Govera Resipi Yako",
     nextStep: "Danho Rinotevera",
+    addPhoto: "Isa Mufananidzo",
+    recipeTitle: "Zita reResipi",
+    recipeTitlePlaceholder: "sge. Sadza raGogo",
+    prepTime: "Nguva yekugadzirira",
+    prepTimePlaceholder: "sge. Maminitsi 30",
+    servingsPlaceholder: "sge. Vanhu 4",
+    description: "Tsanangudzo",
+    descriptionPlaceholder: "Tiudze nezvechikafu chako...",
+    publish: "Buritsa Resipi",
+    publishing: "Kushambadza...",
+    missingInfo: "Mashoko Asipo",
+    missingInfoDesc: "Ndapota isa zita netsanangudzo.",
+    success: "Zwaitwa",
+    recipeCreated: "Resipi yako yagadzirwa!",
+    error: "Kukanganisa",
+    createError: "Kutadza kugadzira resipi.",
+    removePhoto: "Bvisa Mufananidzo",
+    imageUploadHint: "Baya kuti uise mufananidzo",
+    addIngredient: "Wedzera Zvinoshandiswa",
+    addStep: "Wedzera Danho",
+    validationError: "Kukanganisa",
+    checkFields: "Tarisa pane zvakanyorwa nemutsvuku",
+    imagePickerError: "Kutadza kutora mufananidzo",
+    required: "Zvinodiwa",
+    invalidNumber: "Nhamba haisiiyo",
+    atLeastOneIngredient: "Isa chinhu chimwe chete",
+    atLeastOneStep: "Isa danho rimwe chete",
     firstCook: "Mubiki Mutsva",
     weekStreak: "Vhiki Yakatevedzana",
     spiceMaster: "Nyanzvi yeZvinonhuwira",
@@ -265,7 +299,8 @@ const i18n = new I18n({
     ingredientsPlaceholder: "Nyora zvinoshandiswa (mutsara mumwe pachimwe)",
     stepsPlaceholder: "Nyora matanho (mutsara mumwe pachimwe)",
     permissionNeeded: "Mvumo Inodiwa",
-    cameraPermission: "Mvumo yekamera inodiwa kuti utore mifananidzo yezvinoshandiswa.",
+    cameraPermission:
+      "Mvumo yekamera inodiwa kuti utore mifananidzo yezvinoshandiswa.",
     cameraError: "Pane chakanganisika pakuvhura kamera.",
     generateError: "Tatadza kugadzira resipi. Edza zvakare.",
     failedToSave: "Tatadza kuchengeta resipi.",
@@ -431,41 +466,56 @@ const i18n = new I18n({
     oil: "Amafutha",
     salt: "Isawudo",
     garlic: "Igalikhi",
-  }
+    removePhoto: "Susa Isithombe",
+    imageUploadHint: "Cindezela ukuze ufake isithombe",
+    addIngredient: "Faka Isithako",
+    addStep: "Faka Isinyathelo",
+    validationError: "Iphutha",
+    checkFields: "Hlola izindawo ezibhalwe ngokubomvu",
+    imagePickerError: "Ihlulekile ukuthatha isithombe",
+    required: "Kuyadingeka",
+    invalidNumber: "Inombolo engavumelekile",
+    atLeastOneIngredient: "Faka okungenani isithako esisodwa",
+    atLeastOneStep: "Faka okungenani isinyathelo esisodwa",
+  },
 });
 
 // Set the locale once at the beginning of your app.
-const deviceLocale = getLocales()[0]?.languageCode ?? 'en';
+const deviceLocale = getLocales()[0]?.languageCode ?? "en";
 i18n.locale = deviceLocale;
 i18n.enableFallback = true;
-i18n.defaultLocale = 'en';
+i18n.defaultLocale = "en";
 
 // Monkey-patch i18n.t to log missing translations
 const originalT = i18n.t;
-i18n.t = function(scope, options) {
+i18n.t = function (scope, options) {
   // Check if translation exists in current locale (if not default)
   if (i18n.locale !== i18n.defaultLocale) {
-    const parts = typeof scope === 'string' ? scope.split('.') : [];
+    const parts = typeof scope === "string" ? scope.split(".") : [];
     let current: any = i18n.translations[i18n.locale];
     let exists = true;
-    
+
     for (const part of parts) {
-      if (current && typeof current === 'object' && part in current) {
+      if (current && typeof current === "object" && part in current) {
         current = current[part];
       } else {
         exists = false;
         break;
       }
     }
-    
+
     if (!exists) {
-      console.warn(`[MISSING TRANSLATION] Scope: "${scope}", Locale: "${i18n.locale}" (Falling back to default)`);
+      console.warn(
+        `[MISSING TRANSLATION] Scope: "${scope}", Locale: "${i18n.locale}" (Falling back to default)`,
+      );
     }
   }
 
   const result = originalT.call(i18n, scope, options);
-  if (typeof result === 'string' && result.startsWith('[missing "')) {
-    console.warn(`[MISSING TRANSLATION] Scope: "${scope}", Locale: "${i18n.locale}"`);
+  if (typeof result === "string" && result.startsWith('[missing "')) {
+    console.warn(
+      `[MISSING TRANSLATION] Scope: "${scope}", Locale: "${i18n.locale}"`,
+    );
   }
   return result;
 };
