@@ -148,6 +148,13 @@ const i18n = new I18n({
     helpCenter: "Help Center",
     rateUs: "Rate Us",
     refreshed: "Refreshed",
+    removePhoto: "Remove Photo",
+    imageUploadHint: "Tap to upload (Images will be compressed)",
+    addIngredient: "Add Ingredient",
+    addStep: "Add Step",
+    validationError: "Validation Error",
+    checkFields: "Please check the fields marked in red",
+    imagePickerError: "Failed to pick image",
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",

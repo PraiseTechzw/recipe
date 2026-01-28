@@ -1,3 +1,4 @@
+import { SortModal } from "@/components/features/SortModal";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { Chip } from "@/components/ui/Chip";
@@ -138,11 +139,10 @@ export default function ExploreScreen() {
           setAiRecipe(recipe);
         } catch (error) {
           console.error(error);
-          Toast.show({
-            type: "error",
-            text1: "Error",
-            text2: "Failed to generate recipe. Please try again.",
-          });
+          ToastService.error(
+            "Error",
+            "Failed to generate recipe. Please try again.",
+          );
           setAiModalVisible(false);
         } finally {
           setIsGenerating(false);
@@ -150,11 +150,7 @@ export default function ExploreScreen() {
       }
     } catch (error) {
       console.error(error);
-      Toast.show({
-        type: "error",
-        text1: "Error",
-        text2: "Something went wrong launching the camera.",
-      });
+      ToastService.error("Error", "Something went wrong launching the camera.");
     }
   };
 
@@ -175,19 +171,14 @@ export default function ExploreScreen() {
       ]);
 
       if (error) throw error;
-      Toast.show({
-        type: "success",
-        text1: "Success",
-        text2: "Recipe saved to your collection!",
-      });
+      ToastService.success("Success", "Recipe saved to your collection!");
       setAiModalVisible(false);
     } catch (error) {
       console.error(error);
-      Toast.show({
-        type: "info",
-        text1: "Note",
-        text2: "Recipe generated! Configure Supabase to save it permanently.",
-      });
+      ToastService.info(
+        "Note",
+        "Recipe generated! Configure Supabase to save it permanently.",
+      );
     }
   };
 
