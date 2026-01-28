@@ -37,5 +37,21 @@ export const ToastService = {
       position: 'bottom',
       visibilityTime: 4000,
     });
+  },
+  action: (title: string, message: string, actionLabel: string, onAction: () => void) => {
+    Toast.show({
+      type: 'action',
+      text1: title,
+      text2: message,
+      position: 'bottom',
+      visibilityTime: 5000,
+      autoHide: true,
+      props: {
+        action: {
+          label: actionLabel,
+          onPress: onAction
+        }
+      }
+    });
   }
 };

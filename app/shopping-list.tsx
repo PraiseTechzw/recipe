@@ -67,19 +67,16 @@ export default function ShoppingListScreen() {
     HapticService.warning();
     removeFromShoppingList(item.id);
 
-    Toast.show({
-      type: "success",
-      text1: i18n.t("removed"),
-      text2: item.name,
-      action: {
-        label: i18n.t("undo") || "Undo",
-        onPress: () => {
-          addToShoppingList([
-            { name: item.name, quantity: item.quantity || "1" },
-          ]);
-        },
-      },
-    });
+    ToastService.action(
+      i18n.t("removed"),
+      item.name,
+      i18n.t("undo") || "Undo",
+      () => {
+        addToShoppingList([
+          { name: item.name, quantity: item.quantity || "1" },
+        ]);
+      }
+    );
   };
 
   const handleClear = () => {
@@ -195,23 +192,17 @@ export default function ShoppingListScreen() {
             </View>
 
             {shoppingList.length === 0 ? (
-              <View style={styles.emptyState}>
-                <View style={styles.emptyIcon}>
-                  <Ionicons name="basket-outline" size={48} color="#BDBDBD" />
-                </View>
-                <Text style={styles.emptyTitle}>{i18n.t("emptyList")}</Text>
-                <Text style={styles.emptyText}>
-                  {i18n.t("emptyListMessage")}
-                </Text>
-                <TouchableOpacity
-                  style={styles.browseButton}
-                  onPress={() => router.push("/(tabs)/explore")}
-                >
-                  <Text style={styles.browseButtonText}>
-                    {i18n.t("browseRecipes")}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <EmptyState
+                title={
+                  i18n.t("emptyShoppingList") || "Your shopping list is empty"
+                }
+                description={
+                  i18n.t("emptyShoppingListDesc") ||
+                  "Add ingredients from recipes or manually add items above."
+                }
+                icon="basket-outline"
+                style={{ marginTop: 40 }}
+              />
             ) : (
               <View style={styles.listContainer}>
                 {/* Pending Items */}

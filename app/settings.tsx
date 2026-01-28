@@ -77,18 +77,13 @@ export default function SettingsScreen() {
                 />
             </View>
 
-            <View style={styles.item}>
+            <TouchableOpacity style={styles.item} onPress={() => router.push('/notification-settings')}>
                 <View style={styles.itemLeft}>
                     <Ionicons name="notifications-outline" size={22} color="#666" />
                     <Text style={styles.itemText}>{i18n.t('notifications')}</Text>
                 </View>
-                <Switch 
-                    value={notificationsEnabled} 
-                    onValueChange={setNotificationsEnabled}
-                    trackColor={{false: '#eee', true: '#E65100'}} 
-                    thumbColor="#fff" 
-                />
-            </View>
+                <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            </TouchableOpacity>
         </View>
 
         <View style={styles.section}>

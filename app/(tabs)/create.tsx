@@ -198,14 +198,20 @@ export default function CreateScreen() {
       // Save to local store
       addRecipe(newRecipe);
 
-      // Attempt to sync (if service exists)
-      SyncService.syncRecipes().catch((err) =>
-        console.log("Background sync failed", err),
-      );
+      // Check connectivity for feedback
+      const isOnline = await SyncService.checkConnectivity();
+
+      if (isOnline) {
+        // Attempt to sync
+        SyncService.syncRecipes().catch((err) =>
+          console.log("Background sync failed", err),
+        );
+        ToastService.success(i18n.t("success"), i18n.t("recipeCreated"));
+      } else {
+        ToastService.info(i18n.t("savedLocally"), i18n.t("syncLater"));
+      }
 
       addXP(50);
-
-      ToastService.success(i18n.t("success"), i18n.t("recipeCreated"));
 
       setTimeout(() => {
         setTitle("");
