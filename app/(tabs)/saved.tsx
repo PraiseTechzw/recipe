@@ -3,18 +3,17 @@ import { Image } from "expo-image";
 import { Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    FadeInDown,
-    FadeInRight,
-    FadeInUp,
+  FadeInRight,
+  FadeInUp
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RECIPES } from "../../data/recipes";
@@ -183,31 +182,23 @@ export default function SavedScreen() {
   );
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: isDarkMode ? "#121212" : "#F8F9FA" },
-      ]}
-    >
-      <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { paddingTop: insets.top + spacing.m }]}>
         <View>
-          <Text style={[styles.headerTitle, isDarkMode && styles.textDark]}>
+          <Text style={[typography.h1, { color: colors.text }]}>
             {i18n.t("savedRecipes")}
           </Text>
-          <Text
-            style={[styles.headerSubtitle, isDarkMode && styles.textSubDark]}
-          >
+          <Text style={[typography.body, { color: colors.textSecondary }]}>
             {filteredRecipes.length} {i18n.t("items")} • {activeCategory}
           </Text>
         </View>
         <TouchableOpacity
-          style={[styles.filterBtn, isDarkMode && styles.filterBtnDark]}
+          style={[
+            styles.filterBtn,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
         >
-          <Ionicons
-            name="options-outline"
-            size={24}
-            color={isDarkMode ? "#fff" : "#333"}
-          />
+          <Ionicons name="options-outline" size={24} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -215,19 +206,19 @@ export default function SavedScreen() {
         <View
           style={[
             styles.searchContainer,
-            isDarkMode && styles.searchContainerDark,
+            { backgroundColor: colors.surface, borderColor: colors.border },
           ]}
         >
           <Ionicons
             name="search"
             size={20}
-            color={isDarkMode ? "#999" : "#999"}
+            color={colors.textSecondary}
             style={styles.searchIcon}
           />
           <TextInput
-            style={[styles.searchInput, isDarkMode && styles.textDark]}
+            style={[styles.searchInput, { color: colors.text }]}
             placeholder={i18n.t("searchSaved")}
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -238,7 +229,11 @@ export default function SavedScreen() {
                 setSearchQuery("");
               }}
             >
-              <Ionicons name="close-circle" size={20} color="#ccc" />
+              <Ionicons
+                name="close-circle"
+                size={20}
+                color={colors.textSecondary}
+              />
             </TouchableOpacity>
           )}
         </View>
@@ -266,8 +261,11 @@ export default function SavedScreen() {
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  isDarkMode && styles.filterChipDark,
-                  activeCategory === cat && styles.filterChipActive,
+                  {
+                    backgroundColor:
+                      activeCategory === cat ? colors.primary : colors.card,
+                    borderColor: colors.border,
+                  },
                 ]}
                 onPress={() => {
                   HapticService.selection();
@@ -277,8 +275,7 @@ export default function SavedScreen() {
                 <Text
                   style={[
                     styles.filterText,
-                    isDarkMode && styles.textSubDark,
-                    activeCategory === cat && styles.filterTextActive,
+                    { color: activeCategory === cat ? "#fff" : colors.text },
                   ]}
                 >
                   {cat}
@@ -290,45 +287,46 @@ export default function SavedScreen() {
       </View>
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#E65100" />
+        <View style={{ padding: spacing.m }}>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <View style={{ width: "48%" }}>
+              <Skeleton
+                height={200}
+                style={{ marginBottom: spacing.m, borderRadius: radius.m }}
+              />
+              <Skeleton
+                height={200}
+                style={{ marginBottom: spacing.m, borderRadius: radius.m }}
+              />
+            </View>
+            <View style={{ width: "48%" }}>
+              <Skeleton
+                height={200}
+                style={{ marginBottom: spacing.m, borderRadius: radius.m }}
+              />
+              <Skeleton
+                height={200}
+                style={{ marginBottom: spacing.m, borderRadius: radius.m }}
+              />
+            </View>
+          </View>
         </View>
       ) : filteredRecipes.length === 0 ? (
-        <Animated.View entering={FadeInDown.springify()} style={{ flex: 1 }}>
-          <View style={styles.emptyContainer}>
-            <Image
-              source={{
-                uri: "https://cdn-icons-png.flaticon.com/512/2906/2906856.png",
-              }}
-              style={{
-                width: 120,
-                height: 120,
-                opacity: 0.5,
-                marginBottom: 20,
-              }}
-              contentFit="contain"
-            />
-            <Text style={[styles.emptyText, isDarkMode && styles.textDark]}>
-              {searchQuery ? "No matches found" : i18n.t("noSavedRecipes")}
-            </Text>
-            <Text
-              style={[styles.emptySubText, isDarkMode && styles.textSubDark]}
-            >
-              {searchQuery
-                ? "Try a different search term"
-                : i18n.t("saveRecipesMessage")}
-            </Text>
-            {!searchQuery && (
-              <Link href="/(tabs)/explore" asChild>
-                <TouchableOpacity style={styles.browseButton}>
-                  <Text style={styles.browseButtonText}>
-                    {i18n.t("browseRecipes")}
-                  </Text>
-                </TouchableOpacity>
-              </Link>
-            )}
-          </View>
-        </Animated.View>
+        <EmptyState
+          title={searchQuery ? "No matches found" : i18n.t("noSavedRecipes")}
+          message={
+            searchQuery
+              ? "Try a different search term"
+              : i18n.t("saveRecipesMessage")
+          }
+          actionLabel={!searchQuery ? i18n.t("browseRecipes") : undefined}
+          onAction={
+            !searchQuery ? () => router.push("/(tabs)/explore") : undefined
+          }
+          icon="bookmark-outline"
+        />
       ) : (
         <ScrollView
           contentContainerStyle={styles.gridContent}
