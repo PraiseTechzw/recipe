@@ -1,34 +1,32 @@
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    FlatList,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { leaderboardService } from "@/services/leaderboardRealtime";
-import {
-    LeaderboardEntry,
-    useLeaderboardStore,
-} from "@/stores/leaderboardStore";
-import { useUserStore } from "@/stores/userStore";
+import { LeaderboardEntry, useStore } from "@/store/useStore";
 
 type LeaderboardTab = "weekly" | "allTime";
 
 export default function LeaderboardScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  // We might need to add this to store if we want persistence, or keep local state. Local state is fine for UI tab.
+  // Actually, keeping local state for tab is fine.
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
 
   // Store selectors
-  const topWeekly = useLeaderboardStore((state) => state.topWeekly);
-  const topAllTime = useLeaderboardStore((state) => state.topAllTime);
-  const isLoading = useLeaderboardStore((state) => state.isLoading);
-  const userProfile = useUserStore((state) => state.userProfile);
+  const topWeekly = useStore((state) => state.topWeekly);
+  const topAllTime = useStore((state) => state.topAllTime);
+  const isLoading = useStore((state) => state.isLeaderboardLoading);
+  const userProfile = useStore((state) => state.userProfile);
 
   // Data based on tab
   const data = activeTab === "weekly" ? topWeekly : topAllTime;

@@ -1,6 +1,6 @@
-import { supabase } from '@/lib/supabase';
-import { useLeaderboardStore, LeaderboardEntry } from '@/stores/leaderboardStore';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { supabase } from "@/lib/supabase";
+import { useStore } from "@/store/useStore";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 // Limit fetches
 const LIMIT = 50;
@@ -15,43 +15,46 @@ class LeaderboardRealtimeService {
    * Fetches initial data: Top 50 Weekly, Top 50 All-Time.
    */
   async fetchGlobalLeaderboards() {
-    const store = useLeaderboardStore.getState();
-    store.setLoading(true);
-    store.setError(null);
+    const store = useStore.getState();
+    store.setLeaderboardLoading(true);
+    store.setLeaderboardError(null);
 
     try {
       // 1. Fetch Weekly
       const { data: weekly, error: weeklyError } = await supabase
-        .from('leaderboard')
-        .select(`
+        .from("leaderboard")
+        .select(
+          `
           *,
           chefs (chef_name, avatar_seed, country)
-        `)
-        .order('weekly_xp', { ascending: false })
+        `,
+        )
+        .order("weekly_xp", { ascending: false })
         .limit(LIMIT);
 
       if (weeklyError) throw weeklyError;
 
       // 2. Fetch All-Time
       const { data: allTime, error: allTimeError } = await supabase
-        .from('leaderboard')
-        .select(`
+        .from("leaderboard")
+        .select(
+          `
           *,
           chefs (chef_name, avatar_seed, country)
-        `)
-        .order('total_xp', { ascending: false })
+        `,
+        )
+        .order("total_xp", { ascending: false })
         .limit(LIMIT);
 
       if (allTimeError) throw allTimeError;
 
-      store.setTopWeekly((weekly as unknown) as LeaderboardEntry[]);
-      store.setTopAllTime((allTime as unknown) as LeaderboardEntry[]);
-
+      store.setTopWeekly(weekly as unknown as LeaderboardEntry[]);
+      store.setTopAllTime(allTime as unknown as LeaderboardEntry[]);
     } catch (err: any) {
-      console.error('Leaderboard fetch error:', err);
-      store.setError(err.message);
+      console.error("Leaderboard fetch error:", err);
+      store.setLeaderboardError(err.message);
     } finally {
-      store.setLoading(false);
+      store.setLeaderboardLoading(false);
     }
   }
 
@@ -61,43 +64,42 @@ class LeaderboardRealtimeService {
    * we fetch 5 rows with score > myScore and 5 rows with score < myScore.
    */
   async fetchAroundMe(myChefId: string, myWeeklyXp: number) {
-    const store = useLeaderboardStore.getState();
-    
+    const store = useStore.getState();
+
     try {
       // Fetch 5 above
       const { data: above } = await supabase
-        .from('leaderboard')
+        .from("leaderboard")
         .select(`*, chefs (chef_name, avatar_seed, country)`)
-        .gt('weekly_xp', myWeeklyXp)
-        .order('weekly_xp', { ascending: true }) // closest to me
+        .gt("weekly_xp", myWeeklyXp)
+        .order("weekly_xp", { ascending: true }) // closest to me
         .limit(5);
 
       // Fetch 5 below
       const { data: below } = await supabase
-        .from('leaderboard')
+        .from("leaderboard")
         .select(`*, chefs (chef_name, avatar_seed, country)`)
-        .lte('weekly_xp', myWeeklyXp) // includes me potentially if distinct
-        .neq('chef_id', myChefId) // exclude me explicitly
-        .order('weekly_xp', { ascending: false }) // closest to me
+        .lte("weekly_xp", myWeeklyXp) // includes me potentially if distinct
+        .neq("chef_id", myChefId) // exclude me explicitly
+        .order("weekly_xp", { ascending: false }) // closest to me
         .limit(5);
-        
+
       // Fetch Me (to ensure I am in the list with joined data)
       const { data: me } = await supabase
-        .from('leaderboard')
+        .from("leaderboard")
         .select(`*, chefs (chef_name, avatar_seed, country)`)
-        .eq('chef_id', myChefId)
+        .eq("chef_id", myChefId)
         .single();
 
       const neighbors = [
-        ...((above || []).reverse()), // reverse to show highest first
+        ...(above || []).reverse(), // reverse to show highest first
         ...(me ? [me] : []),
-        ...(below || [])
+        ...(below || []),
       ];
 
-      store.setNeighbors((neighbors as unknown) as LeaderboardEntry[]);
-
+      store.setNeighbors(neighbors as unknown as LeaderboardEntry[]);
     } catch (err) {
-      console.error('Fetch neighbors error:', err);
+      console.error("Fetch neighbors error:", err);
     }
   }
 
@@ -110,10 +112,10 @@ class LeaderboardRealtimeService {
     if (this.channel) return;
 
     this.channel = supabase
-      .channel('public:leaderboard')
+      .channel("public:leaderboard")
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'leaderboard' },
+        "postgres_changes",
+        { event: "*", schema: "public", table: "leaderboard" },
         async (payload) => {
           // Payload only contains raw table data, not the joined 'chefs' data.
           // We must fetch the full entry to display name/avatar.
@@ -122,15 +124,17 @@ class LeaderboardRealtimeService {
 
           // Fetch full details
           const { data, error } = await supabase
-            .from('leaderboard')
+            .from("leaderboard")
             .select(`*, chefs (chef_name, avatar_seed, country)`)
-            .eq('chef_id', newRow.chef_id)
+            .eq("chef_id", newRow.chef_id)
             .single();
 
           if (!error && data) {
-            useLeaderboardStore.getState().upsertEntry((data as unknown) as LeaderboardEntry);
+            useStore
+              .getState()
+              .upsertLeaderboardEntry(data as unknown as LeaderboardEntry);
           }
-        }
+        },
       )
       .subscribe();
   }

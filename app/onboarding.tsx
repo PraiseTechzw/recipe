@@ -17,7 +17,7 @@ import { useStore } from "../store/useStore";
 
 export default function UserInfoScreen() {
   const router = useRouter();
-  const { setUserProfile } = useStore();
+  const { setUserProfile, dietaryOptions, experienceLevels } = useStore();
 
   const [name, setName] = useState("");
   const [level, setLevel] = useState<"Beginner" | "Home Cook" | "Pro">(
@@ -134,7 +134,7 @@ export default function UserInfoScreen() {
         <View style={styles.section}>
           <Text style={styles.label}>{i18n.t("experienceLabel")}</Text>
           <View style={styles.optionsRow}>
-            {["Beginner", "Home Cook", "Pro"].map((l) => (
+            {experienceLevels.map((l) => (
               <TouchableOpacity
                 key={l}
                 style={[
@@ -160,24 +160,22 @@ export default function UserInfoScreen() {
         <View style={styles.section}>
           <Text style={styles.label}>{i18n.t("dietaryLabel")}</Text>
           <View style={styles.chipsContainer}>
-            {["Vegetarian", "Vegan", "Gluten-Free", "Halal", "None"].map(
-              (d) => (
-                <TouchableOpacity
-                  key={d}
-                  style={[styles.chip, diet.includes(d) && styles.chipSelected]}
-                  onPress={() => toggleDiet(d)}
+            {dietaryOptions.map((d) => (
+              <TouchableOpacity
+                key={d}
+                style={[styles.chip, diet.includes(d) && styles.chipSelected]}
+                onPress={() => toggleDiet(d)}
+              >
+                <Text
+                  style={[
+                    styles.chipText,
+                    diet.includes(d) && styles.chipTextSelected,
+                  ]}
                 >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      diet.includes(d) && styles.chipTextSelected,
-                    ]}
-                  >
-                    {getDietLabel(d)}
-                  </Text>
-                </TouchableOpacity>
-              ),
-            )}
+                  {getDietLabel(d)}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       </ScrollView>

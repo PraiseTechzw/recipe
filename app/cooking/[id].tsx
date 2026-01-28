@@ -1,38 +1,37 @@
+import { ErrorState } from "@/components/feedback/ErrorState";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Dimensions,
-    Modal,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Dimensions,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    Easing,
-    FadeIn,
-    FadeInDown,
-    FadeOut,
-    Layout,
-    SlideInDown,
-    useAnimatedStyle,
-    useSharedValue,
-    withDelay,
-    withTiming
+  Easing,
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  Layout,
+  SlideInDown,
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
-import { ErrorState } from "@/components/feedback/ErrorState";
 
 const { width, height } = Dimensions.get("window");
 
@@ -112,13 +111,14 @@ const ConfettiSystem = () => {
 export default function CookingModeScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const { addXP, incrementStat } = useStore();
+  const { addXP, incrementStat, recipes, myRecipes } = useStore();
 
   // State
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Timer State
   const [timerSeconds, setTimerSeconds] = useState(15 * 60); // Default 15 mins
@@ -133,7 +133,9 @@ export default function CookingModeScreen() {
   const [showVoiceTooltip, setShowVoiceTooltip] = useState(false);
 
   useEffect(() => {
-    fetchRecipe();
+    if (id) {
+      fetchRecipe();
+    }
   }, [id]);
 
   // Timer Effect
@@ -166,31 +168,49 @@ export default function CookingModeScreen() {
   };
 
   const fetchRecipe = async () => {
+    setLoading(true);
+    setError(null);
+    const recipeId = Array.isArray(id) ? id[0] : id;
+
+    // 1. Check Store (Offline First)
+    const localRecipe =
+      recipes.find((r) => r.id === recipeId) ||
+      myRecipes.find((r) => r.id === recipeId);
+
+    if (localRecipe) {
+      setRecipe(localRecipe);
+      setLoading(false);
+      return;
+    }
+
+    // 2. Fallback to Supabase
     try {
       const { data, error } = await supabase
         .from("recipes")
         .select("*")
-        .eq("id", id)
+        .eq("id", recipeId)
         .single();
 
       if (data) {
-        setRecipe(data);
+        setRecipe({
+          id: data.id,
+          title: data.title,
+          image: data.image,
+          time: data.time,
+          category: data.category,
+          description: data.description,
+          ingredients: data.ingredients || [],
+          steps: data.steps || [],
+          calories: data.calories || "N/A",
+          tags: data.tags || ["Community"],
+          servings: data.servings || "2-4",
+        });
       } else {
-        let local = RECIPES.find((r) => r.id === id);
-        if (!local) {
-          const { myRecipes } = useStore.getState();
-          local = myRecipes.find((r) => r.id === id);
-        }
-        setRecipe(local);
+        setError("Recipe not found");
       }
     } catch (e) {
       console.error(e);
-      let local = RECIPES.find((r) => r.id === id);
-      if (!local) {
-        const { myRecipes } = useStore.getState();
-        local = myRecipes.find((r) => r.id === id);
-      }
-      setRecipe(local);
+      setError("Failed to load recipe");
     } finally {
       setLoading(false);
     }
@@ -224,9 +244,12 @@ export default function CookingModeScreen() {
     ToastService.info("Step Repeated", "Read it again carefully!");
   };
 
+  // Constants
+  const XP_REWARD_PER_RECIPE = 50;
+
   const finishRecipe = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    addXP(50);
+    addXP(XP_REWARD_PER_RECIPE);
     incrementStat("recipesCooked");
     incrementStat("daysStreak"); // Simple logic, assumes daily use
     setIsCompleted(true);
@@ -260,14 +283,17 @@ export default function CookingModeScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-                <Ionicons name="close" size={28} color="#333" />
-            </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.iconButton}
+          >
+            <Ionicons name="close" size={28} color="#333" />
+          </TouchableOpacity>
         </View>
-        <ErrorState 
-            title={i18n.t('recipeNotFound')} 
-            message={i18n.t('recipeNotFound')} 
-            onRetry={() => router.back()} 
+        <ErrorState
+          title={i18n.t("recipeNotFound")}
+          message={i18n.t("recipeNotFound")}
+          onRetry={() => router.back()}
         />
       </SafeAreaView>
     );

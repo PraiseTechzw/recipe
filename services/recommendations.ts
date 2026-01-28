@@ -1,4 +1,3 @@
-import { RECIPES } from '../data/recipes';
 import { Recipe } from '../models/recipe';
 
 // Simple hash function for daily rotation
@@ -11,7 +10,7 @@ const getDailyHash = (str: string) => {
   return Math.abs(hash);
 };
 
-export const getRecipeOfTheDay = (sourceRecipes: Recipe[] = RECIPES): Recipe => {
+export const getRecipeOfTheDay = (sourceRecipes: Recipe[]): Recipe => {
   const today = new Date().toDateString(); // Updates every 24 hours
   const index = getDailyHash(today) % sourceRecipes.length;
   return sourceRecipes[index];
@@ -20,7 +19,7 @@ export const getRecipeOfTheDay = (sourceRecipes: Recipe[] = RECIPES): Recipe => 
 export const getRecommendedRecipes = (
   viewHistory: string[], 
   categoryScores: Record<string, number>,
-  sourceRecipes: Recipe[] = RECIPES
+  sourceRecipes: Recipe[]
 ): Recipe[] => {
   // 1. Identify top categories
   const sortedCategories = Object.entries(categoryScores)
@@ -48,7 +47,7 @@ export const getRecommendedRecipes = (
   return recommended.slice(0, 5); // Return top 5
 };
 
-export const getPantryMatches = (pantry: string[], sourceRecipes: Recipe[] = RECIPES): Recipe[] => {
+export const getPantryMatches = (pantry: string[], sourceRecipes: Recipe[]): Recipe[] => {
   if (!pantry || pantry.length === 0) return [];
   
   const lowerPantry = pantry.map(p => p.toLowerCase());
@@ -64,12 +63,12 @@ export const getPantryMatches = (pantry: string[], sourceRecipes: Recipe[] = REC
   }).slice(0, 5); // Limit to 5 matches
 };
 
-export const getRandomRecipe = (sourceRecipes: Recipe[] = RECIPES): Recipe => {
+export const getRandomRecipe = (sourceRecipes: Recipe[]): Recipe => {
   const index = Math.floor(Math.random() * sourceRecipes.length);
   return sourceRecipes[index];
 };
 
-export const searchRecipes = (query: string, categoryFilter?: string | null, sourceRecipes: Recipe[] = RECIPES): Recipe[] => {
+export const searchRecipes = (query: string, categoryFilter: string | null | undefined, sourceRecipes: Recipe[]): Recipe[] => {
   const lowerQuery = query.toLowerCase();
   
   return sourceRecipes.filter(r => {

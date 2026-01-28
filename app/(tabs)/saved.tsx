@@ -1,7 +1,9 @@
+import { EmptyState } from "@/components/feedback/EmptyState";
+import { Skeleton } from "@/components/feedback/Skeleton";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Link, useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { Link, useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 import {
   Dimensions,
   ScrollView,
@@ -11,14 +13,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Animated, {
-  FadeInRight,
-  FadeInUp
-} from "react-native-reanimated";
+import Animated, { FadeInRight, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
-import { supabase } from "../../lib/supabase";
 import { HapticService } from "../../services/haptics";
 import { useStore } from "../../store/useStore";
 import { useTheme } from "../../theme/useTheme";
@@ -30,74 +27,13 @@ export default function SavedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme, colors, typography, spacing, shadows, radius } = useTheme();
-  const { favorites, isDarkMode } = useStore();
-  const [supabaseRecipes, setSupabaseRecipes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { favorites, isDarkMode, recipes, categories } = useStore();
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 
-  const fetchSavedRecipes = async () => {
-    try {
-      setLoading(true);
-
-      if (favorites.length === 0) {
-        setSupabaseRecipes([]);
-        setLoading(false);
-        return;
-      }
-
-      const localIds = new Set(RECIPES.map((r) => r.id));
-      const remoteIds = favorites.filter((id) => !localIds.has(id));
-
-      if (remoteIds.length === 0) {
-        setSupabaseRecipes([]);
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("recipes")
-        .select("*")
-        .in("id", remoteIds);
-
-      if (error) {
-        console.log("Error fetching saved recipes:", error);
-        setSupabaseRecipes([]);
-      } else if (data) {
-        const formatted = data.map((r) => ({
-          id: r.id,
-          title: r.title,
-          image: r.image,
-          time: r.time,
-          category: r.category,
-          description: r.description,
-          ingredients: r.ingredients || [],
-          steps: r.steps || [],
-          calories: "N/A",
-          tags: ["Community"],
-          servings: "2-4",
-          rating: r.rating || 4.5,
-        }));
-        setSupabaseRecipes(formatted);
-      }
-    } catch (e) {
-      console.log("Supabase fetch error:", e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchSavedRecipes();
-    }, [favorites]),
-  );
-
   const filteredRecipes = useMemo(() => {
-    const localSaved = RECIPES.filter((r) => favorites.includes(r.id));
-    const all = [...localSaved, ...supabaseRecipes];
-
-    let result = all;
+    let result = recipes.filter((r) => favorites.includes(r.id));
 
     if (activeCategory !== "All") {
       result = result.filter((r) => r.category === activeCategory);
@@ -112,7 +48,7 @@ export default function SavedScreen() {
     }
 
     return result;
-  }, [favorites, supabaseRecipes, searchQuery, activeCategory]);
+  }, [favorites, recipes, searchQuery, activeCategory]);
 
   const CompactRecipeCard = ({
     recipe,
@@ -135,7 +71,7 @@ export default function SavedScreen() {
               source={
                 recipe.image
                   ? { uri: recipe.image }
-                  : require("../../assets/images/placeholder.jpg")
+                  : require("../../assets/images/placeholder.png")
               }
               style={styles.cardImage}
               contentFit="cover"
@@ -165,7 +101,7 @@ export default function SavedScreen() {
                       { color: colors.textSecondary },
                     ]}
                   >
-                    {recipe.rating || 4.5}
+                    {recipe.rating || 0}
                   </Text>
                 </View>
                 <Text
@@ -245,40 +181,32 @@ export default function SavedScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
         >
-          {[
-            "All",
-            "Traditional",
-            "Breakfast",
-            "Dinner",
-            "Snack",
-            "Vegetarian",
-            "Dessert",
-          ].map((cat, index) => (
+          {[{ id: "all", name: "All" }, ...categories].map((cat, index) => (
             <Animated.View
-              key={cat}
+              key={cat.id}
               entering={FadeInRight.delay(index * 50).springify()}
             >
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  {
-                    backgroundColor:
-                      activeCategory === cat ? colors.primary : colors.card,
-                    borderColor: colors.border,
+                  activeCategory === cat.name && {
+                    backgroundColor: colors.primary,
+                    borderColor: colors.primary,
                   },
+                  { borderRadius: radius.full },
                 ]}
                 onPress={() => {
                   HapticService.selection();
-                  setActiveCategory(cat);
+                  setActiveCategory(cat.name);
                 }}
               >
                 <Text
                   style={[
                     styles.filterText,
-                    { color: activeCategory === cat ? "#fff" : colors.text },
+                    activeCategory === cat.name && { color: "#fff" },
                   ]}
                 >
-                  {cat}
+                  {cat.name}
                 </Text>
               </TouchableOpacity>
             </Animated.View>

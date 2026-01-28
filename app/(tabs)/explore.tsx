@@ -28,7 +28,6 @@ import {
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AdBanner } from "../../components/AdBanner";
-import { CATEGORIES, RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { generateRecipeFromImage } from "../../services/ai";
@@ -56,7 +55,7 @@ export default function ExploreScreen() {
   const [isLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setLocale } = useStore();
+  const { setLocale, recipes, categories } = useStore();
 
   // AI State
   const [isGenerating, setIsGenerating] = useState(false);
@@ -75,25 +74,26 @@ export default function ExploreScreen() {
     }
   }, [searchQuery]);
 
-  const filteredRecipes = searchRecipes(debouncedQuery, activeCategory).sort(
-    (a, b) => {
-      switch (sortBy) {
-        case "time":
-          return parseInt(a.time) - parseInt(b.time);
-        case "calories":
-          return parseInt(a.calories) - parseInt(b.calories);
-        case "rating":
-          return (b.rating || 0) - (a.rating || 0);
-        default:
-          return 0; // Keep original order (Newest/Relevance)
-      }
-    },
-  );
+  const filteredRecipes = searchRecipes(
+    debouncedQuery,
+    activeCategory,
+    recipes,
+  ).sort((a, b) => {
+    switch (sortBy) {
+      case "time":
+        return parseInt(a.time) - parseInt(b.time);
+      case "calories":
+        return parseInt(a.calories) - parseInt(b.calories);
+      case "rating":
+        return (b.rating || 0) - (a.rating || 0);
+      default:
+        return 0; // Keep original order (Newest/Relevance)
+    }
+  });
 
-  const trendingRecipe =
-    RECIPES.find((r) => r.title.includes("Dovi")) || RECIPES[1];
+  const trendingRecipe = recipes.find((r) => r.rating >= 4.9) || recipes[0];
   const otherTrending =
-    RECIPES.find((r) => r.title.includes("Muriwo")) || RECIPES[2];
+    recipes.find((r) => r.id !== trendingRecipe?.id) || recipes[1];
 
   const toggleLanguage = () => {
     const locales = ["en", "sn", "nd"];
@@ -251,9 +251,12 @@ export default function ExploreScreen() {
     </Modal>
   );
 
-  const renderRecipeList = (recipes: typeof RECIPES, delayBase: number = 0) => (
+  const renderRecipeList = (
+    recipesList: typeof recipes,
+    delayBase: number = 0,
+  ) => (
     <View style={styles.listContainer}>
-      {recipes.map((recipe, index) => (
+      {recipesList.map((recipe, index) => (
         <Link key={recipe.id} href={`/recipe/${recipe.id}`} asChild>
           <TouchableOpacity activeOpacity={0.9}>
             <Animated.View
@@ -397,90 +400,107 @@ export default function ExploreScreen() {
           </TouchableOpacity>
         </Animated.View>
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.trendingContainer}
-        >
-          <Link href={`/recipe/${trendingRecipe.id}`} asChild>
-            <TouchableOpacity activeOpacity={0.9}>
-              <Animated.View
-                entering={FadeInRight.delay(200).springify()}
-                style={styles.trendingCard}
-              >
-                <Image
-                  source={{ uri: trendingRecipe.image }}
-                  style={styles.trendingImage}
-                  contentFit="cover"
-                  transition={300}
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.6)", "rgba(0,0,0,0.9)"]}
-                  style={styles.trendingOverlay}
+        {recipes.length > 0 && trendingRecipe && otherTrending ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.trendingContainer}
+          >
+            <Link href={`/recipe/${trendingRecipe.id}`} asChild>
+              <TouchableOpacity activeOpacity={0.9}>
+                <Animated.View
+                  entering={FadeInRight.delay(200).springify()}
+                  style={styles.trendingCard}
                 >
-                  <View style={styles.trendingTag}>
-                    <Ionicons
-                      name="trending-up"
-                      size={12}
-                      color={colors.primary}
-                    />
-                    <Text
+                  <Image
+                    source={{ uri: trendingRecipe.image }}
+                    style={styles.trendingImage}
+                    contentFit="cover"
+                    transition={300}
+                  />
+                  <LinearGradient
+                    colors={[
+                      "transparent",
+                      "rgba(0,0,0,0.6)",
+                      "rgba(0,0,0,0.9)",
+                    ]}
+                    style={styles.trendingOverlay}
+                  >
+                    <View style={styles.trendingTag}>
+                      <Ionicons
+                        name="trending-up"
+                        size={12}
+                        color={colors.primary}
+                      />
+                      <Text
+                        style={[
+                          styles.trendingTagText,
+                          { color: colors.primary },
+                        ]}
+                      >
+                        {i18n.t("trendingTag")}
+                      </Text>
+                    </View>
+                    <Text style={styles.trendingTitle}>
+                      {trendingRecipe.title}
+                    </Text>
+                    <Text style={styles.trendingMeta}>
+                      {trendingRecipe.time} • {trendingRecipe.calories}
+                    </Text>
+                  </LinearGradient>
+                </Animated.View>
+              </TouchableOpacity>
+            </Link>
+
+            <Link href={`/recipe/${otherTrending.id}`} asChild>
+              <TouchableOpacity activeOpacity={0.9}>
+                <Animated.View
+                  entering={FadeInRight.delay(300).springify()}
+                  style={styles.trendingCard}
+                >
+                  <Image
+                    source={{ uri: otherTrending.image }}
+                    style={styles.trendingImage}
+                    contentFit="cover"
+                    transition={300}
+                  />
+                  <LinearGradient
+                    colors={[
+                      "transparent",
+                      "rgba(0,0,0,0.6)",
+                      "rgba(0,0,0,0.9)",
+                    ]}
+                    style={styles.trendingOverlay}
+                  >
+                    <View
                       style={[
-                        styles.trendingTagText,
-                        { color: colors.primary },
+                        styles.trendingTag,
+                        { backgroundColor: "#E8F5E9" },
                       ]}
                     >
-                      {i18n.t("trendingTag")}
+                      <Ionicons name="leaf" size={12} color="#2E7D32" />
+                      <Text
+                        style={[styles.trendingTagText, { color: "#2E7D32" }]}
+                      >
+                        {i18n.t("healthy")}
+                      </Text>
+                    </View>
+                    <Text style={styles.trendingTitle}>
+                      {otherTrending.title}
                     </Text>
-                  </View>
-                  <Text style={styles.trendingTitle}>
-                    {trendingRecipe.title}
-                  </Text>
-                  <Text style={styles.trendingMeta}>
-                    {trendingRecipe.time} • {trendingRecipe.calories}
-                  </Text>
-                </LinearGradient>
-              </Animated.View>
-            </TouchableOpacity>
-          </Link>
-
-          <Link href={`/recipe/${otherTrending.id}`} asChild>
-            <TouchableOpacity activeOpacity={0.9}>
-              <Animated.View
-                entering={FadeInRight.delay(300).springify()}
-                style={styles.trendingCard}
-              >
-                <Image
-                  source={{ uri: otherTrending.image }}
-                  style={styles.trendingImage}
-                  contentFit="cover"
-                  transition={300}
-                />
-                <LinearGradient
-                  colors={["transparent", "rgba(0,0,0,0.6)", "rgba(0,0,0,0.9)"]}
-                  style={styles.trendingOverlay}
-                >
-                  <View
-                    style={[styles.trendingTag, { backgroundColor: "#E8F5E9" }]}
-                  >
-                    <Ionicons name="leaf" size={12} color="#2E7D32" />
-                    <Text
-                      style={[styles.trendingTagText, { color: "#2E7D32" }]}
-                    >
-                      {i18n.t("healthy")}
+                    <Text style={styles.trendingMeta}>
+                      {otherTrending.time} • {otherTrending.calories}
                     </Text>
-                  </View>
-                  <Text style={styles.trendingTitle}>
-                    {otherTrending.title}
-                  </Text>
-                  <Text style={styles.trendingMeta}>
-                    {otherTrending.time} • {otherTrending.calories}
-                  </Text>
-                </LinearGradient>
-              </Animated.View>
-            </TouchableOpacity>
-          </Link>
-        </ScrollView>
+                  </LinearGradient>
+                </Animated.View>
+              </TouchableOpacity>
+            </Link>
+          </ScrollView>
+        ) : (
+          <View style={{ paddingHorizontal: 20 }}>
+            <Skeleton height={200} borderRadius={16} />
+          </View>
+        )}
 
         <AdBanner />
 
@@ -498,7 +518,7 @@ export default function ExploreScreen() {
             </TouchableOpacity>
           </View>
 
-          {renderRecipeList(RECIPES, 700)}
+          {renderRecipeList(recipes, 700)}
         </Animated.View>
       </>
     );
@@ -570,7 +590,7 @@ export default function ExploreScreen() {
               setActiveCategory("All");
             }}
           />
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Chip
               key={cat.id}
               label={cat.name}

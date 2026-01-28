@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import {
     ScrollView,
     StyleSheet,
@@ -11,16 +10,19 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
+import { useStore } from "../store/useStore";
 import { useTheme } from "../theme/useTheme";
 
 export default function NotificationSettingsScreen() {
   const router = useRouter();
   const { colors, typography, spacing } = useTheme();
+  
+  const { notificationPreferences, setNotificationPreferences } = useStore();
+  const { dailyReminder, weeklyLeaderboard, newBadges, newRecipes } = notificationPreferences;
 
-  const [dailyReminder, setDailyReminder] = useState(true);
-  const [weeklyLeaderboard, setWeeklyLeaderboard] = useState(true);
-  const [newBadges, setNewBadges] = useState(true);
-  const [newRecipes, setNewRecipes] = useState(false);
+  const updatePreference = (key: keyof typeof notificationPreferences, value: boolean) => {
+    setNotificationPreferences({ [key]: value });
+  };
 
   return (
     <SafeAreaView
@@ -72,7 +74,7 @@ export default function NotificationSettingsScreen() {
             </View>
             <Switch
               value={dailyReminder}
-              onValueChange={setDailyReminder}
+              onValueChange={(val) => updatePreference("dailyReminder", val)}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor="#fff"
             />
@@ -94,7 +96,7 @@ export default function NotificationSettingsScreen() {
             </View>
             <Switch
               value={weeklyLeaderboard}
-              onValueChange={setWeeklyLeaderboard}
+              onValueChange={(val) => updatePreference("weeklyLeaderboard", val)}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor="#fff"
             />
@@ -116,7 +118,7 @@ export default function NotificationSettingsScreen() {
             </View>
             <Switch
               value={newBadges}
-              onValueChange={setNewBadges}
+              onValueChange={(val) => updatePreference("newBadges", val)}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor="#fff"
             />
@@ -138,7 +140,7 @@ export default function NotificationSettingsScreen() {
             </View>
             <Switch
               value={newRecipes}
-              onValueChange={setNewRecipes}
+              onValueChange={(val) => updatePreference("newRecipes", val)}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor="#fff"
             />
@@ -154,9 +156,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FAFAFA",
   },
-  containerDark: {
-    backgroundColor: "#121212",
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -166,29 +165,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#f0f0f0",
   },
-  headerDark: {
-    backgroundColor: "#1E1E1E",
-    borderBottomColor: "#333",
-  },
   backButton: {
     padding: 4,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  textDark: {
-    color: "#fff",
-  },
   content: {
     padding: 20,
-  },
-  description: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 20,
-    lineHeight: 20,
   },
   section: {
     backgroundColor: "#fff",
@@ -196,33 +177,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     overflow: "hidden",
   },
-  sectionDark: {
-    backgroundColor: "#1E1E1E",
-  },
   item: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 16,
   },
   itemInfo: {
     flex: 1,
     paddingRight: 16,
   },
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 4,
-  },
-  itemSubtitle: {
-    fontSize: 13,
-    color: "#999",
-  },
   divider: {
     height: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#f9f9f9",
     marginLeft: 16,
   },
 });

@@ -19,7 +19,6 @@ import Animated, {
     useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { IngredientSection } from "../../models/recipe";
@@ -66,8 +65,13 @@ export default function RecipeDetailScreen() {
   );
   const [multiplier, setMultiplier] = useState(1);
 
-  const { isFavorite, toggleFavorite, logRecipeView, addToShoppingList } =
-    useStore();
+  const {
+    isFavorite,
+    toggleFavorite,
+    logRecipeView,
+    addToShoppingList,
+    recipes,
+  } = useStore();
 
   const scrollY = useSharedValue(0);
   const scrollHandler = useAnimatedScrollHandler({
@@ -102,7 +106,9 @@ export default function RecipeDetailScreen() {
   useEffect(() => {
     const loadRecipe = async () => {
       setLoading(true);
-      const localRecipe = RECIPES.find((r) => r.id === id);
+      const recipeId = Array.isArray(id) ? id[0] : id;
+
+      const localRecipe = recipes.find((r) => r.id === recipeId);
       if (localRecipe) {
         setRecipe(localRecipe);
         setLoading(false);
@@ -114,7 +120,7 @@ export default function RecipeDetailScreen() {
         const { data, error } = await supabase
           .from("recipes")
           .select("*")
-          .eq("id", id)
+          .eq("id", recipeId)
           .single();
 
         if (data) {
@@ -127,9 +133,9 @@ export default function RecipeDetailScreen() {
             description: data.description,
             ingredients: data.ingredients || [],
             steps: data.steps || [],
-            calories: "N/A",
-            tags: ["Community"],
-            servings: "2-4",
+            calories: data.calories || "N/A",
+            tags: data.tags || ["Community"],
+            servings: data.servings || "2-4",
           });
         } else {
           console.log("Recipe not found in Supabase or Local");
@@ -174,7 +180,15 @@ export default function RecipeDetailScreen() {
 
   const handleAddToShoppingList = () => {
     if (!recipe) return;
-    const allIngredients = recipe.ingredients.flatMap((s: any) => s.data);
+    const allIngredients = recipe.ingredients.flatMap((s: any) => {
+      // Normalize ingredients if they are just strings
+      return s.data.map((item: any) => {
+        if (typeof item === "string") {
+          return { name: item, quantity: "1" };
+        }
+        return item;
+      });
+    });
     addToShoppingList(allIngredients);
     ToastService.success(
       i18n.t("success"),
@@ -198,12 +212,15 @@ export default function RecipeDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#fff' }}>
-        <Skeleton height={400} style={{ borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }} />
+      <View style={{ flex: 1, backgroundColor: "#fff" }}>
+        <Skeleton
+          height={400}
+          style={{ borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
+        />
         <View style={{ padding: 24 }}>
-           <Skeleton height={32} width="80%" style={{ marginBottom: 16 }} />
-           <Skeleton height={20} width="40%" style={{ marginBottom: 32 }} />
-           <Skeleton height={100} style={{ borderRadius: 16 }} />
+          <Skeleton height={32} width="80%" style={{ marginBottom: 16 }} />
+          <Skeleton height={20} width="40%" style={{ marginBottom: 32 }} />
+          <Skeleton height={100} style={{ borderRadius: 16 }} />
         </View>
       </View>
     );
@@ -213,14 +230,17 @@ export default function RecipeDetailScreen() {
     return (
       <View style={{ flex: 1, paddingTop: insets.top }}>
         <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Ionicons name="arrow-back" size={24} color="#333" />
-            </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
+            <Ionicons name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
         </View>
-        <ErrorState 
-            title={i18n.t('recipeNotFound')} 
-            message={i18n.t('recipeNotFound')} 
-            onRetry={() => router.back()} 
+        <ErrorState
+          title={i18n.t("recipeNotFound")}
+          message={i18n.t("recipeNotFound")}
+          onRetry={() => router.back()}
         />
       </View>
     );
