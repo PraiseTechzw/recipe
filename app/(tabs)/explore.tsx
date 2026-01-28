@@ -1,3 +1,7 @@
+import { ErrorState } from "@/components/feedback/ErrorState";
+import { Skeleton } from "@/components/feedback/Skeleton";
+import { Chip } from "@/components/ui/Chip";
+import { SearchInput } from "@/components/ui/SearchInput";
 import { useStore } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,12 +19,12 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AdBanner } from "../../components/AdBanner";
-import { RECIPES } from "../../data/recipes";
+import { CATEGORIES, RECIPES } from "../../data/recipes";
 import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { generateRecipeFromImage } from "../../services/ai";
@@ -134,7 +138,11 @@ export default function ExploreScreen() {
           setAiRecipe(recipe);
         } catch (error) {
           console.error(error);
-          Alert.alert("Error", "Failed to generate recipe. Please try again.");
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: "Failed to generate recipe. Please try again.",
+          });
           setAiModalVisible(false);
         } finally {
           setIsGenerating(false);
@@ -142,7 +150,11 @@ export default function ExploreScreen() {
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Something went wrong launching the camera.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Something went wrong launching the camera.",
+      });
     }
   };
 
@@ -163,14 +175,19 @@ export default function ExploreScreen() {
       ]);
 
       if (error) throw error;
-      Alert.alert("Success", "Recipe saved to your collection!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Recipe saved to your collection!",
+      });
       setAiModalVisible(false);
     } catch (error) {
       console.error(error);
-      Alert.alert(
-        "Note",
-        "Recipe generated! Configure Supabase to save it permanently.",
-      );
+      Toast.show({
+        type: "info",
+        text1: "Note",
+        text2: "Recipe generated! Configure Supabase to save it permanently.",
+      });
     }
   };
 
@@ -246,70 +263,6 @@ export default function ExploreScreen() {
           ) : null}
         </View>
       </View>
-    </Modal>
-  );
-
-  const renderSortModal = () => (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={sortModalVisible}
-      onRequestClose={() => setSortModalVisible(false)}
-    >
-      <TouchableOpacity
-        style={styles.modalOverlay}
-        activeOpacity={1}
-        onPress={() => setSortModalVisible(false)}
-      >
-        <Animated.View
-          entering={FadeInDown.springify()}
-          style={styles.sortModalContent}
-        >
-          <Text style={styles.sortTitle}>{i18n.t("sortBy") || "Sort By"}</Text>
-
-          {[
-            { id: "newest", label: "Newest", icon: "sparkles-outline" },
-            { id: "time", label: "Cooking Time", icon: "time-outline" },
-            { id: "rating", label: "Top Rated", icon: "star-outline" },
-            {
-              id: "calories",
-              label: "Calories (Low to High)",
-              icon: "flame-outline",
-            },
-          ].map((option) => (
-            <TouchableOpacity
-              key={option.id}
-              style={[
-                styles.sortOption,
-                sortBy === option.id && styles.sortOptionActive,
-              ]}
-              onPress={() => {
-                setSortBy(option.id as any);
-                setSortModalVisible(false);
-              }}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name={option.icon as any}
-                  size={20}
-                  color={sortBy === option.id ? "#E65100" : "#666"}
-                />
-                <Text
-                  style={[
-                    styles.sortText,
-                    sortBy === option.id && styles.sortTextActive,
-                  ]}
-                >
-                  {option.label}
-                </Text>
-              </View>
-              {sortBy === option.id && (
-                <Ionicons name="checkmark" size={20} color="#E65100" />
-              )}
-            </TouchableOpacity>
-          ))}
-        </Animated.View>
-      </TouchableOpacity>
     </Modal>
   );
 
@@ -632,7 +585,12 @@ export default function ExploreScreen() {
         {renderContent()}
       </ScrollView>
       {renderAiModal()}
-      {renderSortModal()}
+      <SortModal
+        visible={sortModalVisible}
+        onClose={() => setSortModalVisible(false)}
+        sortBy={sortBy}
+        onSelectSort={(option) => setSortBy(option)}
+      />
     </SafeAreaView>
   );
 }
@@ -1084,50 +1042,6 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 10,
-    fontWeight: "700",
-  },
-  // Sort Modal Styles
-  sortModalContent: {
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    width: "80%",
-    padding: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  sortTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#1a1a1a",
-    textAlign: "center",
-  },
-  sortOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  sortOptionActive: {
-    backgroundColor: "#FFF3E0",
-    marginHorizontal: -12,
-    paddingHorizontal: 12,
-    borderRadius: 12,
-    borderBottomWidth: 0,
-  },
-  sortText: {
-    fontSize: 16,
-    color: "#666",
-    marginLeft: 12,
-    fontWeight: "500",
-  },
-  sortTextActive: {
-    color: "#E65100",
     fontWeight: "700",
   },
 });

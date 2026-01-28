@@ -5,8 +5,10 @@ export const CATEGORIES = [
   { id: '2', name: 'Relishes' },
   { id: '3', name: 'Meats' },
   { id: '4', name: 'Drinks' },
-  { id: '5', name: 'Stews' },
+  { id: '5', name: 'Stew' },
   { id: '6', name: 'Vegetarian' },
+  { id: '7', name: 'Dinner' },
+  { id: '8', name: 'Traditional' },
 ];
 
 export const RECIPES: Recipe[] = [
