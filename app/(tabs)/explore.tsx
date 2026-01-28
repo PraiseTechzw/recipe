@@ -30,6 +30,7 @@ import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { generateRecipeFromImage } from "../../services/ai";
 import { searchRecipes } from "../../services/recommendations";
+import { ToastService } from "@/services/toast";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
