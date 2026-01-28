@@ -1,6 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
@@ -11,31 +13,52 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { leaderboardService } from "@/services/leaderboardRealtime";
-import { LeaderboardEntry, useStore } from "@/store/useStore";
+import { useStore } from "@/store/useStore";
+import { useTheme } from "@/theme/useTheme";
+
+// Components
+import { EmptyState } from "@/components/feedback/EmptyState";
+import { LeaderboardRow } from "@/components/leaderboard/LeaderboardRow";
+import { MyRankCard } from "@/components/leaderboard/MyRankCard";
+import { Podium } from "@/components/leaderboard/Podium";
+import { Chip } from "@/components/ui/Chip";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 type LeaderboardTab = "weekly" | "allTime";
 
 export default function LeaderboardScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  // We might need to add this to store if we want persistence, or keep local state. Local state is fine for UI tab.
-  // Actually, keeping local state for tab is fine.
-  const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
+  const { colors, typography, spacing } = useTheme();
 
-  // Store selectors
+  // Local State
+  const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
+  const [filterMode, setFilterMode] = useState<"global" | "friends">("global");
+
+  // Store Selectors
   const topWeekly = useStore((state) => state.topWeekly);
   const topAllTime = useStore((state) => state.topAllTime);
+  const neighbors = useStore((state) => state.neighbors);
+  const userRank = useStore((state) => state.userRank);
   const isLoading = useStore((state) => state.isLeaderboardLoading);
+  const error = useStore((state) => state.leaderboardError);
   const userProfile = useStore((state) => state.userProfile);
 
-  // Data based on tab
-  const data = activeTab === "weekly" ? topWeekly : topAllTime;
+  // Derived Data
+  const fullData = activeTab === "weekly" ? topWeekly : topAllTime;
+  const topThree = fullData.slice(0, 3);
+  const listData = fullData.slice(3);
 
-  // Initialize and Subscribe
+  // Visibility Check for Sticky Footer
+  const amIVisibleInList = fullData.some(
+    (item) => item.chef_id === userProfile.id,
+  );
+  const myEntry = neighbors.find((item) => item.chef_id === userProfile.id);
+
+  // Lifecycle
   useEffect(() => {
     fetchData();
     leaderboardService.subscribe();
-
     return () => {
       leaderboardService.unsubscribe();
     };
@@ -43,148 +66,163 @@ export default function LeaderboardScreen() {
 
   const fetchData = useCallback(() => {
     leaderboardService.fetchGlobalLeaderboards();
-    // Also fetch neighbors if we have a user ID
     if (userProfile.id) {
-      // We pass 0 for XP as a fallback if not found,
-      // but ideally we should pass current XP from store if available there
-      // or let the service handle it.
-      // The service expects (chefId, xp).
-      // Let's use the XP from userProfile for now.
-      const currentXp =
-        activeTab === "weekly"
-          ? 0 // We don't track weekly XP in userStore yet, so neighbors might be inaccurate for weekly
-          : userProfile.xp;
-
-      leaderboardService.fetchAroundMe(userProfile.id, currentXp);
+      const sortBy = activeTab === "weekly" ? "weekly_xp" : "total_xp";
+      leaderboardService.fetchAroundMe(userProfile.id, sortBy);
     }
-  }, [userProfile.id, userProfile.xp, activeTab]);
+  }, [userProfile.id, activeTab]);
 
   const onRefresh = useCallback(() => {
     fetchData();
   }, [fetchData]);
 
-  const renderItem = ({
-    item,
-    index,
-  }: {
-    item: LeaderboardEntry;
-    index: number;
-  }) => {
-    const isMe = item.chef_id === userProfile.id;
-    const rank = index + 1;
-
-    // Determine avatar
-    // If we have a seed, we can use a service like dicebear or just a placeholder
-    // For this app, let's assume we use a simple generic avatar or initials if no image
-    // The store interface has avatar_seed.
-
-    return (
-      <View style={[styles.row, isMe && styles.meRow]}>
-        <View style={styles.rankContainer}>
-          <Text style={[styles.rankText, rank <= 3 && styles.topRank]}>
-            {rank}
-          </Text>
-        </View>
-
-        <View style={styles.avatarContainer}>
-          {/* Placeholder for avatar based on seed */}
-          <View style={styles.avatarPlaceholder}>
-            <Text style={styles.avatarInitials}>
-              {item.chefs?.chef_name?.substring(0, 1).toUpperCase() || "?"}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.infoContainer}>
-          <Text
-            style={[styles.chefName, isMe && styles.meText]}
-            numberOfLines={1}
-          >
-            {item.chefs?.chef_name || "Unknown Chef"}
-            {isMe && " (You)"}
-          </Text>
-          <Text style={styles.levelText}>Lvl {item.level}</Text>
-        </View>
-
-        <View style={styles.scoreContainer}>
-          <Text style={styles.scoreText}>
-            {activeTab === "weekly" ? item.weekly_xp : item.total_xp} XP
-          </Text>
-        </View>
-      </View>
-    );
+  // Handlers
+  const handleTabChange = (index: number) => {
+    setActiveTab(index === 0 ? "weekly" : "allTime");
   };
 
-  return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Leaderboard</Text>
-        <View style={styles.liveContainer}>
-          <View style={styles.liveDot} />
-          <Text style={styles.liveText}>Live</Text>
+  const renderHeader = () => (
+    <View style={styles.headerContainer}>
+      {/* 1) Header Title & Status */}
+      <View style={styles.titleRow}>
+        <View>
+          <Text style={[typography.h2, { color: colors.text }]}>
+            Leaderboard
+          </Text>
+          <View style={styles.subtitleRow}>
+            <Text style={[typography.body, { color: colors.textSecondary }]}>
+              {activeTab === "weekly" ? "This Week" : "All Time Legends"}
+            </Text>
+            {!error && (
+              <View
+                style={[
+                  styles.liveBadge,
+                  { backgroundColor: colors.success + "20" },
+                ]}
+              >
+                <View
+                  style={[styles.liveDot, { backgroundColor: colors.success }]}
+                />
+                <Text
+                  style={[
+                    typography.caption,
+                    { color: colors.success, fontWeight: "700" },
+                  ]}
+                >
+                  LIVE
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+        {/* Optional Search Icon */}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => {
+            /* Placeholder for future search */
+          }}
+        >
+          <Ionicons name="search" size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      {/* 2) Controls */}
+      <View style={styles.controlsContainer}>
+        <SegmentedControl
+          values={["Weekly", "All-time"]}
+          selectedIndex={activeTab === "weekly" ? 0 : 1}
+          onChange={handleTabChange}
+          style={styles.segmentedControl}
+        />
+
+        <View style={styles.filterChips}>
+          <Chip
+            label="Global"
+            selected={filterMode === "global"}
+            onPress={() => setFilterMode("global")}
+            style={{ marginRight: 8 }}
+          />
+          <Chip
+            label="Friends"
+            selected={filterMode === "friends"}
+            // onPress={() => setFilterMode("friends")} // Disabled for now
+            style={{ opacity: 0.5 }}
+          />
         </View>
       </View>
 
-      {/* Segmented Control */}
-      <View style={styles.segmentContainer}>
-        <TouchableOpacity
-          style={[
-            styles.segmentButton,
-            activeTab === "weekly" && styles.segmentActive,
-          ]}
-          onPress={() => setActiveTab("weekly")}
-        >
+      {/* Offline Banner */}
+      {error && (
+        <View style={styles.errorBanner}>
+          <Ionicons name="cloud-offline" size={16} color={colors.error} />
           <Text
-            style={[
-              styles.segmentText,
-              activeTab === "weekly" && styles.segmentTextActive,
-            ]}
+            style={[typography.caption, { color: colors.error, marginLeft: 6 }]}
           >
-            Weekly
+            Offline mode • Showing cached data
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.segmentButton,
-            activeTab === "allTime" && styles.segmentActive,
-          ]}
-          onPress={() => setActiveTab("allTime")}
-        >
-          <Text
-            style={[
-              styles.segmentText,
-              activeTab === "allTime" && styles.segmentTextActive,
-            ]}
-          >
-            All Time
-          </Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      )}
 
-      {/* List */}
+      {/* 3) Top 3 Podium */}
+      {isLoading && fullData.length === 0 ? (
+        <View style={styles.podiumSkeleton}>
+          {/* Simple skeleton placeholder */}
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        topThree.length > 0 && (
+          <Podium topThree={topThree} mode={activeTab} style={styles.podium} />
+        )
+      )}
+    </View>
+  );
+
+  return (
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, backgroundColor: colors.background },
+      ]}
+    >
       <FlatList
-        data={data}
-        renderItem={renderItem}
+        data={listData}
+        renderItem={({ item, index }) => (
+          <LeaderboardRow
+            item={item}
+            rank={index + 4} // +1 for 0-index, +3 for top 3
+            isMe={item.chef_id === userProfile.id}
+            mode={activeTab}
+          />
+        )}
         keyExtractor={(item) => item.chef_id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingBottom: 100 }} // Space for sticky footer
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={
+          !isLoading ? (
+            <EmptyState
+              title="No Chefs Yet"
+              description="Be the first to cook a recipe and climb the ranks!"
+              icon="trophy-outline"
+              actionLabel={error ? "Retry Connection" : undefined}
+              onAction={error ? fetchData : undefined}
+              style={{ marginTop: 40 }}
+            />
+          ) : null
+        }
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
             onRefresh={onRefresh}
-            tintColor="#E65100"
+            tintColor={colors.primary}
           />
         }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              {isLoading
-                ? "Loading chefs..."
-                : "No chefs found yet. Be the first!"}
-            </Text>
-          </View>
-        }
       />
+
+      {/* 5) Sticky My Rank Footer */}
+      {/* Show if: Not loading AND I'm not in the visible list AND I have a rank entry */}
+      {!isLoading && !amIVisibleInList && (userRank || myEntry) && (
+        <MyRankCard userRank={userRank} entry={myEntry} mode={activeTab} />
+      )}
     </View>
   );
 }
@@ -192,147 +230,74 @@ export default function LeaderboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+  headerContainer: {
     paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingTop: 10,
     backgroundColor: "#fff",
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 5,
+    marginBottom: 10,
+    paddingBottom: 20,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#333",
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
   },
-  liveContainer: {
+  subtitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(76, 175, 80, 0.1)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+    marginTop: 4,
+  },
+  liveBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 8,
   },
   liveDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#4CAF50",
-    marginRight: 6,
+    marginRight: 4,
   },
-  liveText: {
-    color: "#4CAF50",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-  segmentContainer: {
-    flexDirection: "row",
-    marginHorizontal: 20,
-    marginBottom: 15,
-    backgroundColor: "#EEEEEE",
-    borderRadius: 12,
-    padding: 4,
-  },
-  segmentButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderRadius: 10,
-  },
-  segmentActive: {
-    backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  segmentText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#757575",
-  },
-  segmentTextActive: {
-    color: "#E65100",
-  },
-  listContent: {
-    paddingBottom: 100, // Space for tab bar
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
-  },
-  meRow: {
-    backgroundColor: "#FFF3E0", // Light orange highlight
-  },
-  rankContainer: {
-    width: 30,
-    alignItems: "center",
-    marginRight: 10,
-  },
-  rankText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#757575",
-  },
-  topRank: {
-    color: "#E65100",
-    fontWeight: "bold",
-    fontSize: 18,
-  },
-  avatarContainer: {
-    marginRight: 12,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
+  iconButton: {
+    padding: 8,
+    backgroundColor: "#f5f5f5",
     borderRadius: 20,
-    backgroundColor: "#E0E0E0",
+  },
+  controlsContainer: {
+    marginBottom: 20,
+  },
+  segmentedControl: {
+    marginBottom: 12,
+  },
+  filterChips: {
+    flexDirection: "row",
+  },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#ffebee",
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  podiumSkeleton: {
+    height: 200,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarInitials: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#757575",
-  },
-  infoContainer: {
-    flex: 1,
-  },
-  chefName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 2,
-  },
-  meText: {
-    color: "#E65100",
-  },
-  levelText: {
-    fontSize: 12,
-    color: "#999",
-  },
-  scoreContainer: {
-    alignItems: "flex-end",
-  },
-  scoreText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: "center",
-  },
-  emptyText: {
-    color: "#999",
-    fontSize: 16,
+  podium: {
+    marginTop: 10,
   },
 });

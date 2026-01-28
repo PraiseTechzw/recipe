@@ -5,45 +5,6 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 // Limit fetches
 const LIMIT = 50;
 
-// Mock Data for Fallback/Demo
-const MOCK_LEADERBOARD: LeaderboardEntry[] = [
-  {
-    chef_id: "chef_1",
-    weekly_xp: 2450,
-    total_xp: 15400,
-    level: 12,
-    chefs: { chef_name: "Tariro", avatar_seed: "tariro", country: "ZW" },
-  },
-  {
-    chef_id: "chef_2",
-    weekly_xp: 2100,
-    total_xp: 12350,
-    level: 10,
-    chefs: { chef_name: "Kudza", avatar_seed: "kudza", country: "ZW" },
-  },
-  {
-    chef_id: "chef_3",
-    weekly_xp: 1850,
-    total_xp: 8900,
-    level: 8,
-    chefs: { chef_name: "Mama Chi", avatar_seed: "mamachi", country: "ZW" },
-  },
-  {
-    chef_id: "chef_4",
-    weekly_xp: 1600,
-    total_xp: 6500,
-    level: 6,
-    chefs: { chef_name: "Simba", avatar_seed: "simba", country: "ZW" },
-  },
-  {
-    chef_id: "chef_5",
-    weekly_xp: 1200,
-    total_xp: 4200,
-    level: 4,
-    chefs: { chef_name: "Nyasha", avatar_seed: "nyasha", country: "ZW" },
-  },
-];
-
 /**
  * Service to manage Leaderboard Data & Realtime Subscriptions
  */
@@ -71,13 +32,9 @@ class LeaderboardRealtimeService {
         .order("weekly_xp", { ascending: false })
         .limit(LIMIT);
 
-      // If Supabase is empty or fails (e.g. no connection/table), use Mock
-      if (weeklyError || !weekly || weekly.length === 0) {
-        console.log("Using Mock Leaderboard Data (Weekly)");
-        store.setTopWeekly(MOCK_LEADERBOARD);
-      } else {
-        store.setTopWeekly(weekly as unknown as LeaderboardEntry[]);
-      }
+      if (weeklyError) throw weeklyError;
+
+      store.setTopWeekly((weekly || []) as unknown as LeaderboardEntry[]);
 
       // 2. Fetch All-Time
       const { data: allTime, error: allTimeError } = await supabase
@@ -91,25 +48,13 @@ class LeaderboardRealtimeService {
         .order("total_xp", { ascending: false })
         .limit(LIMIT);
 
-      if (allTimeError || !allTime || allTime.length === 0) {
-        console.log("Using Mock Leaderboard Data (All Time)");
-        // Sort mock by total_xp just in case
-        const sortedMock = [...MOCK_LEADERBOARD].sort(
-          (a, b) => b.total_xp - a.total_xp,
-        );
-        store.setTopAllTime(sortedMock);
-      } else {
-        store.setTopAllTime(allTime as unknown as LeaderboardEntry[]);
-      }
+      if (allTimeError) throw allTimeError;
+
+      store.setTopAllTime((allTime || []) as unknown as LeaderboardEntry[]);
     } catch (err: any) {
       console.error("Leaderboard fetch error:", err);
-      // Fallback on error too
-      store.setTopWeekly(MOCK_LEADERBOARD);
-      store.setTopAllTime(
-        [...MOCK_LEADERBOARD].sort((a, b) => b.total_xp - a.total_xp),
-      );
-      // We don't set error state to avoid showing error UI if we have mock data
-      // store.setLeaderboardError(err.message);
+      store.setLeaderboardError(err.message || "Failed to fetch leaderboard");
+      // Keep existing data in store (offline support) if fetch fails
     } finally {
       store.setLeaderboardLoading(false);
     }
@@ -117,44 +62,50 @@ class LeaderboardRealtimeService {
 
   /**
    * Fetches "Around Me" - entries with scores just above and below the current user.
-   * Fallback strategy: Since we can't efficiently calculate RANK() in simple RLS-limited select,
-   * we fetch 5 rows with score > myScore and 5 rows with score < myScore.
+   * Also calculates the user's exact rank.
    */
-  async fetchAroundMe(myChefId: string, myWeeklyXp: number) {
+  async fetchAroundMe(myChefId: string, sortBy: "weekly_xp" | "total_xp") {
     const store = useStore.getState();
 
     try {
-      // Fetch 5 above
-      const { data: above } = await supabase
-        .from("leaderboard")
-        .select(`*, chefs (chef_name, avatar_seed, country)`)
-        .gt("weekly_xp", myWeeklyXp)
-        .order("weekly_xp", { ascending: true }) // closest to me
-        .limit(5);
-
-      // Fetch 5 below
-      const { data: below } = await supabase
-        .from("leaderboard")
-        .select(`*, chefs (chef_name, avatar_seed, country)`)
-        .lte("weekly_xp", myWeeklyXp) // includes me potentially if distinct
-        .neq("chef_id", myChefId) // exclude me explicitly
-        .order("weekly_xp", { ascending: false }) // closest to me
-        .limit(5);
-
-      // Fetch Me (to ensure I am in the list with joined data)
+      // 1. Fetch Me to get accurate XP
       const { data: me } = await supabase
         .from("leaderboard")
         .select(`*, chefs (chef_name, avatar_seed, country)`)
         .eq("chef_id", myChefId)
         .single();
 
-      const neighbors = [
-        ...(above || []).reverse(), // reverse to show highest first
-        ...(me ? [me] : []),
-        ...(below || []),
-      ];
+      if (!me) return;
+      const myXp = me[sortBy];
+
+      // 2. Fetch 2 above (people with MORE xp, closest to me)
+      const { data: above } = await supabase
+        .from("leaderboard")
+        .select(`*, chefs (chef_name, avatar_seed, country)`)
+        .gt(sortBy, myXp)
+        .order(sortBy, { ascending: true })
+        .limit(2);
+
+      // 3. Fetch 2 below (people with LESS or EQUAL xp, closest to me)
+      const { data: below } = await supabase
+        .from("leaderboard")
+        .select(`*, chefs (chef_name, avatar_seed, country)`)
+        .lte(sortBy, myXp)
+        .neq("chef_id", myChefId)
+        .order(sortBy, { ascending: false })
+        .limit(2);
+
+      const neighbors = [...(above || []).reverse(), me, ...(below || [])];
 
       store.setNeighbors(neighbors as unknown as LeaderboardEntry[]);
+
+      // 4. Calculate Rank
+      const { count } = await supabase
+        .from("leaderboard")
+        .select("*", { count: "exact", head: true })
+        .gt(sortBy, myXp);
+
+      store.setUserRank((count || 0) + 1);
     } catch (err) {
       console.error("Fetch neighbors error:", err);
     }

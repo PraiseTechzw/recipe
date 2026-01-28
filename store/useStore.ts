@@ -3,7 +3,13 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { BADGES, getLevel } from "../constants/gamification";
 import { supabase } from "../lib/supabase";
-import { IngredientItem, IngredientSection, Recipe, ShoppingItem, Step } from "../models/recipe";
+import {
+    IngredientItem,
+    IngredientSection,
+    Recipe,
+    ShoppingItem,
+    Step,
+} from "../models/recipe";
 
 export interface Category {
   id: string;
@@ -118,7 +124,10 @@ interface AppState {
   addXP: (amount: number) => void;
   checkBadges: () => void;
   unlockBadge: (badgeId: string) => void;
-  incrementStat: (stat: Exclude<keyof UserStats, "lastCookDate">, amount?: number) => void;
+  incrementStat: (
+    stat: Exclude<keyof UserStats, "lastCookDate">,
+    amount?: number,
+  ) => void;
 
   // Intelligence & Analytics
   viewHistory: string[]; // List of recipe IDs viewed
@@ -157,11 +166,13 @@ interface AppState {
   topWeekly: LeaderboardEntry[];
   topAllTime: LeaderboardEntry[];
   neighbors: LeaderboardEntry[];
+  userRank: number | null;
   isLeaderboardLoading: boolean;
   leaderboardError: string | null;
   setTopWeekly: (entries: LeaderboardEntry[]) => void;
   setTopAllTime: (entries: LeaderboardEntry[]) => void;
   setNeighbors: (entries: LeaderboardEntry[]) => void;
+  setUserRank: (rank: number | null) => void;
   upsertLeaderboardEntry: (entry: LeaderboardEntry) => void;
   setLeaderboardLoading: (loading: boolean) => void;
   setLeaderboardError: (error: string | null) => void;
@@ -524,6 +535,7 @@ export const useStore = create<AppState>()(
       topWeekly: [],
       topAllTime: [],
       neighbors: [],
+      userRank: null,
       isLeaderboardLoading: false,
       leaderboardError: null,
       setTopWeekly: (entries: LeaderboardEntry[]) =>
@@ -532,6 +544,7 @@ export const useStore = create<AppState>()(
         set({ topAllTime: entries }),
       setNeighbors: (entries: LeaderboardEntry[]) =>
         set({ neighbors: entries }),
+      setUserRank: (rank: number | null) => set({ userRank: rank }),
       upsertLeaderboardEntry: (entry: LeaderboardEntry) =>
         set((state) => {
           // Update in weekly if present
