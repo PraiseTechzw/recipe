@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps, ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/useTheme';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,7 +12,7 @@ interface InputProps extends TextInputProps {
   containerStyle?: ViewStyle;
 }
 
-export function Input({ 
+export const Input = forwardRef<TextInput, InputProps>(({ 
   label, 
   error, 
   leftIcon, 
@@ -21,7 +21,7 @@ export function Input({
   containerStyle,
   style,
   ...props 
-}: InputProps) {
+}, ref) => {
   const { colors, spacing, radius, typography } = useTheme();
 
   return (
@@ -45,6 +45,7 @@ export function Input({
           <Ionicons name={leftIcon} size={20} color={colors.textSecondary} style={{ marginRight: spacing.s }} />
         )}
         <TextInput
+          ref={ref}
           placeholderTextColor={colors.textSecondary}
           style={[
             styles.input,
@@ -70,7 +71,7 @@ export function Input({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

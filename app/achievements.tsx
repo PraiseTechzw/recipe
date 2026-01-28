@@ -3,19 +3,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-    BADGES,
-    getLevel
-} from "../constants/gamification";
+import { BADGES, getLevel } from "../constants/gamification";
 import { useStore } from "../store/useStore";
 
 const { width } = Dimensions.get("window");
@@ -37,15 +34,12 @@ export default function AchievementsScreen() {
   // -------------------------------------------------------------------------
 
   // Calculate Progress to Next Level
-  const nextLevelXP = levelInfo.nextLevelXP || (levelInfo.minXP + 1000);
+  const nextLevelXP = levelInfo.nextLevelXP || levelInfo.minXP + 1000;
   const currentLevelXP = levelInfo.minXP;
-  
+
   const progressPercent = Math.min(
     100,
-    Math.max(
-      0,
-      ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100,
-    ),
+    Math.max(0, ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100),
   );
 
   // -------------------------------------------------------------------------
@@ -71,11 +65,15 @@ export default function AchievementsScreen() {
   const unlockedCount = unlockedIds.length;
   const totalCount = BADGES.length;
 
-  function getCategoryColor(category: string): import("react-native").ColorValue | undefined {
+  function getCategoryColor(
+    category: string,
+  ): import("react-native").ColorValue | undefined {
     throw new Error("Function not implemented.");
   }
 
-  function getCategoryColor(category: string): import("react-native").ColorValue | undefined {
+  function getCategoryColor(
+    category: string,
+  ): import("react-native").ColorValue | undefined {
     throw new Error("Function not implemented.");
   }
 
@@ -148,20 +146,18 @@ export default function AchievementsScreen() {
                 No badges unlocked yet. Get cooking!
               </Text>
             ) : (
-              BADGES.filter((a) => unlockedIds.includes(a.id)).map(
-                (badge) => (
-                  <View key={badge.id} style={styles.badgeItem}>
-                    <View
-                      style={[
-                        styles.badgeIconContainer,
-                        { backgroundColor: getCategoryColor(badge.category) },
-                      ]}
-                    >
-                      <Text style={{ fontSize: 24 }}>{badge.icon}</Text>
-                    </View>
+              BADGES.filter((a) => unlockedIds.includes(a.id)).map((badge) => (
+                <View key={badge.id} style={styles.badgeItem}>
+                  <View
+                    style={[
+                      styles.badgeIconContainer,
+                      { backgroundColor: getCategoryColor(badge.category) },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 24 }}>{badge.icon}</Text>
                   </View>
-                ),
-              )
+                </View>
+              ))
             )}
           </View>
         </View>
@@ -196,22 +192,22 @@ export default function AchievementsScreen() {
                   style={[
                     styles.iconCircle,
                     isUnlocked
-                      ? { backgroundColor: getRarityColor(item.rarity) }
+                      ? { backgroundColor: getCategoryColor(item.category) }
                       : styles.iconLocked,
                   ]}
                 >
-                  <Ionicons
-                    name={isUnlocked ? (item.badgeIcon as any) : "lock-closed"}
-                    size={24}
-                    color={isUnlocked ? "#FFF" : "#999"}
-                  />
+                  {isUnlocked ? (
+                    <Text style={{ fontSize: 24 }}>{item.icon}</Text>
+                  ) : (
+                    <Ionicons name="lock-closed" size={24} color="#999" />
+                  )}
                 </View>
 
                 <View style={styles.rowContent}>
                   <Text
                     style={[styles.rowTitle, !isUnlocked && styles.textLocked]}
                   >
-                    {item.title}
+                    {item.name}
                   </Text>
                   <Text style={styles.rowDesc} numberOfLines={2}>
                     {item.description}
@@ -231,19 +227,6 @@ export default function AchievementsScreen() {
       </ScrollView>
     </View>
   );
-}
-
-function getRarityColor(rarity: string) {
-  switch (rarity) {
-    case "common":
-      return "#4FC3F7"; // Light Blue
-    case "rare":
-      return "#FFB74D"; // Orange
-    case "epic":
-      return "#AB47BC"; // Purple
-    default:
-      return "#999";
-  }
 }
 
 const styles = StyleSheet.create({

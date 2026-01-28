@@ -26,7 +26,7 @@ const COLUMN_WIDTH = (width - 48) / 2;
 export default function SavedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { theme, colors, typography, spacing, shadows, radius } = useTheme();
+  const { colors, typography, spacing, shadows, radius } = useTheme();
   const { favorites, isDarkMode, recipes, categories } = useStore();
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

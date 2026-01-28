@@ -74,6 +74,15 @@ export default function ExploreScreen() {
     }
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (autoFocus === "true") {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [autoFocus]);
+
   const filteredRecipes = searchRecipes(
     debouncedQuery,
     activeCategory,
