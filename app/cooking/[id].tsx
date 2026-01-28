@@ -32,6 +32,7 @@ import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
+import { ErrorState } from "@/components/feedback/ErrorState";
 
 const { width, height } = Dimensions.get("window");
 
@@ -258,15 +259,16 @@ export default function CookingModeScreen() {
   if (!recipe || !recipe.steps) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.center}>
-          <Text>{i18n.t("recipeNotFound")}</Text>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={{ marginTop: 20 }}
-          >
-            <Text style={{ color: "#E65100" }}>{i18n.t("goBack")}</Text>
-          </TouchableOpacity>
+        <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
+                <Ionicons name="close" size={28} color="#333" />
+            </TouchableOpacity>
         </View>
+        <ErrorState 
+            title={i18n.t('recipeNotFound')} 
+            message={i18n.t('recipeNotFound')} 
+            onRetry={() => router.back()} 
+        />
       </SafeAreaView>
     );
   }

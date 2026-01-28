@@ -3,19 +3,34 @@ import { Image } from 'expo-image';
 import { Link } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Recipe } from '../models/recipe';
+import { useTheme } from '../theme/useTheme';
 
 interface RecipeCardProps {
   recipe: Recipe;
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
+  const { colors, typography, shadows, radius } = useTheme();
+
   return (
     <Link href={`/recipe/${recipe.id}`} asChild>
-      <TouchableOpacity style={styles.card}>
-        <Image source={{ uri: recipe.image }} style={styles.image} contentFit="cover" transition={200} />
+      <TouchableOpacity 
+        style={[
+          styles.card, 
+          { backgroundColor: colors.card, borderRadius: radius.m },
+          shadows.small
+        ]}
+        activeOpacity={0.8}
+      >
+        <Image 
+          source={recipe.image ? { uri: recipe.image } : require('../assets/images/placeholder.jpg')} 
+          style={styles.image} 
+          contentFit="cover" 
+          transition={200} 
+        />
         <View style={styles.overlay}>
            <View style={styles.badgeContainer}>
-             {recipe.tags.slice(0, 1).map((tag, index) => (
+             {recipe.tags && recipe.tags.slice(0, 1).map((tag, index) => (
                <View key={index} style={styles.badge}>
                  <Text style={styles.badgeText}>{tag}</Text>
                </View>
@@ -23,15 +38,17 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
            </View>
         </View>
         <View style={styles.content}>
-          <Text style={styles.title}>{recipe.title}</Text>
+          <Text style={[styles.title, { color: colors.text }]} numberOfLines={2} ellipsizeMode="tail">
+            {recipe.title}
+          </Text>
           <View style={styles.metaRow}>
             <View style={styles.metaItem}>
-              <Ionicons name="time-outline" size={14} color="#666" />
-              <Text style={styles.metaText}>{recipe.time}</Text>
+              <Ionicons name="time-outline" size={14} color={colors.textSecondary} />
+              <Text style={[styles.metaText, { color: colors.textSecondary }]}>{recipe.time}</Text>
             </View>
             <View style={styles.metaItem}>
-              <Ionicons name="flame-outline" size={14} color="#666" />
-              <Text style={styles.metaText}>{recipe.calories}</Text>
+              <Ionicons name="flame-outline" size={14} color={colors.textSecondary} />
+              <Text style={[styles.metaText, { color: colors.textSecondary }]}>{recipe.calories}</Text>
             </View>
           </View>
         </View>
@@ -42,20 +59,12 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   image: {
     width: '100%',
     height: 200,
-    resizeMode: 'cover',
   },
   overlay: {
     position: 'absolute',
@@ -87,7 +96,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
-    color: '#333',
   },
   metaRow: {
     flexDirection: 'row',
@@ -100,6 +108,5 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 12,
-    color: '#666',
   },
 });

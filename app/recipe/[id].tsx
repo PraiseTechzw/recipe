@@ -198,21 +198,31 @@ export default function RecipeDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ padding: 16, gap: 16 }}>
-        <Skeleton height={240} borderRadius={24} />
-        <Skeleton height={60} borderRadius={12} />
-        <Skeleton height={160} borderRadius={16} />
-        <Skeleton height={300} borderRadius={16} />
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        <Skeleton height={400} style={{ borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }} />
+        <View style={{ padding: 24 }}>
+           <Skeleton height={32} width="80%" style={{ marginBottom: 16 }} />
+           <Skeleton height={20} width="40%" style={{ marginBottom: 32 }} />
+           <Skeleton height={100} style={{ borderRadius: 16 }} />
+        </View>
       </View>
     );
   }
 
   if (!recipe) {
     return (
-      <ErrorState
-        message={i18n.t("recipeNotFound")}
-        onRetry={() => router.back()}
-      />
+      <View style={{ flex: 1, paddingTop: insets.top }}>
+        <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={24} color="#333" />
+            </TouchableOpacity>
+        </View>
+        <ErrorState 
+            title={i18n.t('recipeNotFound')} 
+            message={i18n.t('recipeNotFound')} 
+            onRetry={() => router.back()} 
+        />
+      </View>
     );
   }
 
