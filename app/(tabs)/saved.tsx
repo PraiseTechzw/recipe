@@ -3,7 +3,6 @@ import { Image } from "expo-image";
 import { Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
-    ActivityIndicator,
     Dimensions,
     ScrollView,
     StyleSheet,
@@ -23,6 +22,7 @@ import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { HapticService } from "../../services/haptics";
 import { useStore } from "../../store/useStore";
+import { useTheme } from "../../theme/useTheme";
 
 const { width } = Dimensions.get("window");
 const COLUMN_WIDTH = (width - 48) / 2;
@@ -30,6 +30,7 @@ const COLUMN_WIDTH = (width - 48) / 2;
 export default function SavedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { theme, colors, typography, spacing, shadows, radius } = useTheme();
   const { favorites, isDarkMode } = useStore();
   const [supabaseRecipes, setSupabaseRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,11 +123,21 @@ export default function SavedScreen() {
     index: number;
   }) => (
     <Link href={`/recipe/${recipe.id}`} asChild>
-      <TouchableOpacity activeOpacity={0.9} style={{ marginBottom: 16 }}>
+      <TouchableOpacity activeOpacity={0.8} style={{ marginBottom: spacing.m }}>
         <Animated.View entering={FadeInUp.delay(index * 100).springify()}>
-          <View style={[styles.card, isDarkMode && styles.cardDark]}>
+          <View
+            style={[
+              styles.card,
+              { backgroundColor: colors.card, borderRadius: radius.m },
+              shadows.small,
+            ]}
+          >
             <Image
-              source={{ uri: recipe.image }}
+              source={
+                recipe.image
+                  ? { uri: recipe.image }
+                  : require("../../assets/images/placeholder.jpg")
+              }
               style={styles.cardImage}
               contentFit="cover"
               transition={200}
@@ -140,7 +151,7 @@ export default function SavedScreen() {
 
             <View style={styles.cardContent}>
               <Text
-                style={[styles.cardTitle, isDarkMode && styles.textDark]}
+                style={[typography.h4, { color: colors.text }]}
                 numberOfLines={2}
               >
                 {recipe.title}
@@ -151,18 +162,15 @@ export default function SavedScreen() {
                   <Ionicons name="star" size={12} color="#FFD700" />
                   <Text
                     style={[
-                      styles.ratingText,
-                      isDarkMode && styles.textSubDark,
+                      typography.caption,
+                      { color: colors.textSecondary },
                     ]}
                   >
                     {recipe.rating || 4.5}
                   </Text>
                 </View>
                 <Text
-                  style={[
-                    styles.caloriesText,
-                    isDarkMode && styles.textSubDark,
-                  ]}
+                  style={[typography.caption, { color: colors.textSecondary }]}
                 >
                   {recipe.calories !== "N/A" ? recipe.calories : ""}
                 </Text>
