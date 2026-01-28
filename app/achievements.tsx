@@ -71,6 +71,14 @@ export default function AchievementsScreen() {
   const unlockedCount = unlockedIds.length;
   const totalCount = BADGES.length;
 
+  function getCategoryColor(category: string): import("react-native").ColorValue | undefined {
+    throw new Error("Function not implemented.");
+  }
+
+  function getCategoryColor(category: string): import("react-native").ColorValue | undefined {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Stack.Screen options={{ headerShown: false }} />

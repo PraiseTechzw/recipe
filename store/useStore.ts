@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { BADGES, getLevel } from "../constants/gamification";
 import { supabase } from "../lib/supabase";
-import { IngredientItem, Recipe, ShoppingItem } from "../models/recipe";
+import { IngredientItem, IngredientSection, Recipe, ShoppingItem, Step } from "../models/recipe";
 
 export interface Category {
   id: string;
@@ -118,7 +118,7 @@ interface AppState {
   addXP: (amount: number) => void;
   checkBadges: () => void;
   unlockBadge: (badgeId: string) => void;
-  incrementStat: (stat: keyof UserStats, amount?: number) => void;
+  incrementStat: (stat: Exclude<keyof UserStats, "lastCookDate">, amount?: number) => void;
 
   // Intelligence & Analytics
   viewHistory: string[]; // List of recipe IDs viewed
@@ -447,7 +447,7 @@ export const useStore = create<AppState>()(
       // Analytics
       viewHistory: [],
       categoryScores: {},
-      logRecipeView: (id, category) =>
+      logRecipeView: (id: string, category: string) =>
         set((state) => {
           // Add to history (limit to last 20)
           const newHistory = [
@@ -469,13 +469,13 @@ export const useStore = create<AppState>()(
         }),
 
       sessionStartTime: Date.now(),
-      setSessionStartTime: (time) => set({ sessionStartTime: time }),
+      setSessionStartTime: (time: number) => set({ sessionStartTime: time }),
 
       // Settings
       isDarkMode: false,
       toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
       locale: "en",
-      setLocale: (locale) => set({ locale }),
+      setLocale: (locale: string) => set({ locale }),
 
       // Notifications
       notificationPreferences: {
@@ -484,7 +484,9 @@ export const useStore = create<AppState>()(
         newBadges: true,
         newRecipes: true,
       },
-      setNotificationPreferences: (prefs) =>
+      setNotificationPreferences: (
+        prefs: Partial<AppState["notificationPreferences"]>,
+      ) =>
         set((state) => ({
           notificationPreferences: {
             ...state.notificationPreferences,
@@ -492,7 +494,9 @@ export const useStore = create<AppState>()(
           },
         })),
       notifications: [],
-      addNotification: (notification) =>
+      addNotification: (
+        notification: Omit<Notification, "id" | "read" | "time">,
+      ) =>
         set((state) => ({
           notifications: [
             {
@@ -504,7 +508,7 @@ export const useStore = create<AppState>()(
             ...state.notifications,
           ],
         })),
-      markNotificationAsRead: (id) =>
+      markNotificationAsRead: (id: string) =>
         set((state) => ({
           notifications: state.notifications.map((n) =>
             n.id === id ? { ...n, read: true } : n,
@@ -515,6 +519,48 @@ export const useStore = create<AppState>()(
           notifications: state.notifications.map((n) => ({ ...n, read: true })),
         })),
       clearNotifications: () => set({ notifications: [] }),
+
+      // Leaderboard
+      topWeekly: [],
+      topAllTime: [],
+      neighbors: [],
+      isLeaderboardLoading: false,
+      leaderboardError: null,
+      setTopWeekly: (entries: LeaderboardEntry[]) =>
+        set({ topWeekly: entries }),
+      setTopAllTime: (entries: LeaderboardEntry[]) =>
+        set({ topAllTime: entries }),
+      setNeighbors: (entries: LeaderboardEntry[]) =>
+        set({ neighbors: entries }),
+      upsertLeaderboardEntry: (entry: LeaderboardEntry) =>
+        set((state) => {
+          // Update in weekly if present
+          const weeklyIndex = state.topWeekly.findIndex(
+            (e) => e.chef_id === entry.chef_id,
+          );
+          let newWeekly = [...state.topWeekly];
+          if (weeklyIndex >= 0) {
+            newWeekly[weeklyIndex] = { ...newWeekly[weeklyIndex], ...entry };
+          }
+
+          // Update in allTime if present
+          const allTimeIndex = state.topAllTime.findIndex(
+            (e) => e.chef_id === entry.chef_id,
+          );
+          let newAllTime = [...state.topAllTime];
+          if (allTimeIndex >= 0) {
+            newAllTime[allTimeIndex] = {
+              ...newAllTime[allTimeIndex],
+              ...entry,
+            };
+          }
+
+          return { topWeekly: newWeekly, topAllTime: newAllTime };
+        }),
+      setLeaderboardLoading: (loading: boolean) =>
+        set({ isLeaderboardLoading: loading }),
+      setLeaderboardError: (error: string | null) =>
+        set({ leaderboardError: error }),
     }),
     {
       name: "recipe-app-storage",

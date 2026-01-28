@@ -1,14 +1,15 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
@@ -51,7 +52,7 @@ export default function EditProfileScreen() {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -79,10 +80,22 @@ export default function EditProfileScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.avatarSection}>
-          <Image
-            source={{ uri: avatar || "https://i.pravatar.cc/150?img=12" }}
-            style={styles.avatar}
-          />
+          {avatar ? (
+            <Image source={{ uri: avatar }} style={styles.avatar} />
+          ) : (
+            <View
+              style={[
+                styles.avatar,
+                {
+                  backgroundColor: "#E65100",
+                  justifyContent: "center",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <Ionicons name="person" size={50} color="#fff" />
+            </View>
+          )}
           <TouchableOpacity style={styles.changePhotoBtn} onPress={pickImage}>
             <Text style={styles.changePhotoText}>{i18n.t("changePhoto")}</Text>
           </TouchableOpacity>

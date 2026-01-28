@@ -25,6 +25,7 @@ import i18n from "../i18n";
 import { HapticService } from "../services/haptics";
 import { ToastService } from "../services/toast";
 import { useStore } from "../store/useStore";
+import { EmptyState } from "@/components/feedback/EmptyState";
 
 export default function ShoppingListScreen() {
   const router = useRouter();

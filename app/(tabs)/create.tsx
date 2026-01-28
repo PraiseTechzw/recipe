@@ -92,7 +92,7 @@ export default function CreateScreen() {
     HapticService.light();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.5, // Compression hint: reduced quality

@@ -116,7 +116,7 @@ export default function ExploreScreen() {
 
     try {
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ["images"],
         allowsEditing: true,
         base64: true,
         quality: 0.5,
