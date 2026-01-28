@@ -155,6 +155,12 @@ const i18n = new I18n({
     validationError: "Validation Error",
     checkFields: "Please check the fields marked in red",
     imagePickerError: "Failed to pick image",
+    favorite: "Favorite",
+    share: "Share",
+    addedTo: "Added to",
+    favorites: "Favorites",
+    removed: "Removed",
+    removedFrom: "Removed from",
   },
   sn: {
     exploreTitle: "Tsvaga Zvinonaka zveZimbabwe",
