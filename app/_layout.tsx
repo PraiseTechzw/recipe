@@ -109,6 +109,24 @@ export default function RootLayout() {
                 gestureEnabled: false,
               }}
             />
+            <Stack.Screen name="settings" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="notifications"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="notification-settings"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="edit-profile"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen name="leaderboard" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="achievements"
+              options={{ headerShown: false }}
+            />
             <Stack.Screen
               name="(ai-chef)"
               options={{
