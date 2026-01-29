@@ -5,20 +5,15 @@ import { Skeleton } from "@/components/feedback/Skeleton";
 import { Chip } from "@/components/ui/Chip";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { HapticService } from "@/services/haptics";
-import { ToastService } from "@/services/toast";
 import { useStore } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
   Dimensions,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -28,9 +23,7 @@ import {
 } from "react-native";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AdBanner } from "../../components/AdBanner";
 import i18n from "../../i18n";
-import { supabase } from "../../lib/supabase";
 import { searchRecipes } from "../../services/recommendations";
 
 const { width } = Dimensions.get("window");
@@ -370,8 +363,6 @@ export default function ExploreScreen() {
           </View>
         )}
 
-        <AdBanner />
-
         {/* Popular Recipes List */}
         <Animated.View entering={FadeInDown.delay(600).duration(500)}>
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
@@ -401,9 +392,12 @@ export default function ExploreScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>
           {i18n.t("explore")}
         </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <TouchableOpacity onPress={handleScanIngredients} style={styles.iconButton}>
-              <Ionicons name="scan" size={24} color="#E65100" />
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+          <TouchableOpacity
+            onPress={handleScanIngredients}
+            style={styles.iconButton}
+          >
+            <Ionicons name="scan" size={24} color="#E65100" />
           </TouchableOpacity>
           <TouchableOpacity onPress={toggleLanguage} style={styles.langButton}>
             <Text style={styles.langText}>{locale.toUpperCase()}</Text>
