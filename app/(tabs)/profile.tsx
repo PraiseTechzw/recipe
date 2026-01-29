@@ -491,7 +491,9 @@ export default function ProfileScreen() {
                         borderColor: colors.border,
                       },
                       !isUnlocked && {
-                        backgroundColor: isDark ? "#222" : "#f5f5f5",
+                        backgroundColor: isDark
+                          ? colors.surfaceVariant
+                          : "#f5f5f5",
                         opacity: 0.5,
                       },
                     ]}
@@ -499,7 +501,11 @@ export default function ProfileScreen() {
                     <View
                       style={[
                         styles.badgeIconContainer,
-                        !isUnlocked && styles.badgeIconLocked,
+                        !isUnlocked && {
+                          backgroundColor: isDark
+                            ? colors.surfaceVariant
+                            : "#EEE",
+                        },
                       ]}
                     >
                       <Text style={styles.badgeEmoji}>{badge.icon}</Text>
