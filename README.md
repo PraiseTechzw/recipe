@@ -94,14 +94,6 @@ Follow these steps to get the project running on your local machine.
 
 ---
 
-## 📄 AdMob Verification
-
-For production, ensure your `app-ads.txt` is properly hosted:
-1.  Navigate to the `public/app-ads.txt` file.
-2.  Upload this file to the root of your developer website (e.g., `https://yourwebsite.com/app-ads.txt`).
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.

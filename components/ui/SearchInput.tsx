@@ -42,3 +42,5 @@ export const SearchInput = forwardRef<TextInput, SearchInputProps>(
     );
   },
 );
+
+SearchInput.displayName = "SearchInput";

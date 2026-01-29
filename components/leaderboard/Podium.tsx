@@ -3,6 +3,7 @@ import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, StyleSheet, Text, View, ViewStyle } from "react-native";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 
 interface PodiumProps {
   topThree: LeaderboardEntry[];

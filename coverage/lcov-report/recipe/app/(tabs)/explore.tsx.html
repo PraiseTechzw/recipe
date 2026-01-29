@@ -999,13 +999,7 @@
 <a name='L934'></a><a href='#L934'>934</a>
 <a name='L935'></a><a href='#L935'>935</a>
 <a name='L936'></a><a href='#L936'>936</a>
-<a name='L937'></a><a href='#L937'>937</a>
-<a name='L938'></a><a href='#L938'>938</a>
-<a name='L939'></a><a href='#L939'>939</a>
-<a name='L940'></a><a href='#L940'>940</a>
-<a name='L941'></a><a href='#L941'>941</a>
-<a name='L942'></a><a href='#L942'>942</a>
-<a name='L943'></a><a href='#L943'>943</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L937'></a><a href='#L937'>937</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1033,13 +1027,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1263,8 +1250,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1400,6 +1385,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1954,20 +1942,15 @@ import { Skeleton } from "@/components/feedback/Skeleton";
 import { Chip } from "@/components/ui/Chip";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { HapticService } from "@/services/haptics";
-import { ToastService } from "@/services/toast";
 import { useStore } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  Alert,
   Dimensions,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -1977,9 +1960,7 @@ import {
 } from "react-native";
 import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AdBanner } from "../../components/AdBanner";
 import i18n from "../../i18n";
-import { supabase } from "../../lib/supabase";
 import { searchRecipes } from "../../services/recommendations";
 &nbsp;
 const { width } = <span class="cstat-no" title="statement not covered" >Dimensions.get("window");</span>
@@ -2319,8 +2300,6 @@ export default function <span class="fstat-no" title="function not covered" >Exp
           &lt;/View&gt;
         )}
 &nbsp;
-        &lt;AdBanner /&gt;
-&nbsp;
         {/* Popular Recipes List */}
         &lt;Animated.View entering={FadeInDown.delay(600).duration(500)}&gt;
           &lt;View style={[styles.sectionHeader, { marginTop: 24 }]}&gt;
@@ -2350,9 +2329,12 @@ export default function <span class="fstat-no" title="function not covered" >Exp
         &lt;Text style={[styles.headerTitle, { color: colors.text }]}&gt;
           {i18n.t("explore")}
         &lt;/Text&gt;
-        &lt;View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}&gt;
-          &lt;TouchableOpacity onPress={handleScanIngredients} style={styles.iconButton}&gt;
-              &lt;Ionicons name="scan" size={24} color="#E65100" /&gt;
+        &lt;View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}&gt;
+          &lt;TouchableOpacity
+            onPress={handleScanIngredients}
+            style={styles.iconButton}
+          &gt;
+            &lt;Ionicons name="scan" size={24} color="#E65100" /&gt;
           &lt;/TouchableOpacity&gt;
           &lt;TouchableOpacity onPress={toggleLanguage} style={styles.langButton}&gt;
             &lt;Text style={styles.langText}&gt;{locale.toUpperCase()}&lt;/Text&gt;
@@ -2896,7 +2878,7 @@ const styles = <span class="cstat-no" title="statement not covered" >StyleSheet.
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-28T21:19:31.969Z
+                at 2026-01-29T05:47:26.948Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
