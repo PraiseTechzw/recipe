@@ -5,13 +5,13 @@ import { Image } from "expo-image";
 import { Link, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Animated, { FadeInRight, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -27,8 +27,8 @@ export default function SavedScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, typography, spacing, shadows, radius } = useTheme();
-  const { favorites, isDarkMode, recipes, categories } = useStore();
-  const [loading, setLoading] = useState(false);
+  const { favorites, recipes } = useStore();
+  // const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
 

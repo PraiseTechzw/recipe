@@ -11,24 +11,28 @@ Welcome to **Taste of Zimbabwe**, a premium culinary application dedicated to pr
 ## 🚀 Features
 
 ### 🌟 Core Functionality
--   **Explore Traditional Recipes**: Browse a curated collection of authentic Zimbabwean dishes (Sadza, Dovi, Muriwo, etc.).
--   **Smart Search & Filters**: Filter recipes by category (Grains, Relishes, Meats, Drinks) or search by ingredients.
--   **Multi-Language Support**: Fully localized in **English**, **Shona**, and **Ndebele** to serve the local community.
--   **Fixed Header Navigation**: Smooth UI with a sticky header ensuring navigation is always accessible.
+
+- **Explore Traditional Recipes**: Browse a curated collection of authentic Zimbabwean dishes (Sadza, Dovi, Muriwo, etc.).
+- **Smart Search & Filters**: Filter recipes by category (Grains, Relishes, Meats, Drinks) or search by ingredients.
+- **Multi-Language Support**: Fully localized in **English**, **Shona**, and **Ndebele** to serve the local community.
+- **Fixed Header Navigation**: Smooth UI with a sticky header ensuring navigation is always accessible.
 
 ### 🤖 AI-Powered Chef
--   **Ingredient Scanning**: Snap a photo of ingredients using the camera.
--   **Gemini AI Integration**: Our advanced AI analyzes the image to identify ingredients and generates a complete, authentic recipe (Ingredients, Steps, Nutrition) on the fly.
--   **Save AI Recipes**: Generated recipes can be saved directly to your personal collection.
+
+- **Ingredient Scanning**: Snap a photo of ingredients using the camera.
+- **Gemini AI Integration**: Our advanced AI analyzes the image to identify ingredients and generates a complete, authentic recipe (Ingredients, Steps, Nutrition) on the fly.
+- **Save AI Recipes**: Generated recipes can be saved directly to your personal collection.
 
 ### ☁️ Real-Time & Backend
--   **Supabase Integration**: Robust backend for real-time data synchronization.
--   **Community Sharing**: Users can create and upload their own recipes to the cloud.
--   **Live Updates**: Instant updates across devices.
+
+- **Supabase Integration**: Robust backend for real-time data synchronization.
+- **Community Sharing**: Users can create and upload their own recipes to the cloud.
+- **Live Updates**: Instant updates across devices.
 
 ### 💰 Monetization
--   **AdMob Integration**: Seamlessly integrated banner ads for sustainable monetization.
--   **Safety First**: Crash-proof implementation for Expo Go (development) with full native ad support in production builds.
+
+- **AdMob Integration**: Seamlessly integrated banner ads for sustainable monetization.
+- **Safety First**: Crash-proof implementation for Expo Go (development) with full native ad support in production builds.
 
 ---
 
@@ -36,23 +40,23 @@ Welcome to **Taste of Zimbabwe**, a premium culinary application dedicated to pr
 
 The application boasts a modern, clean, and culturally inspired interface:
 
--   **Explore Screen**: Features a fixed header with language toggle, trending recipes carousel, and category filters.
--   **Create Screen**: A user-friendly form for submitting recipes with image upload placeholders.
--   **AI Modal**: An elegant overlay that handles the AI generation process with loading states and structured result presentation.
--   **Native Feel**: Built with React Native and Expo for a buttery smooth experience on both Android and iOS.
+- **Explore Screen**: Features a fixed header with language toggle, trending recipes carousel, and category filters.
+- **Create Screen**: A user-friendly form for submitting recipes with image upload placeholders.
+- **AI Modal**: An elegant overlay that handles the AI generation process with loading states and structured result presentation.
+- **Native Feel**: Built with React Native and Expo for a buttery smooth experience on both Android and iOS.
 
 ---
 
 ## 🛠 Tech Stack
 
--   **Framework**: [React Native](https://reactnative.dev/) (via [Expo](https://expo.dev/))
--   **Language**: [TypeScript](https://www.typescriptlang.org/)
--   **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
--   **Backend**: [Supabase](https://supabase.com/)
--   **AI**: [Google Gemini API](https://ai.google.dev/)
--   **Ads**: [React Native Google Mobile Ads](https://github.com/invertase/react-native-google-mobile-ads)
--   **Localization**: `i18n-js` & `expo-localization`
--   **UI Components**: `react-native-reanimated`, `@expo/vector-icons`
+- **Framework**: [React Native](https://reactnative.dev/) (via [Expo](https://expo.dev/))
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
+- **Backend**: [Supabase](https://supabase.com/)
+- **AI**: [Google Gemini API](https://ai.google.dev/)
+- **Ads**: [React Native Google Mobile Ads](https://github.com/invertase/react-native-google-mobile-ads)
+- **Localization**: `i18n-js` & `expo-localization`
+- **UI Components**: `react-native-reanimated`, `@expo/vector-icons`
 
 ---
 
@@ -61,25 +65,29 @@ The application boasts a modern, clean, and culturally inspired interface:
 Follow these steps to get the project running on your local machine.
 
 ### Prerequisites
--   Node.js (v18 or higher)
--   npm or yarn
--   Expo Go app on your mobile device (or Android Studio/Xcode for simulators)
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Expo Go app on your mobile device (or Android Studio/Xcode for simulators)
 
 ### Steps
 
 1.  **Clone the Repository**
+
     ```bash
     git clone https://github.com/PraiseTechzw/taste-of-zimbabwe.git
     cd taste-of-zimbabwe
     ```
 
 2.  **Install Dependencies**
+
     ```bash
     npm install
     ```
 
 3.  **Environment Configuration**
     Create a `.env` file in the root directory and add your API keys:
+
     ```bash
     EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
     EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -112,9 +120,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Praise Masunga (PraiseTechzw)**
 
-*   **GitHub**: [@PraiseTechzw](https://github.com/PraiseTechzw)
-*   **Role**: Lead Developer & Creator
+- **GitHub**: [@PraiseTechzw](https://github.com/PraiseTechzw)
+- **Role**: Lead Developer & Creator
 
 ---
 
-*Built with ❤️ for Zimbabwe*
+_Built with ❤️ for Zimbabwe_

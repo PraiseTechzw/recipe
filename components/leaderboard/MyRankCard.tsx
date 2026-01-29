@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, ViewStyle, Platform } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { LeaderboardEntry } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,7 +11,7 @@ interface MyRankCardProps {
 }
 
 export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
-  const { colors, typography, spacing, shadows, radius } = useTheme();
+  const { colors, typography, spacing } = useTheme();
   const insets = useSafeAreaInsets();
 
   if (!userRank && !entry) return null;

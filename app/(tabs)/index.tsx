@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Animated,
   RefreshControl,
@@ -31,7 +31,7 @@ import { useTheme } from "../../theme/useTheme";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { colors, spacing, typography, shadows } = useTheme();
+  const { colors, shadows } = useTheme();
   const {
     viewHistory,
     categoryScores,
@@ -58,9 +58,9 @@ export default function HomeScreen() {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [hasOnboarded]);
+  }, [hasOnboarded, router]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     // 1. Daily Rotation
     setDailyPick(getRecipeOfTheDay(recipes));
 
@@ -77,7 +77,7 @@ export default function HomeScreen() {
     // 3. Pantry Matches
     const matched = getPantryMatches(pantry, recipes);
     setPantryRecipes(matched);
-  };
+  }, [recipes, viewHistory, categoryScores, pantry]);
 
   useEffect(() => {
     const init = async () => {
@@ -93,7 +93,7 @@ export default function HomeScreen() {
       }, 1000);
     };
     init();
-  }, [viewHistory, categoryScores, pantry, recipes]);
+  }, [loadData, fadeAnim]);
 
   const onRefresh = async () => {
     HapticService.selection();

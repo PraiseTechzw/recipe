@@ -75,8 +75,7 @@ export default function ResultScreen() {
         resetFlow();
         router.push("/(tabs)/saved");
       }, 1500);
-    } catch (e) {
-      console.error(e);
+    } catch {
       Alert.alert("Error", "Could not save recipe.");
       setIsSaving(false);
     }
@@ -109,7 +108,7 @@ export default function ResultScreen() {
                 "Here is a new recipe for you.",
               );
               HapticService.success();
-            } catch (e) {
+            } catch {
               // Store handles error state
               Alert.alert("Error", "Failed to regenerate recipe.");
             }

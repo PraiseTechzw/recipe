@@ -19,7 +19,6 @@ import {
 } from "react-native-gesture-handler";
 import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Toast from "react-native-toast-message";
 
 import i18n from "../i18n";
 import { HapticService } from "../services/haptics";

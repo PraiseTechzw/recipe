@@ -3,19 +3,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Dimensions,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BADGES, getLevel } from "../constants/gamification";
 import { useStore } from "../store/useStore";
-
-const { width } = Dimensions.get("window");
 
 type FilterType = "All" | "Unlocked" | "Locked";
 
@@ -64,18 +61,6 @@ export default function AchievementsScreen() {
 
   const unlockedCount = unlockedIds.length;
   const totalCount = BADGES.length;
-
-  function getCategoryColor(
-    category: string,
-  ): import("react-native").ColorValue | undefined {
-    throw new Error("Function not implemented.");
-  }
-
-  function getCategoryColor(
-    category: string,
-  ): import("react-native").ColorValue | undefined {
-    throw new Error("Function not implemented.");
-  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>

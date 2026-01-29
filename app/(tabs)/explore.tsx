@@ -27,11 +27,10 @@ import i18n from "../../i18n";
 import { searchRecipes } from "../../services/recommendations";
 
 const { width } = Dimensions.get("window");
-const CARD_WIDTH = (width - 48) / 2;
 
 export default function ExploreScreen() {
   const { colors } = useTheme();
-  const { autoFocus, openScan } = useLocalSearchParams<{
+  const { autoFocus } = useLocalSearchParams<{
     autoFocus: string;
     openScan: string;
   }>();
@@ -67,7 +66,7 @@ export default function ExploreScreen() {
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [searchQuery]);
+  }, [searchQuery, debouncedQuery]);
 
   useEffect(() => {
     if (autoFocus === "true") {

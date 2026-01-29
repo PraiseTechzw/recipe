@@ -1,6 +1,5 @@
 import { BaseToast, ErrorToast, ToastProps } from 'react-native-toast-message';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 /*
   Custom Toast Configuration

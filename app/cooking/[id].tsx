@@ -74,7 +74,7 @@ const ConfettiPiece = ({ index }: { index: number }) => {
       randomDelay + randomDuration * 0.8,
       withTiming(0, { duration: 500 }),
     );
-  }, []);
+  }, [translateY, rotate, opacity, randomDelay, randomDuration, randomRotate]);
 
   const style = useAnimatedStyle(() => ({
     transform: [
@@ -121,7 +121,7 @@ export default function CookingModeScreen() {
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
 
   // Timer State
   const [timerSeconds, setTimerSeconds] = useState(15 * 60); // Default 15 mins
@@ -139,7 +139,7 @@ export default function CookingModeScreen() {
     if (id) {
       fetchRecipe();
     }
-  }, [id]);
+  }, [id, fetchRecipe]);
 
   // Timer Effect
   useEffect(() => {
@@ -170,7 +170,7 @@ export default function CookingModeScreen() {
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
-  const fetchRecipe = async () => {
+  const fetchRecipe = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -201,7 +201,7 @@ export default function CookingModeScreen() {
 
     // 2. Fallback to Supabase
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("recipes")
         .select("*")
         .eq("id", recipeId)
@@ -230,7 +230,7 @@ export default function CookingModeScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, recipeParams, recipes, myRecipes]);
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

@@ -117,7 +117,7 @@ export default function RecipeDetailScreen() {
 
       // Try Supabase
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("recipes")
           .select("*")
           .eq("id", recipeId)
@@ -148,7 +148,7 @@ export default function RecipeDetailScreen() {
     };
 
     loadRecipe();
-  }, [id]);
+  }, [id, recipes]);
 
   const favorite = recipe ? isFavorite(recipe.id) : false;
 

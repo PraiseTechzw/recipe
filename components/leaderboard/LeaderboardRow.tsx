@@ -17,7 +17,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
   isMe,
   mode,
 }: LeaderboardRowProps) {
-  const { colors, typography, spacing, radius } = useTheme();
+  const { colors, typography } = useTheme();
 
   const score = (mode === "weekly" ? item.weekly_xp : item.total_xp) || 0;
 
