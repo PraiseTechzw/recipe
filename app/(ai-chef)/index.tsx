@@ -25,6 +25,7 @@ import { useAppPermissions } from "../../hooks/useCameraPermissions";
 import { HapticService } from "../../services/haptics";
 import { ImageCaptureService } from "../../services/imageCapture";
 import { SyncService } from "../../services/syncService";
+import { useAICaptureStore } from "../../stores/aiCaptureStore";
 
 const { width } = Dimensions.get("window");
 
@@ -34,6 +35,7 @@ export default function CaptureScreen() {
   const cameraRef = useRef<CameraView>(null);
   const { cameraStatus, verifyCameraPermission, verifyMediaLibraryPermission } =
     useAppPermissions();
+  const { setCapturedImage } = useAICaptureStore.getState();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
@@ -59,7 +61,8 @@ export default function CaptureScreen() {
     try {
       const result = await ImageCaptureService.pickFromGallery();
       if (result) {
-        processAndNavigate(result.uri);
+        setCapturedImage(result.uri, result.base64);
+        processAndNavigate(result.uri, result.base64);
       }
     } catch {
       Alert.alert("Error", "Failed to pick image.");
@@ -96,6 +99,7 @@ export default function CaptureScreen() {
         const processed = await ImageCaptureService.processCameraPhoto(
           photo.uri,
         );
+        setCapturedImage(processed.uri, processed.base64);
         processAndNavigate(processed.uri, processed.base64);
       }
     } catch {

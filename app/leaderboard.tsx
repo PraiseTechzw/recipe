@@ -28,7 +28,7 @@ type LeaderboardTab = "weekly" | "allTime";
 export default function LeaderboardScreen() {
   const insets = useSafeAreaInsets();
   // const router = useRouter();
-  const { colors, typography } = useTheme();
+  const { colors, typography, isDark } = useTheme();
 
   // Local State
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
@@ -83,7 +83,7 @@ export default function LeaderboardScreen() {
   };
 
   const renderHeader = () => (
-    <View style={styles.headerContainer}>
+    <View style={[styles.headerContainer, { backgroundColor: colors.surface, shadowColor: isDark ? "#000" : "#000" }]}>
       {/* 1) Header Title & Status */}
       <View style={styles.titleRow}>
         <View>

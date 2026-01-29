@@ -4,11 +4,11 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { BADGES, getLevel } from "../constants/gamification";
 import { supabase } from "../lib/supabase";
 import {
-    IngredientItem,
-    IngredientSection,
-    Recipe,
-    ShoppingItem,
-    Step,
+  IngredientItem,
+  IngredientSection,
+  Recipe,
+  ShoppingItem,
+  Step,
 } from "../models/recipe";
 
 export interface Category {
@@ -118,6 +118,7 @@ interface AppState {
     pushToken?: string;
     avatar?: string;
     bio?: string;
+    country?: string;
     stats: UserStats;
   };
   setUserProfile: (profile: Partial<AppState["userProfile"]>) => void;
@@ -234,7 +235,8 @@ export const useStore = create<AppState>()(
                     *,
                     author:author_id (
                         name,
-                        avatar_url
+                        avatar_url,
+                        country
                     )
                 `);
           // We can filter by author_id if we only want official ones,
@@ -269,6 +271,7 @@ export const useStore = create<AppState>()(
               author: {
                 name: r.author?.name || "Chef",
                 avatar: r.author?.avatar_url || "https://i.pravatar.cc/150",
+                country: (r.author as any)?.country || "Zimbabwe",
               },
             }));
 
@@ -337,6 +340,7 @@ export const useStore = create<AppState>()(
         xp: 0,
         badges: [],
         dietaryPreferences: [],
+        country: "Zimbabwe", // Default
         stats: {
           recipesCooked: 0,
           savedRecipes: 0,

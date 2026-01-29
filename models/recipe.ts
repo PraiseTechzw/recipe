@@ -28,6 +28,7 @@ export interface Step {
 export interface Author {
   name: string;
   avatar: string;
+  country?: string;
 }
 
 export interface Recipe {

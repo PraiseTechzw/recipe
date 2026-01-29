@@ -25,6 +25,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
     <View
       style={[
         styles.container,
+        { borderBottomColor: colors.border },
         isMe && { backgroundColor: colors.primary + "10" }, // 10% opacity primary
       ]}
       accessible={true}
@@ -37,6 +38,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
           style={[
             typography.body,
             styles.rankText,
+            { color: colors.textSecondary },
             isMe && { color: colors.primary, fontWeight: "bold" },
           ]}
         >
@@ -49,7 +51,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
         source={{
           uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${item.chefs?.avatar_seed || item.chef_id}`,
         }}
-        style={styles.avatar}
+        style={[styles.avatar, { backgroundColor: colors.surfaceVariant }]}
       />
 
       {/* Info */}
@@ -59,6 +61,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
             style={[
               typography.body,
               styles.nameText,
+              { color: colors.text },
               isMe && { color: colors.primary, fontWeight: "700" },
             ]}
             numberOfLines={1}
@@ -73,14 +76,27 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
             </View>
           )}
         </View>
-        <LevelPill
-          level={item.level || 1}
-          style={{
-            transform: [{ scale: 0.8 }],
-            alignSelf: "flex-start",
-            marginLeft: -4,
-          }}
-        />
+        <View style={styles.detailsRow}>
+          <LevelPill
+            level={item.level || 1}
+            style={{
+              transform: [{ scale: 0.8 }],
+              alignSelf: "flex-start",
+              marginLeft: -4,
+              marginRight: 8,
+            }}
+          />
+          {item.chefs?.country && (
+            <Text
+              style={[
+                typography.caption,
+                { color: colors.textSecondary, fontSize: 10 },
+              ]}
+            >
+              {item.chefs.country}
+            </Text>
+          )}
+        </View>
       </View>
 
       {/* Score */}
@@ -96,6 +112,23 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
   );
 });
 
+// Simple helper to map common country names to flags (can be expanded)
+function getFlagEmoji(country: string): string {
+  const map: Record<string, string> = {
+    Zimbabwe: "🇿🇼",
+    "South Africa": "🇿🇦",
+    USA: "🇺🇸",
+    UK: "🇬🇧",
+    Canada: "🇨🇦",
+    Australia: "🇦🇺",
+    India: "🇮🇳",
+    China: "🇨🇳",
+    Nigeria: "🇳🇬",
+    Kenya: "🇰🇪",
+  };
+  return map[country] || "🌍";
+}
+
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
@@ -103,7 +136,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   rankContainer: {
     width: 30,
@@ -112,14 +144,12 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   rankText: {
-    color: "#666",
     fontWeight: "600",
   },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f0f0f0",
     marginRight: 12,
   },
   infoContainer: {
@@ -130,6 +160,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 4,
+  },
+  detailsRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   nameText: {
     fontWeight: "600",

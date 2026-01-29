@@ -60,6 +60,7 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
                 height: avatarSize + 6,
                 borderRadius: (avatarSize + 6) / 2,
                 borderColor: borderColor,
+                backgroundColor: colors.background, // Ensure background matches theme
               },
             ]}
           >
@@ -71,17 +72,29 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
                 width: avatarSize,
                 height: avatarSize,
                 borderRadius: avatarSize / 2,
-                backgroundColor: "#fff",
+                backgroundColor: colors.surfaceVariant, // Themed placeholder
               }}
             />
-            <View style={[styles.rankBadge, { backgroundColor: rankColor }]}>
+            <View
+              style={[
+                styles.rankBadge,
+                { backgroundColor: rankColor, borderColor: colors.background },
+              ]}
+            >
               <Text style={styles.rankText}>{rank}</Text>
             </View>
           </View>
         </View>
 
         {/* Info Section */}
-        <Text style={[typography.bodySmall, styles.nameText]} numberOfLines={1}>
+        <Text
+          style={[
+            typography.bodySmall,
+            styles.nameText,
+            { color: colors.text },
+          ]}
+          numberOfLines={1}
+        >
           {entry.chefs?.chef_name || "Chef"}
         </Text>
         <Text style={[typography.caption, { color: colors.textSecondary }]}>
@@ -138,7 +151,6 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
   },
   crown: {
     position: "absolute",
@@ -154,7 +166,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#fff",
   },
   rankText: {
     color: "#fff",

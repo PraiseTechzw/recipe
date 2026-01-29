@@ -1,28 +1,29 @@
+import { useStore } from "@/store/useStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    FadeIn,
-    FadeOut,
-    LinearTransition,
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withSequence,
-    withTiming,
+  FadeIn,
+  FadeOut,
+  LinearTransition,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Chip } from "../../components/ui/Chip";
@@ -30,7 +31,6 @@ import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
-import { useStore } from "@/store/useStore";
 const LOADING_STEPS = [
   "Analyzing image...",
   "Detecting ingredients...",
@@ -68,13 +68,18 @@ export default function ReviewScreen() {
 
   // Auto-trigger extraction on mount if needed
   useEffect(() => {
-    if (
-      status === "reviewingImage" &&
-      imageBase64 &&
-      extractedIngredients.length === 0
-    ) {
-      extractIngredients(imageBase64);
-    }
+    const run = async () => {
+      if (
+        status === "reviewingImage" &&
+        imageBase64 &&
+        extractedIngredients.length === 0
+      ) {
+        const isOnline = await SyncService.checkConnectivity();
+        if (!isOnline) return;
+        extractIngredients(imageBase64);
+      }
+    };
+    run();
   }, [status, imageBase64, extractedIngredients.length, extractIngredients]);
 
   // Handle navigation on success

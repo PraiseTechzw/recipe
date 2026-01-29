@@ -254,10 +254,26 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
     // We need to verify Step interface in models/recipe.ts
     // For now assuming: id, instruction, timer?
 
-    // Actually, let's just cast for now and fix if type mismatch occurs
-    // But I should check models/recipe.ts to be sure about the mapping
+    // Get current user profile for author info
+    const { userProfile } = useStore.getState();
 
-    useStore.getState().addRecipe(newRecipe as any);
+    // Add author info
+    const recipeWithAuthor = {
+      ...newRecipe,
+      author: {
+        name: userProfile.name || "Chef",
+        avatar: userProfile.avatar || "https://i.pravatar.cc/150",
+        country: userProfile.country || "Zimbabwe",
+      },
+    };
+
+    useStore.getState().addRecipe(recipeWithAuthor as any);
+
+    // Trigger sync to cloud
+    // We don't await this to keep UI responsive, but it runs in background
+    SyncService.syncRecipes().catch((err) => {
+      console.log("Auto-sync failed after AI generation:", err);
+    });
   },
 
   resetFlow: () => {

@@ -5,20 +5,20 @@ import { useRouter } from "expo-router";
 import * as StoreReview from "expo-store-review";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    FadeInDown,
-    FadeInRight,
-    FadeInUp,
+  FadeInDown,
+  FadeInRight,
+  FadeInUp,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BADGES, getLevel, getNextLevel } from "../../constants/gamification";
@@ -26,12 +26,13 @@ import i18n from "../../i18n";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
+import { useTheme } from "../../theme/useTheme";
 
 const { width } = Dimensions.get("window");
 
 export default function ProfileScreen() {
-  const { userProfile, isDarkMode, toggleDarkMode, setLocale, myRecipes } =
-    useStore();
+  const { userProfile, toggleDarkMode, setLocale, myRecipes } = useStore();
+  const { colors, typography, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -247,8 +248,39 @@ export default function ProfileScreen() {
           />
         </View>
 
-        {/* Sync Status Widget */}
+        {/* Leaderboard Entry - Premium & Integrated */}
         <Animated.View entering={FadeInUp.delay(200).springify()}>
+          <TouchableOpacity
+            style={[
+              styles.leaderboardRow,
+              isDarkMode && styles.leaderboardRowDark,
+            ]}
+            onPress={() => router.push("/leaderboard")}
+            activeOpacity={0.7}
+          >
+            <View style={styles.leaderboardIconContainer}>
+              <Ionicons name="trophy" size={24} color="#FFD700" />
+            </View>
+            <View style={styles.leaderboardInfo}>
+              <Text
+                style={[styles.leaderboardTitle, isDarkMode && styles.textDark]}
+              >
+                Leaderboard
+              </Text>
+              <Text style={styles.leaderboardSubtitle}>
+                Compare your cooking stats
+              </Text>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color={isDarkMode ? "#666" : "#CCC"}
+            />
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* Sync Status Widget */}
+        <Animated.View entering={FadeInUp.delay(250).springify()}>
           <View
             style={[styles.syncWidget, isDarkMode && styles.syncWidgetDark]}
           >
@@ -597,6 +629,49 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  leaderboardRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    marginHorizontal: 20,
+    marginBottom: 20,
+    padding: 16,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "#f0f0f0",
+  },
+  leaderboardRowDark: {
+    backgroundColor: "#1E1E1E",
+    borderColor: "#333",
+  },
+  leaderboardIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: "#FFF9C4", // Light yellow/gold
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  leaderboardInfo: {
+    flex: 1,
+  },
+  leaderboardTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 2,
+  },
+  leaderboardSubtitle: {
+    fontSize: 12,
+    color: "#888",
+  },
+});
   profileContent: {
     alignItems: "center",
   },

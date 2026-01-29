@@ -55,7 +55,6 @@ class LeaderboardRealtimeService {
     } catch (err: any) {
       console.error("Leaderboard fetch error:", err);
       store.setLeaderboardError(err.message || "Failed to fetch leaderboard");
-      // Keep existing data in store (offline support) if fetch fails
     } finally {
       store.setLeaderboardLoading(false);
     }
