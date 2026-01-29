@@ -32,12 +32,24 @@ export default function AnimatedSplashScreen() {
 
     // Navigation Logic after delay
     const timer = setTimeout(() => {
-      // If not onboarded, go to Onboarding Flow
-      // If onboarded, go to Tabs
-      if (!hasOnboarded) {
-        router.replace("/onboarding");
+      const { session, hasOnboarded } = useStore.getState();
+
+      if (session) {
+        // Authenticated User
+        if (hasOnboarded) {
+          router.replace("/(tabs)");
+        } else {
+          router.replace("/onboarding");
+        }
       } else {
-        router.replace("/(tabs)");
+        // Guest or New User
+        if (hasOnboarded) {
+          // Guest who already finished onboarding -> Go to App
+          router.replace("/(tabs)");
+        } else {
+          // New User -> Go to Auth
+          router.replace("/auth");
+        }
       }
     }, 2500); // 2.5s splash duration
 

@@ -65,7 +65,7 @@ const i18n = new I18n({
     subGreeting: "What are we cooking today?",
     featured: "Featured Traditional Dishes",
     recipeOfTheDay: "Recipe of the Day",
-    searchPlaceholderHome: "Search for Sadza, Mopane worms...",
+    searchPlaceholderHome: "Search recipes...",
     onboardingTitle: "Tell us about you",
     onboardingSubtitle: "We'll personalize your recipe recommendations.",
     chefAvatar: "Chef Avatar",

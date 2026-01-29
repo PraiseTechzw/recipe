@@ -5,6 +5,7 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -33,6 +34,8 @@ export default function LeaderboardScreen() {
   // Local State
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
   const [filterMode, setFilterMode] = useState<"global" | "friends">("global");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
   // const [refreshing, setRefreshing] = useState(false);
 
   // Store Selectors
@@ -46,12 +49,40 @@ export default function LeaderboardScreen() {
   const isLive = useStore((state) => state.isLeaderboardLive);
 
   // Derived Data
-  const fullData = activeTab === "weekly" ? topWeekly : topAllTime;
-  const topThree = fullData.slice(0, 3);
-  const listData = fullData.slice(3);
+  const baseData = activeTab === "weekly" ? topWeekly : topAllTime;
+
+  // Apply Filters (Friends & Search)
+  const filteredData = React.useMemo(() => {
+    let data = baseData;
+
+    // Mock Friends Filter: Show a deterministic subset (e.g., based on char code)
+    if (filterMode === "friends") {
+      data = data.filter((item, index) => {
+        // Always include self
+        if (item.chef_id === userProfile.id) return true;
+        // Mock: "Friends" are just random folks for now
+        return index % 3 === 0;
+      });
+    }
+
+    // Search Filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      data = data.filter(
+        (item) =>
+          item.chefs?.chef_name.toLowerCase().includes(q) ||
+          item.chefs?.country.toLowerCase().includes(q),
+      );
+    }
+
+    return data;
+  }, [baseData, filterMode, searchQuery, userProfile.id]);
+
+  const topThree = filteredData.slice(0, 3);
+  const listData = filteredData.slice(3);
 
   // Visibility Check for Sticky Footer
-  const amIVisibleInList = fullData.some(
+  const amIVisibleInList = filteredData.some(
     (item) => item.chef_id === userProfile.id,
   );
   const myEntry = neighbors.find((item) => item.chef_id === userProfile.id);
@@ -65,8 +96,8 @@ export default function LeaderboardScreen() {
     };
   }, [fetchData]);
 
-  const fetchData = useCallback(() => {
-    leaderboardService.fetchGlobalLeaderboards();
+  const fetchData = useCallback(async () => {
+    await leaderboardService.fetchGlobalLeaderboards();
     if (userProfile.id) {
       const sortBy = activeTab === "weekly" ? "weekly_xp" : "total_xp";
       leaderboardService.fetchAroundMe(userProfile.id, sortBy);
@@ -83,7 +114,15 @@ export default function LeaderboardScreen() {
   };
 
   const renderHeader = () => (
-    <View style={[styles.headerContainer, { backgroundColor: colors.surface, shadowColor: isDark ? "#000" : "#000" }]}>
+    <View
+      style={[
+        styles.headerContainer,
+        {
+          backgroundColor: colors.surface,
+          shadowColor: isDark ? "#000" : "#000",
+        },
+      ]}
+    >
       {/* 1) Header Title & Status */}
       <View style={styles.titleRow}>
         <View>
@@ -116,16 +155,52 @@ export default function LeaderboardScreen() {
             )}
           </View>
         </View>
-        {/* Optional Search Icon */}
+        {/* Search Icon Toggle */}
         <TouchableOpacity
-          style={styles.iconButton}
+          style={[
+            styles.iconButton,
+            { backgroundColor: colors.surfaceVariant },
+          ]}
           onPress={() => {
-            /* Placeholder for future search */
+            setIsSearchVisible(!isSearchVisible);
+            if (isSearchVisible) setSearchQuery(""); // Clear on close
           }}
         >
-          <Ionicons name="search" size={24} color={colors.text} />
+          <Ionicons
+            name={isSearchVisible ? "close" : "search"}
+            size={24}
+            color={colors.text}
+          />
         </TouchableOpacity>
       </View>
+
+      {/* Search Bar (Collapsible) */}
+      {isSearchVisible && (
+        <View
+          style={[
+            styles.searchContainer,
+            { backgroundColor: colors.surfaceVariant },
+          ]}
+        >
+          <Ionicons
+            name="search"
+            size={20}
+            color={colors.textSecondary}
+            style={{ marginRight: 8 }}
+          />
+          <TextInput
+            placeholder="Search chefs..."
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={[
+              typography.body,
+              { flex: 1, color: colors.text, paddingVertical: 8 },
+            ]}
+            autoFocus
+          />
+        </View>
+      )}
 
       {/* 2) Controls */}
       <View style={styles.controlsContainer}>
@@ -146,15 +221,17 @@ export default function LeaderboardScreen() {
           <Chip
             label="Friends"
             selected={filterMode === "friends"}
-            // onPress={() => setFilterMode("friends")} // Disabled for now
-            style={{ opacity: 0.5 }}
+            onPress={() => setFilterMode("friends")}
+            style={{}}
           />
         </View>
       </View>
 
       {/* Offline Banner */}
       {error && (
-        <View style={styles.errorBanner}>
+        <View
+          style={[styles.errorBanner, { backgroundColor: colors.error + "15" }]}
+        >
           <Ionicons name="cloud-offline" size={16} color={colors.error} />
           <Text
             style={[typography.caption, { color: colors.error, marginLeft: 6 }]}
@@ -164,42 +241,48 @@ export default function LeaderboardScreen() {
         </View>
       )}
 
-      {/* 3) Top 3 Podium */}
-      {isLoading && fullData.length === 0 ? (
-        <View style={styles.podiumSkeleton}>
-          <View style={{ alignItems: "center", marginBottom: 20 }}>
-            <Skeleton
-              width={60}
-              height={60}
-              borderRadius={30}
-              style={{ marginBottom: 8 }}
-            />
-            <Skeleton width={70} height={12} />
+      {/* 3) Top 3 Podium (Only show if no search is active to keep it clean) */}
+      {!searchQuery &&
+        (isLoading && filteredData.length === 0 ? (
+          <View style={styles.podiumSkeleton}>
+            {/* Skeleton ... */}
+            <View style={{ alignItems: "center", marginBottom: 20 }}>
+              <Skeleton
+                width={60}
+                height={60}
+                borderRadius={30}
+                style={{ marginBottom: 8 }}
+              />
+              <Skeleton width={70} height={12} />
+            </View>
+            <View style={{ alignItems: "center", marginHorizontal: 20 }}>
+              <Skeleton
+                width={80}
+                height={80}
+                borderRadius={40}
+                style={{ marginBottom: 8 }}
+              />
+              <Skeleton width={90} height={16} />
+            </View>
+            <View style={{ alignItems: "center", marginBottom: 20 }}>
+              <Skeleton
+                width={60}
+                height={60}
+                borderRadius={30}
+                style={{ marginBottom: 8 }}
+              />
+              <Skeleton width={70} height={12} />
+            </View>
           </View>
-          <View style={{ alignItems: "center", marginHorizontal: 20 }}>
-            <Skeleton
-              width={80}
-              height={80}
-              borderRadius={40}
-              style={{ marginBottom: 8 }}
+        ) : (
+          topThree.length > 0 && (
+            <Podium
+              topThree={topThree}
+              mode={activeTab}
+              style={styles.podium}
             />
-            <Skeleton width={90} height={16} />
-          </View>
-          <View style={{ alignItems: "center", marginBottom: 20 }}>
-            <Skeleton
-              width={60}
-              height={60}
-              borderRadius={30}
-              style={{ marginBottom: 8 }}
-            />
-            <Skeleton width={70} height={12} />
-          </View>
-        </View>
-      ) : (
-        topThree.length > 0 && (
-          <Podium topThree={topThree} mode={activeTab} style={styles.podium} />
-        )
-      )}
+          )
+        ))}
     </View>
   );
 
@@ -260,10 +343,8 @@ const styles = StyleSheet.create({
   headerContainer: {
     paddingHorizontal: 20,
     paddingTop: 10,
-    backgroundColor: "#fff",
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -298,8 +379,14 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 8,
-    backgroundColor: "#f5f5f5",
     borderRadius: 20,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   controlsContainer: {
     marginBottom: 20,
@@ -313,7 +400,6 @@ const styles = StyleSheet.create({
   errorBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffebee",
     padding: 8,
     borderRadius: 8,
     marginBottom: 16,

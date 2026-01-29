@@ -66,6 +66,7 @@ export interface LeaderboardEntry {
   total_xp: number;
   weekly_xp: number;
   level: number;
+  trend?: "up" | "down" | "same" | "new";
   chefs?: {
     chef_name: string;
     avatar_seed: string;
@@ -136,6 +137,8 @@ interface AppState {
   logRecipeView: (id: string, category: string) => void;
 
   // Session
+  session: Session | null;
+  setSession: (session: Session | null) => void;
   sessionStartTime: number;
   setSessionStartTime: (time: number) => void;
 
@@ -486,6 +489,9 @@ export const useStore = create<AppState>()(
           };
         }),
 
+      // Session
+      session: null,
+      setSession: (session) => set({ session }),
       sessionStartTime: Date.now(),
       setSessionStartTime: (time: number) => set({ sessionStartTime: time }),
 

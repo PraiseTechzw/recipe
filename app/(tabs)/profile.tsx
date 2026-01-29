@@ -32,7 +32,7 @@ const { width } = Dimensions.get("window");
 
 export default function ProfileScreen() {
   const { userProfile, toggleDarkMode, setLocale, myRecipes } = useStore();
-  const { colors, typography, isDark } = useTheme();
+  const { colors, typography, isDark, shadows } = useTheme();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -219,7 +219,11 @@ export default function ProfileScreen() {
                       if (!badge) return null;
                       return (
                         <View key={badgeId} style={styles.miniBadgeItem}>
-                          <Text style={styles.miniBadgeIcon}>{badge.icon}</Text>
+                          <Image
+                            source={badge.icon}
+                            style={{ width: 24, height: 24 }}
+                            contentFit="contain"
+                          />
                         </View>
                       );
                     })}
@@ -240,159 +244,119 @@ export default function ProfileScreen() {
           />
         </View>
 
-        {/* Leaderboard Entry - Premium & Integrated */}
+        {/* Stats Section - sleek single card */}
         <Animated.View entering={FadeInUp.delay(200).springify()}>
-          <TouchableOpacity
-            style={[
-              styles.leaderboardRow,
-              { backgroundColor: colors.surface, borderColor: colors.border },
-            ]}
-            onPress={() => router.push("/leaderboard")}
-            activeOpacity={0.7}
-          >
-            <View style={styles.leaderboardIconContainer}>
-              <Ionicons name="trophy" size={24} color="#FFD700" />
-            </View>
-            <View style={styles.leaderboardInfo}>
-              <Text style={[styles.leaderboardTitle, { color: colors.text }]}>
-                Leaderboard
-              </Text>
-              <Text
-                style={[
-                  styles.leaderboardSubtitle,
-                  { color: colors.textSecondary },
-                ]}
-              >
-                Compare your cooking stats
-              </Text>
-            </View>
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Sync Status Widget */}
-        <Animated.View entering={FadeInUp.delay(250).springify()}>
           <View
             style={[
-              styles.syncWidget,
+              styles.statsContainer,
               {
                 backgroundColor: colors.surface,
-                shadowColor: isDark ? "#000" : "#000",
+                shadowColor: shadows.medium.shadowColor,
               },
             ]}
           >
-            <View style={styles.syncInfo}>
-              <Text style={[styles.syncTitle, { color: colors.text }]}>
-                Sync Status
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {userProfile.stats?.recipesCooked || 0}
               </Text>
-              <Text
-                style={[styles.syncSubtitle, { color: colors.textSecondary }]}
-              >
-                {lastSynced
-                  ? `Last synced: ${lastSynced}`
-                  : "Not synced recently"}
-              </Text>
-              <Text
-                style={[styles.syncSubtitle, { color: colors.textSecondary }]}
-              >
-                {pendingUploads > 0
-                  ? `${pendingUploads} pending upload${pendingUploads !== 1 ? "s" : ""}`
-                  : "All recipes synced"}
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Cooked
               </Text>
             </View>
+            <View
+              style={[styles.statDivider, { backgroundColor: colors.border }]}
+            />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {userProfile.stats?.savedRecipes || 0}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Saved
+              </Text>
+            </View>
+            <View
+              style={[styles.statDivider, { backgroundColor: colors.border }]}
+            />
+            <View style={styles.statItem}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
+                {userProfile.stats?.sharedRecipes || 0}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
+                Shared
+              </Text>
+            </View>
+          </View>
+        </Animated.View>
+
+        {/* Action Grid - Leaderboard & Sync */}
+        <View style={styles.actionGrid}>
+          <Animated.View
+            entering={FadeInUp.delay(250).springify()}
+            style={{ flex: 1, marginRight: 8 }}
+          >
             <TouchableOpacity
               style={[
-                styles.syncButton,
-                { backgroundColor: colors.primary },
-                isSyncing && styles.syncButtonDisabled,
+                styles.actionCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
+              ]}
+              onPress={() => router.push("/leaderboard")}
+            >
+              <LinearGradient
+                colors={["#FFF9C4", "#FFECB3"]}
+                style={styles.actionIconCircle}
+              >
+                <Ionicons name="trophy" size={24} color="#FFB300" />
+              </LinearGradient>
+              <Text style={[styles.actionTitle, { color: colors.text }]}>
+                Leaderboard
+              </Text>
+              <Text
+                style={[styles.actionSubtitle, { color: colors.textSecondary }]}
+              >
+                Top Chefs
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+
+          <Animated.View
+            entering={FadeInUp.delay(300).springify()}
+            style={{ flex: 1, marginLeft: 8 }}
+          >
+            <TouchableOpacity
+              style={[
+                styles.actionCard,
+                { backgroundColor: colors.surface, borderColor: colors.border },
               ]}
               onPress={handleSync}
               disabled={isSyncing}
             >
-              {isSyncing ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.syncButtonText}>Sync Now</Text>
-              )}
+              <LinearGradient
+                colors={
+                  isSyncing ? ["#E0E0E0", "#BDBDBD"] : ["#E3F2FD", "#BBDEFB"]
+                }
+                style={styles.actionIconCircle}
+              >
+                {isSyncing ? (
+                  <ActivityIndicator color="#757575" size="small" />
+                ) : (
+                  <Ionicons name="sync" size={24} color="#1976D2" />
+                )}
+              </LinearGradient>
+              <Text style={[styles.actionTitle, { color: colors.text }]}>
+                Sync Status
+              </Text>
+              <Text
+                style={[styles.actionSubtitle, { color: colors.textSecondary }]}
+              >
+                {isSyncing
+                  ? "Syncing..."
+                  : pendingUploads > 0
+                    ? `${pendingUploads} Pending`
+                    : "All Good"}
+              </Text>
             </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Stats Grid */}
-        <Animated.View entering={FadeInUp.delay(300).springify()}>
-          <View style={styles.statsGrid}>
-            <View
-              style={[styles.statCard, { backgroundColor: colors.surface }]}
-            >
-              <View
-                style={[
-                  styles.statIcon,
-                  {
-                    backgroundColor: isDark ? colors.surfaceVariant : "#FFF3E0",
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="restaurant"
-                  size={22}
-                  color={isDark ? colors.primary : "#E65100"}
-                />
-              </View>
-              <Text style={[styles.statValue, { color: colors.text }]}>
-                {userProfile.stats?.recipesCooked || 0}
-              </Text>
-              <Text style={styles.statLabel}>Cooked</Text>
-            </View>
-            <View
-              style={[styles.statCard, { backgroundColor: colors.surface }]}
-            >
-              <View
-                style={[
-                  styles.statIcon,
-                  {
-                    backgroundColor: isDark ? colors.surfaceVariant : "#E3F2FD",
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="bookmark"
-                  size={22}
-                  color={isDark ? "#64B5F6" : "#1976D2"}
-                />
-              </View>
-              <Text style={[styles.statValue, { color: colors.text }]}>
-                {userProfile.stats?.savedRecipes || 0}
-              </Text>
-              <Text style={styles.statLabel}>Saved</Text>
-            </View>
-            <View
-              style={[styles.statCard, { backgroundColor: colors.surface }]}
-            >
-              <View
-                style={[
-                  styles.statIcon,
-                  {
-                    backgroundColor: isDark ? colors.surfaceVariant : "#F3E5F5",
-                  },
-                ]}
-              >
-                <Ionicons
-                  name="share-social"
-                  size={22}
-                  color={isDark ? "#BA68C8" : "#7B1FA2"}
-                />
-              </View>
-              <Text style={[styles.statValue, { color: colors.text }]}>
-                {userProfile.stats?.sharedRecipes || 0}
-              </Text>
-              <Text style={styles.statLabel}>Shared</Text>
-            </View>
-          </View>
-        </Animated.View>
+          </Animated.View>
+        </View>
 
         {/* My Recipes Section */}
         {myRecipes.length > 0 && (
@@ -418,7 +382,10 @@ export default function ProfileScreen() {
                     key={recipe.id}
                     style={[
                       styles.recipeCard,
-                      { backgroundColor: colors.surface },
+                      {
+                        backgroundColor: colors.surface,
+                        shadowColor: shadows.small.shadowColor,
+                      },
                     ]}
                     onPress={() => router.push(`/cooking/${recipe.id}`)}
                   >
@@ -465,7 +432,7 @@ export default function ProfileScreen() {
             </Text>
             <TouchableOpacity onPress={() => router.push("/achievements")}>
               <Text style={[styles.seeAll, { color: colors.primary }]}>
-                {userProfile.badges.length}/{BADGES.length} &gt;
+                See All
               </Text>
             </TouchableOpacity>
           </View>
@@ -474,7 +441,7 @@ export default function ProfileScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.badgesList}
             decelerationRate="fast"
-            snapToInterval={100}
+            snapToInterval={112} // width + gap
           >
             {BADGES.map((badge, i) => {
               const isUnlocked = userProfile.badges.includes(badge.id);
@@ -488,43 +455,75 @@ export default function ProfileScreen() {
                       styles.badgeCard,
                       {
                         backgroundColor: colors.surface,
-                        borderColor: colors.border,
+                        shadowColor: shadows.small.shadowColor,
+                        borderColor: isUnlocked
+                          ? colors.primaryLight
+                          : colors.border,
                       },
                       !isUnlocked && {
                         backgroundColor: isDark
                           ? colors.surfaceVariant
-                          : "#f5f5f5",
-                        opacity: 0.5,
+                          : "#f9f9f9",
+                        opacity: 0.6,
+                        borderColor: "transparent",
                       },
                     ]}
                   >
                     <View
                       style={[
                         styles.badgeIconContainer,
-                        !isUnlocked && {
-                          backgroundColor: isDark
-                            ? colors.surfaceVariant
-                            : "#EEE",
+                        {
+                          backgroundColor: isUnlocked
+                            ? colors.surface
+                            : isDark
+                              ? colors.surfaceVariant
+                              : "#F5F5F5",
                         },
                       ]}
                     >
-                      <Text style={styles.badgeEmoji}>{badge.icon}</Text>
+                      <Image
+                        source={badge.icon}
+                        style={{
+                          width: 40,
+                          height: 40,
+                          opacity: isUnlocked ? 1 : 0.5,
+                        }}
+                        contentFit="contain"
+                      />
                       {isUnlocked && (
-                        <View style={styles.checkBadge}>
+                        <View
+                          style={[
+                            styles.checkBadge,
+                            {
+                              backgroundColor: colors.success,
+                              borderColor: colors.surface,
+                            },
+                          ]}
+                        >
                           <Ionicons name="checkmark" size={10} color="#fff" />
                         </View>
                       )}
                     </View>
                     <Text
-                      style={[styles.badgeName, { color: colors.text }]}
+                      style={[
+                        styles.badgeName,
+                        { color: colors.text, opacity: isUnlocked ? 1 : 0.7 },
+                      ]}
                       numberOfLines={1}
                     >
                       {badge.name}
                     </Text>
                     <Text
-                      style={[styles.badgeReward, { color: colors.primary }]}
+                      style={[
+                        styles.badgeReward,
+                        {
+                          color: isUnlocked
+                            ? colors.primary
+                            : colors.textSecondary,
+                        },
+                      ]}
                     >
-                      +{badge.xpReward} XP
+                      {isUnlocked ? "Unlocked" : `+${badge.xpReward} XP`}
                     </Text>
                   </View>
                 </Animated.View>
@@ -748,47 +747,79 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  leaderboardRow: {
+  statsContainer: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    backgroundColor: "#fff",
     marginHorizontal: 20,
+    marginTop: -30,
     marginBottom: 20,
+    paddingVertical: 20,
+    borderRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.1,
+    shadowRadius: 24,
+    elevation: 8,
+    zIndex: 10,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  statDivider: {
+    width: 1,
+    height: 40,
+    opacity: 0.5,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "800",
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  actionGrid: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  actionCard: {
+    flex: 1,
     padding: 16,
-    borderRadius: 20,
+    borderRadius: 24,
+    alignItems: "center",
+    borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 12,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: "#f0f0f0",
+    elevation: 3,
   },
-  leaderboardRowDark: {
-    backgroundColor: "#1E1E1E",
-    borderColor: "#333",
-  },
-  leaderboardIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: "#FFF9C4", // Light yellow/gold
+  actionIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  leaderboardInfo: {
-    flex: 1,
+  actionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 4,
   },
-  leaderboardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 2,
-  },
-  leaderboardSubtitle: {
-    fontSize: 12,
-    color: "#888",
+  actionSubtitle: {
+    fontSize: 11,
+    fontWeight: "500",
+    opacity: 0.8,
   },
   profileContent: {
     alignItems: "center",
@@ -889,48 +920,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     textAlign: "center",
   },
-  statsGrid: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    marginTop: -20,
-    zIndex: 1,
-  },
-  statCard: {
-    backgroundColor: "#fff",
-    width: width / 3 - 20,
-    padding: 16,
-    borderRadius: 20,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-  },
-  statCardDark: {
-    backgroundColor: "#1E1E1E",
-  },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 2,
-  },
-  statLabel: {
-    fontSize: 11,
-    color: "#999",
-    fontWeight: "600",
-  },
   section: {
     paddingHorizontal: 20,
     marginBottom: 30,
@@ -956,26 +945,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   badgeCard: {
-    backgroundColor: "#fff",
     padding: 12,
-    borderRadius: 16,
+    borderRadius: 20,
     alignItems: "center",
     width: 100,
     borderWidth: 1,
-    borderColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 2,
-  },
-  badgeCardDark: {
-    backgroundColor: "#1E1E1E",
-    borderColor: "#333",
-  },
-  badgeLocked: {
-    opacity: 0.5,
-    backgroundColor: "#f5f5f5",
   },
   badgeIconContainer: {
     width: 50,
@@ -986,9 +964,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
     position: "relative",
-  },
-  badgeIconLocked: {
-    backgroundColor: "#EEE",
   },
   badgeEmoji: {
     fontSize: 24,
@@ -1003,9 +978,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
     overflow: "hidden",
-  },
-  recipeCardDark: {
-    backgroundColor: "#1E1E1E",
   },
   recipeImage: {
     width: "100%",
@@ -1074,10 +1046,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#f0f0f0",
   },
-  menuGroupDark: {
-    backgroundColor: "#1E1E1E",
-    borderColor: "#333",
-  },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -1085,10 +1053,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#f5f5f5",
-  },
-  menuItemDark: {
-    backgroundColor: "#1E1E1E",
-    borderBottomColor: "#333",
   },
   menuIconBox: {
     width: 36,
@@ -1103,9 +1067,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     fontWeight: "500",
-  },
-  textDark: {
-    color: "#fff",
   },
   logoutButton: {
     flexDirection: "row",
@@ -1166,56 +1127,5 @@ const styles = StyleSheet.create({
     color: "rgba(255,255,255,0.6)",
     fontSize: 12,
     fontStyle: "italic",
-  },
-  syncWidget: {
-    marginHorizontal: 20,
-    marginTop: -20,
-    marginBottom: 20,
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
-    zIndex: 2,
-  },
-  syncWidgetDark: {
-    backgroundColor: "#1E1E1E",
-  },
-  syncInfo: {
-    flex: 1,
-  },
-  syncTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 4,
-  },
-  syncSubtitle: {
-    fontSize: 12,
-    color: "#999",
-    marginBottom: 2,
-  },
-  syncButton: {
-    backgroundColor: "#E65100",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    minWidth: 90,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  syncButtonDisabled: {
-    opacity: 0.7,
-  },
-  syncButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-    fontSize: 14,
   },
 });

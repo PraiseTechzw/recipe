@@ -99,43 +99,93 @@ export const SyncService = {
 
         const { data, error } = await supabase
           .from("recipes")
-          .insert([
+          .upsert(
             {
-              ...recipeData,
-              is_traditional: isTraditional,
-              reviews_count: reviews || 0,
-              author_id: userProfile.id, // Using the public ID
+              author_id: userProfile.id,
               original_id: id,
+              title: recipeData.title,
+              description: recipeData.description,
               image_url: imageUrl,
-              ingredients: recipe.ingredients, // JSONB
-              steps: recipe.steps, // JSONB
+              category: recipeData.category,
+              tags: recipeData.tags,
+              time: recipeData.time,
+              servings: recipeData.servings,
+              calories: recipeData.calories,
+              ingredients: recipeData.ingredients,
+              steps: recipeData.steps,
+              is_traditional: isTraditional,
             },
-          ])
-          .select()
-          .single();
+            { onConflict: "original_id" }, // Use original_id to prevent dupes if remoteId missing?
+            // Actually, if we have remoteId, we should use it.
+            // But for now, we assume simple sync.
+          )
+          .select();
 
         if (error) {
-          // Check if it's the "placeholder" error or connection error
-          console.warn("Sync warning:", error.message);
-          // If Supabase is not configured, we stop to avoid spamming errors
-          if (
-            error.message?.includes("placeholder") ||
-            !supabase.supabaseUrl.includes("supabase.co")
-          ) {
-            console.log("Supabase not configured. Sync simulated.");
-            // Simulate sync for demo purposes if desired, or just return
-            return;
-          }
-          throw error;
+          console.error(`Failed to sync recipe ${recipe.title}:`, error);
+        } else if (data && data[0]) {
+          // Update local recipe with remote ID
+          updateRecipe(id, { remoteId: data[0].id });
         }
-
-        if (data) {
-          updateRecipe(id, { remoteId: data.id });
-          console.log(`Synced recipe: ${recipe.title}`);
-        }
-      } catch (error) {
-        console.warn(`Failed to sync recipe ${recipe.title}:`, error);
+      } catch (e) {
+        console.error(`Sync error for ${recipe.title}:`, e);
       }
+    }
+  },
+
+  async pullUserRecipes() {
+    const isOnline = await this.checkConnectivity();
+    if (!isOnline) return;
+
+    const { userProfile, addRecipe, myRecipes } = useStore.getState();
+
+    if (!userProfile.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("recipes")
+        .select("*")
+        .eq("author_id", userProfile.id);
+
+      if (error) {
+        console.error("Error pulling recipes:", error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const localRemoteIds = new Set(
+          myRecipes.map((r) => r.remoteId).filter(Boolean),
+        );
+
+        data.forEach((remoteRecipe) => {
+          if (!localRemoteIds.has(remoteRecipe.id)) {
+            const newRecipe: any = {
+              id: remoteRecipe.id,
+              remoteId: remoteRecipe.id,
+              title: remoteRecipe.title,
+              description: remoteRecipe.description,
+              image: remoteRecipe.image_url,
+              category: remoteRecipe.category,
+              tags: remoteRecipe.tags || [],
+              time: remoteRecipe.time,
+              servings: remoteRecipe.servings,
+              calories: remoteRecipe.calories,
+              ingredients: remoteRecipe.ingredients || [],
+              steps: remoteRecipe.steps || [],
+              isTraditional: remoteRecipe.is_traditional,
+              rating: remoteRecipe.rating,
+              author: {
+                name: userProfile.name,
+                avatar: userProfile.avatar,
+                country: userProfile.country,
+              },
+            };
+            addRecipe(newRecipe);
+          }
+        });
+      }
+    } catch (e) {
+      console.warn("Pull recipes failed:", e);
     }
   },
 };

@@ -1,34 +1,37 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Platform, TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import i18n from "../../i18n";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../../theme/useTheme";
 
-const CustomTabBarButton = ({ children, onPress }: any) => (
+const CustomTabBarButton = ({ children, onPress, colors, bgColor }: any) => (
   <TouchableOpacity
     style={{
       justifyContent: "center",
       alignItems: "center",
-      top: -10, // Slight lift to center it visually in taller tab bar
+      top: -24, // Lifted more for better prominence
     }}
     onPress={onPress}
     activeOpacity={0.8}
   >
     <View
       style={{
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: "#E65100",
+        width: 64, // Slightly larger
+        height: 64,
+        borderRadius: 32,
+        backgroundColor: colors.primary,
         justifyContent: "center",
         alignItems: "center",
-        shadowColor: "#E65100",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
+        shadowColor: colors.primary,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 10,
+        borderWidth: 4,
+        borderColor: bgColor, // Matches tab bar background for seamless cutout
       }}
     >
       {children}
@@ -37,37 +40,41 @@ const CustomTabBarButton = ({ children, onPress }: any) => (
 );
 
 export default function TabLayout() {
-  // const colorScheme = useColorScheme();
+  const { colors, isDark } = useTheme();
+
+  // Define tab bar background to ensure consistency
+  const tabBarBackground = isDark ? colors.surfaceVariant : colors.surface;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#E65100", // Override with brand color
-        tabBarInactiveTintColor: "#9CA3AF", // Neutral gray
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarShowLabel: false, // Clean, icon-only look
+        tabBarShowLabel: false,
         tabBarStyle: {
           position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          elevation: 0,
-          backgroundColor: "#ffffff",
+          bottom: 24, // More breathing room
+          left: 24,
+          right: 24,
+          height: 72,
+          backgroundColor: tabBarBackground,
+          borderRadius: 36,
           borderTopWidth: 0,
-          height: Platform.select({ ios: 85, android: 70 }),
-          paddingTop: 10,
-          ...Platform.select({
-            ios: {
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 10,
-            },
-            android: {
-              elevation: 8,
-            },
-          }),
+          elevation: 12, // Stronger shadow for floating effect
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.15,
+          shadowRadius: 24,
+          paddingBottom: 0,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        tabBarItemStyle: {
+          justifyContent: "center",
+          alignItems: "center",
+          height: 72,
         },
       }}
     >
@@ -104,9 +111,15 @@ export default function TabLayout() {
         options={{
           title: "",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="add" size={28} color="#fff" />
+            <Ionicons name="add" size={32} color="#fff" />
           ),
-          tabBarButton: (props) => <CustomTabBarButton {...props} />,
+          tabBarButton: (props) => (
+            <CustomTabBarButton
+              {...props}
+              colors={colors}
+              bgColor={tabBarBackground}
+            />
+          ),
         }}
       />
 

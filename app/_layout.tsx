@@ -1,7 +1,7 @@
 import {
-    DarkTheme,
-    DefaultTheme,
-    ThemeProvider,
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -19,6 +19,7 @@ import { SeedService } from "../services/seedService";
 import { SyncService } from "../services/syncService";
 import { useStore } from "../store/useStore";
 
+import { supabase } from "@/lib/supabase";
 import { toastConfig } from "../components/feedback/ToastConfig";
 
 export const unstable_settings = {
@@ -42,7 +43,18 @@ export default function RootLayout() {
     };
     initData();
 
-    // 2. Setup Notifications
+    // 2. Setup Auth Listener
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      useStore.getState().setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      useStore.getState().setSession(session);
+    });
+
+    // 3. Setup Notifications
     const setupNotifications = async () => {
       const token =
         await NotificationService.registerForPushNotificationsAsync();
@@ -53,6 +65,10 @@ export default function RootLayout() {
     };
 
     setupNotifications();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [fetchRecipes, setUserProfile]);
 
   if (locale) {
@@ -82,6 +98,13 @@ export default function RootLayout() {
               name="pantry-check"
               options={{
                 presentation: "fullScreenModal",
+                headerShown: false,
+                gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen
+              name="auth"
+              options={{
                 headerShown: false,
                 gestureEnabled: false,
               }}

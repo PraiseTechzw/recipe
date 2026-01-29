@@ -11,12 +11,26 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
+import { authService } from "../services/authService";
 import { useStore } from "../store/useStore";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { locale, setLocale, isDarkMode, toggleDarkMode } = useStore();
+  const { locale, setLocale, isDarkMode, toggleDarkMode, session } = useStore();
   // const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
+  const handleSignOut = async () => {
+    Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign Out",
+        onPress: async () => {
+          await authService.signOut();
+          router.replace("/onboarding");
+        },
+      },
+    ]);
+  };
 
   const handleDeleteAccount = () => {
     Alert.alert(
@@ -78,6 +92,32 @@ export default function SettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          {session ? (
+            <TouchableOpacity style={styles.item} onPress={handleSignOut}>
+              <View style={styles.itemLeft}>
+                <Ionicons name="log-out-outline" size={22} color="#666" />
+                <Text style={styles.itemText}>
+                  Sign Out ({session.user.email})
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.item}
+              onPress={() => router.push("/auth")}
+            >
+              <View style={styles.itemLeft}>
+                <Ionicons name="log-in-outline" size={22} color="#666" />
+                <Text style={styles.itemText}>Sign In / Restore Account</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#ccc" />
+            </TouchableOpacity>
+          )}
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{i18n.t("appPreferences")}</Text>
 

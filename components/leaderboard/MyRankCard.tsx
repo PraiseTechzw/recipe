@@ -1,3 +1,4 @@
+import { COUNTRIES } from "@/constants/countries";
 import { LeaderboardEntry } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import React from "react";
@@ -19,6 +20,11 @@ export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
   const score = entry
     ? (mode === "weekly" ? entry.weekly_xp : entry.total_xp) || 0
     : 0;
+
+  const countryFlag = React.useMemo(() => {
+    if (!entry?.chefs?.country) return null;
+    return COUNTRIES.find((c) => c.name === entry.chefs?.country)?.flag;
+  }, [entry?.chefs?.country]);
 
   return (
     <View
@@ -65,6 +71,7 @@ export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
               { fontWeight: "bold", color: colors.text },
             ]}
           >
+            {countryFlag ? `${countryFlag} ` : ""}
             {entry?.chefs?.chef_name || "You"}
           </Text>
           <Text style={[typography.caption, { color: colors.textSecondary }]}>

@@ -3,22 +3,25 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BADGES, getLevel } from "../constants/gamification";
 import { useStore } from "../store/useStore";
+import { useTheme } from "../theme/useTheme";
 
 type FilterType = "All" | "Unlocked" | "Locked";
 
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors, typography, isDark, shadows } = useTheme();
   const [filter, setFilter] = useState<FilterType>("All");
 
   const { userProfile } = useStore();
@@ -30,7 +33,6 @@ export default function AchievementsScreen() {
   // HELPERS
   // -------------------------------------------------------------------------
 
-  // Calculate Progress to Next Level
   const nextLevelXP = levelInfo.nextLevelXP || levelInfo.minXP + 1000;
   const currentLevelXP = levelInfo.minXP;
 
@@ -38,6 +40,21 @@ export default function AchievementsScreen() {
     100,
     Math.max(0, ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100),
   );
+
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "chef":
+        return "#FF9800";
+      case "social":
+        return "#2196F3";
+      case "health":
+        return "#4CAF50";
+      case "collection":
+        return "#9C27B0";
+      default:
+        return colors.primary;
+    }
+  };
 
   // -------------------------------------------------------------------------
   // FILTERING
@@ -50,7 +67,6 @@ export default function AchievementsScreen() {
     return true;
   });
 
-  // Sort: Unlocked first, then by XP reward
   filteredAchievements.sort((a, b) => {
     const aUnlocked = unlockedIds.includes(a.id);
     const bUnlocked = unlockedIds.includes(b.id);
@@ -63,18 +79,32 @@ export default function AchievementsScreen() {
   const totalCount = BADGES.length;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View
+        style={[
+          styles.header,
+          {
+            paddingTop: insets.top + 10,
+            backgroundColor: colors.surface,
+            borderBottomColor: colors.border,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => router.back()}
-          style={styles.backButton}
+          style={[
+            styles.backButton,
+            { backgroundColor: isDark ? colors.surfaceVariant : "#F5F5F5" },
+          ]}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Achievements</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Achievements
+        </Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -83,132 +113,213 @@ export default function AchievementsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* XP Card */}
-        <LinearGradient
-          colors={["#FF9966", "#FF5E62"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.xpCard}
-        >
-          <View style={styles.xpRow}>
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelNum}>{level}</Text>
-              <Text style={styles.levelLabel}>LEVEL</Text>
-            </View>
-
-            <View style={styles.xpInfo}>
-              <Text style={styles.xpTotalText}>{xp.toLocaleString()} XP</Text>
-              <Text style={styles.xpNextText}>
-                Next Level: {nextLevelXP.toLocaleString()} XP
-              </Text>
-
-              <View style={styles.progressBarBg}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${progressPercent}%` },
-                  ]}
-                />
+        <Animated.View entering={FadeInDown.delay(100).springify()}>
+          <LinearGradient
+            colors={[colors.primary, "#FF5E62"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.xpCard, { shadowColor: colors.primary }]}
+          >
+            <View style={styles.xpRow}>
+              <View style={styles.levelBadge}>
+                <Text style={styles.levelNum}>{level}</Text>
+                <Text style={styles.levelLabel}>LEVEL</Text>
               </View>
-              <Text style={styles.progressText}>
-                {Math.floor(nextLevelXP - xp)} XP to go
-              </Text>
-            </View>
-          </View>
-        </LinearGradient>
 
-        {/* Badges Grid (Preview of Unlocked) */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Badges</Text>
-            <Text style={styles.sectionSubtitle}>
-              {unlockedCount}/{totalCount}
-            </Text>
-          </View>
+              <View style={styles.xpInfo}>
+                <Text style={styles.xpTotalText}>{xp.toLocaleString()} XP</Text>
+                <Text style={styles.xpNextText}>
+                  Next Level: {nextLevelXP.toLocaleString()} XP
+                </Text>
 
-          <View style={styles.badgesGrid}>
-            {unlockedIds.length === 0 ? (
-              <Text style={styles.emptyText}>
-                No badges unlocked yet. Get cooking!
-              </Text>
-            ) : (
-              BADGES.filter((a) => unlockedIds.includes(a.id)).map((badge) => (
-                <View key={badge.id} style={styles.badgeItem}>
+                <View style={styles.progressBarBg}>
                   <View
                     style={[
-                      styles.badgeIconContainer,
-                      { backgroundColor: getCategoryColor(badge.category) },
+                      styles.progressBarFill,
+                      { width: `${progressPercent}%` },
                     ]}
-                  >
-                    <Text style={{ fontSize: 24 }}>{badge.icon}</Text>
-                  </View>
+                  />
                 </View>
-              ))
-            )}
-          </View>
-        </View>
+                <Text style={styles.progressText}>
+                  {Math.floor(nextLevelXP - xp)} XP to go
+                </Text>
+              </View>
+            </View>
+          </LinearGradient>
+        </Animated.View>
 
         {/* Filter Tabs */}
-        <View style={styles.tabsContainer}>
-          {(["All", "Unlocked", "Locked"] as FilterType[]).map((t) => (
-            <TouchableOpacity
-              key={t}
-              style={[styles.tabButton, filter === t && styles.tabActive]}
-              onPress={() => setFilter(t)}
-            >
-              <Text
-                style={[styles.tabText, filter === t && styles.tabTextActive]}
+        <Animated.View entering={FadeInDown.delay(200).springify()}>
+          <View
+            style={[
+              styles.tabsContainer,
+              { backgroundColor: isDark ? colors.surfaceVariant : "#EEE" },
+            ]}
+          >
+            {(["All", "Unlocked", "Locked"] as FilterType[]).map((t) => (
+              <TouchableOpacity
+                key={t}
+                style={[
+                  styles.tabButton,
+                  filter === t && {
+                    backgroundColor: colors.surface,
+                    shadowColor: "#000",
+                  },
+                  filter === t && styles.tabActive,
+                ]}
+                onPress={() => setFilter(t)}
               >
-                {t}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.tabText,
+                    {
+                      color:
+                        filter === t ? colors.primary : colors.textSecondary,
+                    },
+                  ]}
+                >
+                  {t}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Animated.View>
+
+        {/* Stats Summary */}
+        <View style={styles.summaryContainer}>
+          <Text style={[styles.summaryText, { color: colors.textSecondary }]}>
+            You've unlocked{" "}
+            <Text style={{ color: colors.primary, fontWeight: "bold" }}>
+              {unlockedCount}
+            </Text>{" "}
+            of {totalCount} badges
+          </Text>
         </View>
 
         {/* Achievements List */}
         <View style={styles.listContainer}>
-          {filteredAchievements.map((item) => {
+          {filteredAchievements.map((item, index) => {
             const isUnlocked = unlockedIds.includes(item.id);
+            const categoryColor = getCategoryColor(item.category);
+
             return (
-              <View
+              <Animated.View
                 key={item.id}
-                style={[styles.achievementRow, !isUnlocked && styles.rowLocked]}
+                entering={FadeInUp.delay(300 + index * 50).springify()}
               >
                 <View
                   style={[
-                    styles.iconCircle,
-                    isUnlocked
-                      ? { backgroundColor: getCategoryColor(item.category) }
-                      : styles.iconLocked,
+                    styles.achievementRow,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: isUnlocked ? colors.border : "transparent",
+                      shadowColor: shadows.small.shadowColor,
+                    },
+                    !isUnlocked && {
+                      backgroundColor: isDark
+                        ? colors.surfaceVariant
+                        : "#F9F9F9",
+                      opacity: 0.7,
+                    },
                   ]}
                 >
-                  {isUnlocked ? (
-                    <Text style={{ fontSize: 24 }}>{item.icon}</Text>
-                  ) : (
-                    <Ionicons name="lock-closed" size={24} color="#999" />
-                  )}
-                </View>
-
-                <View style={styles.rowContent}>
-                  <Text
-                    style={[styles.rowTitle, !isUnlocked && styles.textLocked]}
+                  <View
+                    style={[
+                      styles.iconCircle,
+                      {
+                        backgroundColor: isUnlocked
+                          ? isDark
+                            ? "rgba(255,255,255,0.05)"
+                            : "#F5F5F5"
+                          : isDark
+                            ? "rgba(255,255,255,0.02)"
+                            : "#EEE",
+                      },
+                    ]}
                   >
-                    {item.name}
-                  </Text>
-                  <Text style={styles.rowDesc} numberOfLines={2}>
-                    {item.description}
-                  </Text>
-                  {!isUnlocked && (
-                    <Text style={styles.rewardText}>+{item.xpReward} XP</Text>
+                    {isUnlocked ? (
+                      <Image
+                        source={item.icon}
+                        style={{ width: 40, height: 40 }}
+                        contentFit="contain"
+                      />
+                    ) : (
+                      <Ionicons
+                        name="lock-closed"
+                        size={20}
+                        color={colors.textSecondary}
+                      />
+                    )}
+                  </View>
+
+                  <View style={styles.rowContent}>
+                    <Text
+                      style={[
+                        styles.rowTitle,
+                        { color: colors.text, opacity: isUnlocked ? 1 : 0.6 },
+                      ]}
+                    >
+                      {item.name}
+                    </Text>
+                    <Text
+                      style={[styles.rowDesc, { color: colors.textSecondary }]}
+                      numberOfLines={2}
+                    >
+                      {item.description}
+                    </Text>
+
+                    <View style={styles.metaRow}>
+                      <View
+                        style={[
+                          styles.pill,
+                          {
+                            backgroundColor: isUnlocked
+                              ? categoryColor + "20"
+                              : colors.border,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.pillText,
+                            {
+                              color: isUnlocked
+                                ? categoryColor
+                                : colors.textSecondary,
+                            },
+                          ]}
+                        >
+                          {item.category.toUpperCase()}
+                        </Text>
+                      </View>
+
+                      {!isUnlocked && (
+                        <Text
+                          style={[styles.rewardText, { color: colors.primary }]}
+                        >
+                          +{item.xpReward} XP
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+
+                  {isUnlocked && (
+                    <View style={styles.checkIcon}>
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={24}
+                        color={colors.success}
+                      />
+                    </View>
                   )}
                 </View>
-
-                {isUnlocked && (
-                  <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
-                )}
-              </View>
+              </Animated.View>
             );
           })}
         </View>
+
+        {/* Bottom spacer for tab bar */}
+        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
@@ -217,223 +328,189 @@ export default function AchievementsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: "#fff",
+    paddingBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: "#EEE",
   },
   backButton: {
-    padding: 8,
-    marginLeft: -8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "800",
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingTop: 20,
   },
   xpCard: {
-    margin: 20,
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: "#FF5E62",
+    marginHorizontal: 20,
+    marginBottom: 24,
+    borderRadius: 24,
+    padding: 24,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowRadius: 16,
+    elevation: 10,
   },
   xpRow: {
     flexDirection: "row",
     alignItems: "center",
   },
   levelBadge: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#FFF",
+    borderColor: "rgba(255,255,255,0.4)",
     marginRight: 20,
   },
   levelNum: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: "900",
     color: "#FFF",
   },
   levelLabel: {
-    fontSize: 8,
+    fontSize: 9,
     color: "#FFF",
-    fontWeight: "bold",
+    fontWeight: "800",
+    marginTop: -2,
+    opacity: 0.9,
   },
   xpInfo: {
     flex: 1,
   },
   xpTotalText: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 24,
+    fontWeight: "800",
     color: "#FFF",
     marginBottom: 4,
   },
   xpNextText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "rgba(255,255,255,0.9)",
-    marginBottom: 8,
+    marginBottom: 10,
+    fontWeight: "500",
   },
   progressBarBg: {
-    height: 8,
-    backgroundColor: "rgba(0,0,0,0.1)",
-    borderRadius: 4,
-    marginBottom: 6,
+    height: 6,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    borderRadius: 3,
+    marginBottom: 8,
     overflow: "hidden",
   },
   progressBarFill: {
     height: "100%",
     backgroundColor: "#FFF",
-    borderRadius: 4,
+    borderRadius: 3,
   },
   progressText: {
     fontSize: 12,
     color: "#FFF",
-    fontWeight: "600",
+    fontWeight: "700",
     textAlign: "right",
+    opacity: 0.9,
   },
-  section: {
+  tabsContainer: {
+    flexDirection: "row",
+    marginHorizontal: 20,
     marginBottom: 20,
-    paddingHorizontal: 20,
+    borderRadius: 16,
+    padding: 4,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
     alignItems: "center",
-    marginBottom: 12,
+    borderRadius: 12,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: "#757575",
-  },
-  badgesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  badgeItem: {
-    marginBottom: 8,
-  },
-  badgeIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
+  tabActive: {
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  emptyText: {
-    color: "#999",
-    fontStyle: "italic",
-  },
-  tabsContainer: {
-    flexDirection: "row",
-    marginHorizontal: 20,
-    marginBottom: 15,
-    backgroundColor: "#EEE",
-    borderRadius: 12,
-    padding: 4,
-  },
-  tabButton: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: "center",
-    borderRadius: 10,
-  },
-  tabActive: {
-    backgroundColor: "#FFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
   tabText: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#757575",
+    fontWeight: "700",
   },
-  tabTextActive: {
-    color: "#E65100",
+  summaryContainer: {
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
+  summaryText: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   listContainer: {
     paddingHorizontal: 20,
   },
   achievementRow: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF",
+    alignItems: "flex-start",
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 20,
     marginBottom: 12,
-    shadowColor: "#000",
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowRadius: 8,
     elevation: 2,
   },
-  rowLocked: {
-    backgroundColor: "#F5F5F5",
-    shadowOpacity: 0,
-    elevation: 0,
-  },
   iconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
   },
-  iconLocked: {
-    backgroundColor: "#E0E0E0",
-  },
   rowContent: {
     flex: 1,
+    paddingVertical: 2,
   },
   rowTitle: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: "700",
     marginBottom: 4,
-  },
-  textLocked: {
-    color: "#757575",
   },
   rowDesc: {
     fontSize: 13,
-    color: "#757575",
     lineHeight: 18,
+    marginBottom: 8,
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 4,
+  },
+  pill: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  pillText: {
+    fontSize: 10,
+    fontWeight: "700",
   },
   rewardText: {
-    marginTop: 4,
     fontSize: 12,
-    fontWeight: "bold",
-    color: "#FF9800",
+    fontWeight: "800",
+  },
+  checkIcon: {
+    marginLeft: 8,
+    marginTop: 12,
   },
 });

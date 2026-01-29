@@ -2,33 +2,79 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { COUNTRIES, DEFAULT_COUNTRY } from "../constants/countries";
 import i18n from "../i18n";
+import { authService } from "../services/authService";
 import { useStore } from "../store/useStore";
+
+const AVATAR_SEEDS = [
+  "Chef Gordon",
+  "Jamie O",
+  "Nigella L",
+  "Massimo B",
+  "Heston B",
+  "Felix",
+  "Aneka",
+  "Zack",
+  "Molly",
+  "Bear",
+  "Chef",
+  "Tasty",
+  "Spicy",
+  "Sweet",
+  "Salty",
+];
 
 export default function UserInfoScreen() {
   const router = useRouter();
-  const { setUserProfile, dietaryOptions, experienceLevels } = useStore();
+  const { setUserProfile, dietaryOptions, experienceLevels, userProfile } =
+    useStore();
 
   const [name, setName] = useState("");
+  const [country, setCountry] = useState(DEFAULT_COUNTRY);
+  const [showCountryModal, setShowCountryModal] = useState(false);
   const [level, setLevel] = useState<"Beginner" | "Home Cook" | "Pro">(
     "Beginner",
   );
   const [diet, setDiet] = useState<string[]>([]);
   const [avatar, setAvatar] = useState<string | null>(null);
 
+  useEffect(() => {
+    // Pre-fill if restoring profile
+    if (userProfile.name && userProfile.name !== "Guest") {
+      setName(userProfile.name);
+    }
+    if (userProfile.country) {
+      const c = COUNTRIES.find((c) => c.name === userProfile.country);
+      if (c) setCountry(c);
+    }
+    if (userProfile.avatar) {
+      setAvatar(userProfile.avatar);
+    }
+    if (userProfile.chefLevel) {
+      // @ts-ignore
+      setLevel(userProfile.chefLevel);
+    }
+    if (userProfile.dietaryPreferences) {
+      setDiet(userProfile.dietaryPreferences);
+    }
+  }, []);
+
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ["images"],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.5,
@@ -39,6 +85,10 @@ export default function UserInfoScreen() {
     }
   };
 
+  const selectPresetAvatar = (seed: string) => {
+    setAvatar(`https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`);
+  };
+
   const toggleDiet = (item: string) => {
     if (diet.includes(item)) {
       setDiet(diet.filter((i) => i !== item));
@@ -47,20 +97,27 @@ export default function UserInfoScreen() {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (name.trim().length === 0) {
-      // Show error or shake
       return;
     }
 
-    setUserProfile({
+    const updates = {
       name: name.trim(),
-      chefLevel: "Beginner", // Start everyone as Beginner
+      chefLevel: level,
       dietaryPreferences: diet,
       avatar: avatar || undefined,
-    });
+      country: country.name,
+    };
 
-    // Go to Pantry Check next, instead of straight to tabs
+    setUserProfile(updates);
+
+    // Sync to Supabase if authenticated
+    const session = useStore.getState().session;
+    if (session) {
+      await authService.linkProfile(session.user.id);
+    }
+
     router.replace("/pantry-check");
   };
 
@@ -119,6 +176,34 @@ export default function UserInfoScreen() {
           <Text style={styles.uploadText}>{i18n.t("uploadPhoto")}</Text>
         </View>
 
+        {/* Preset Avatars */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Or choose a chef avatar:</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.avatarList}
+          >
+            {AVATAR_SEEDS.map((seed) => (
+              <TouchableOpacity
+                key={seed}
+                onPress={() => selectPresetAvatar(seed)}
+                style={styles.presetAvatarBtn}
+              >
+                <Image
+                  source={{
+                    uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${seed}`,
+                  }}
+                  style={[
+                    styles.presetAvatar,
+                    avatar?.includes(seed) && styles.presetAvatarSelected,
+                  ]}
+                />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         {/* Name Input */}
         <View style={styles.section}>
           <Text style={styles.label}>{i18n.t("nameLabel")}</Text>
@@ -128,6 +213,19 @@ export default function UserInfoScreen() {
             value={name}
             onChangeText={setName}
           />
+        </View>
+
+        {/* Country Selector */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Country</Text>
+          <TouchableOpacity
+            style={styles.input}
+            onPress={() => setShowCountryModal(true)}
+          >
+            <Text style={styles.inputText}>
+              {country.flag} {country.name}
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Chef Level */}
@@ -192,7 +290,52 @@ export default function UserInfoScreen() {
           <Text style={styles.buttonText}>{i18n.t("continue")}</Text>
           <Ionicons name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.signInButton}
+          onPress={() => router.push("/auth")}
+        >
+          <Text style={styles.signInText}>
+            Already have an account?{" "}
+            <Text style={styles.signInLink}>Sign In</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Country Selection Modal */}
+      <Modal
+        visible={showCountryModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Country</Text>
+            <TouchableOpacity onPress={() => setShowCountryModal(false)}>
+              <Text style={styles.modalClose}>Close</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={COUNTRIES}
+            keyExtractor={(item) => item.code}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.countryItem}
+                onPress={() => {
+                  setCountry(item);
+                  setShowCountryModal(false);
+                }}
+              >
+                <Text style={styles.countryFlag}>{item.flag}</Text>
+                <Text style={styles.countryName}>{item.name}</Text>
+                {country.code === item.code && (
+                  <Ionicons name="checkmark" size={20} color="#E65100" />
+                )}
+              </TouchableOpacity>
+            )}
+          />
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -232,8 +375,10 @@ const styles = StyleSheet.create({
   input: {
     borderBottomWidth: 2,
     borderBottomColor: "#E0E0E0",
-    fontSize: 20,
     paddingVertical: 8,
+  },
+  inputText: {
+    fontSize: 20,
     color: "#1a1a1a",
   },
   optionsRow: {
@@ -288,7 +433,7 @@ const styles = StyleSheet.create({
   },
   centerSection: {
     alignItems: "center",
-    marginBottom: 32,
+    marginBottom: 20,
   },
   avatarContainer: {
     width: 100,
@@ -354,5 +499,71 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  avatarList: {
+    paddingVertical: 8,
+    gap: 12,
+  },
+  presetAvatarBtn: {
+    padding: 2,
+  },
+  presetAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "#F5F5F5",
+  },
+  presetAvatarSelected: {
+    borderWidth: 3,
+    borderColor: "#E65100",
+  },
+  signInButton: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  signInText: {
+    color: "#757575",
+    fontSize: 14,
+  },
+  signInLink: {
+    color: "#E65100",
+    fontWeight: "bold",
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  modalClose: {
+    fontSize: 16,
+    color: "#E65100",
+  },
+  countryItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  countryFlag: {
+    fontSize: 24,
+    marginRight: 16,
+  },
+  countryName: {
+    fontSize: 16,
+    color: "#333",
+    flex: 1,
   },
 });

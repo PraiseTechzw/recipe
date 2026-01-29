@@ -2,7 +2,7 @@ export interface Badge {
   id: string;
   name: string;
   description: string;
-  icon: string; // Emoji or icon name
+  icon: any; // Image require
   xpReward: number;
   category: 'cooking' | 'social' | 'collection' | 'streak';
 }
@@ -12,7 +12,7 @@ export const BADGES: Badge[] = [
     id: 'first_cook',
     name: 'First Cook',
     description: 'Complete your first recipe.',
-    icon: '🍳',
+    icon: require('../assets/badges/first-cook.png'),
     xpReward: 50,
     category: 'cooking'
   },
@@ -20,7 +20,7 @@ export const BADGES: Badge[] = [
     id: 'week_streak',
     name: 'Week Streak',
     description: 'Cook for 7 days in a row.',
-    icon: '🔥',
+    icon: require('../assets/badges/week-steark.png'),
     xpReward: 150,
     category: 'streak'
   },
@@ -28,7 +28,7 @@ export const BADGES: Badge[] = [
     id: 'flavor_explorer',
     name: 'Flavor Explorer',
     description: 'Try recipes from 3 different cuisines.',
-    icon: '🌍',
+    icon: require('../assets/badges/flavour Explorer.png'),
     xpReward: 100,
     category: 'collection'
   },
@@ -36,7 +36,7 @@ export const BADGES: Badge[] = [
     id: 'early_bird',
     name: 'Early Bird',
     description: 'Cook a breakfast recipe before 9 AM.',
-    icon: '🌅',
+    icon: require('../assets/badges/early-bird.png'),
     xpReward: 50,
     category: 'cooking'
   },
@@ -44,7 +44,7 @@ export const BADGES: Badge[] = [
     id: 'night_owl',
     name: 'Night Owl',
     description: 'Cook a recipe after 10 PM.',
-    icon: '🦉',
+    icon: require('../assets/badges/night-owl.png'),
     xpReward: 50,
     category: 'cooking'
   },
@@ -52,7 +52,7 @@ export const BADGES: Badge[] = [
     id: 'healthy_habit',
     name: 'Healthy Habit',
     description: 'Cook 5 healthy recipes.',
-    icon: '🥗',
+    icon: require('../assets/badges/Healthy-Habit.png'),
     xpReward: 100,
     category: 'cooking'
   },
@@ -60,7 +60,7 @@ export const BADGES: Badge[] = [
     id: 'sweet_tooth',
     name: 'Sweet Tooth',
     description: 'Cook 3 dessert recipes.',
-    icon: '🍰',
+    icon: require('../assets/badges/sweet-tooth.png'),
     xpReward: 75,
     category: 'cooking'
   },
@@ -68,7 +68,7 @@ export const BADGES: Badge[] = [
     id: 'master_chef',
     name: 'Master Chef',
     description: 'Reach Level 10.',
-    icon: '👨‍🍳',
+    icon: require('../assets/badges/Master-Chef.png'),
     xpReward: 1000,
     category: 'cooking'
   },
@@ -76,7 +76,7 @@ export const BADGES: Badge[] = [
     id: 'collector',
     name: 'Collector',
     description: 'Save 20 recipes.',
-    icon: '🔖',
+    icon: require('../assets/badges/collector.png'),
     xpReward: 50,
     category: 'collection'
   },
@@ -84,7 +84,7 @@ export const BADGES: Badge[] = [
     id: 'sharer',
     name: 'Sharer',
     description: 'Share a recipe with a friend.',
-    icon: '📤',
+    icon: require('../assets/badges/sharer.png'),
     xpReward: 25,
     category: 'social'
   }
