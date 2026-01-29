@@ -30,15 +30,8 @@ import { useStore } from "../../store/useStore";
 const { width } = Dimensions.get("window");
 
 export default function ProfileScreen() {
-  const {
-    favorites,
-    userProfile,
-    isDarkMode,
-    toggleDarkMode,
-    setLocale,
-    locale,
-    myRecipes,
-  } = useStore();
+  const { userProfile, isDarkMode, toggleDarkMode, setLocale, myRecipes } =
+    useStore();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -112,8 +105,8 @@ export default function ProfileScreen() {
       100
     : 100;
 
-  const AnimatedTouchableOpacity =
-    Animated.createAnimatedComponent(TouchableOpacity);
+  // const AnimatedTouchableOpacity =
+  //   Animated.createAnimatedComponent(TouchableOpacity);
 
   return (
     <View

@@ -26,10 +26,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Chip } from "../../components/ui/Chip";
+import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
-
 const LOADING_STEPS = [
   "Analyzing image...",
   "Detecting ingredients...",
@@ -74,14 +74,14 @@ export default function ReviewScreen() {
     ) {
       extractIngredients(imageBase64);
     }
-  }, [status, imageBase64, extractedIngredients.length]);
+  }, [status, imageBase64, extractedIngredients.length, extractIngredients]);
 
   // Handle navigation on success
   useEffect(() => {
     if (status === "showingResults") {
       router.push("/(ai-chef)/result");
     }
-  }, [status]);
+  }, [status, router]);
 
   // Handle errors
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function ReviewScreen() {
         Alert.alert("Error", error.message);
       }
     }
-  }, [error]);
+  }, [error, generateRecipe]);
 
   const isExtracting = status === "extractingIngredients";
   const isGenerating = status === "generatingRecipe";
@@ -127,7 +127,7 @@ export default function ReviewScreen() {
     } else {
       pulseScale.value = withTiming(1);
     }
-  }, [isLoading, editedIngredients.length]);
+  }, [isLoading, editedIngredients.length, pulseScale]);
 
   const handleAddIngredient = () => {
     if (newIngredient.trim()) {

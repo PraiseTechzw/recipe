@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
@@ -28,13 +27,13 @@ type LeaderboardTab = "weekly" | "allTime";
 
 export default function LeaderboardScreen() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const { colors, typography, spacing } = useTheme();
+  // const router = useRouter();
+  const { colors, typography } = useTheme();
 
   // Local State
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
   const [filterMode, setFilterMode] = useState<"global" | "friends">("global");
-  const [refreshing, setRefreshing] = useState(false);
+  // const [refreshing, setRefreshing] = useState(false);
 
   // Store Selectors
   const topWeekly = useStore((state) => state.topWeekly);
@@ -45,7 +44,6 @@ export default function LeaderboardScreen() {
   const error = useStore((state) => state.leaderboardError);
   const userProfile = useStore((state) => state.userProfile);
   const isLive = useStore((state) => state.isLeaderboardLive);
-  const lastUpdated = useStore((state) => state.leaderboardLastUpdated);
 
   // Derived Data
   const fullData = activeTab === "weekly" ? topWeekly : topAllTime;
@@ -65,7 +63,7 @@ export default function LeaderboardScreen() {
     return () => {
       leaderboardService.unsubscribe();
     };
-  }, []);
+  }, [fetchData]);
 
   const fetchData = useCallback(() => {
     leaderboardService.fetchGlobalLeaderboards();

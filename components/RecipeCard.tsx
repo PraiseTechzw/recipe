@@ -10,7 +10,7 @@ interface RecipeCardProps {
 }
 
 export default function RecipeCard({ recipe }: RecipeCardProps) {
-  const { colors, typography, shadows, radius } = useTheme();
+  const { colors, shadows, radius } = useTheme();
 
   return (
     <Link href={`/recipe/${recipe.id}`} asChild>

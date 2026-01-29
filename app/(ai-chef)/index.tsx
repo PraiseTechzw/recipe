@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { CameraType, CameraView, FlashMode } from "expo-camera";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Alert,
@@ -32,11 +32,8 @@ export default function CaptureScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const cameraRef = useRef<CameraView>(null);
-  const {
-    verifyCameraPermission,
-    verifyMediaLibraryPermission,
-    cameraGranted,
-  } = useAppPermissions();
+  const { verifyCameraPermission, verifyMediaLibraryPermission } =
+    useAppPermissions();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
@@ -52,12 +49,12 @@ export default function CaptureScreen() {
   useEffect(() => {
     // Check permission on mount
     checkPermissions();
-  }, []);
+  }, [checkPermissions]);
 
-  const checkPermissions = async () => {
+  const checkPermissions = useCallback(async () => {
     const granted = await verifyCameraPermission();
     setHasPermission(granted);
-  };
+  }, [verifyCameraPermission]);
 
   const handleGalleryPick = async () => {
     const isOnline = await SyncService.checkConnectivity();
@@ -75,7 +72,7 @@ export default function CaptureScreen() {
       if (result) {
         processAndNavigate(result.uri);
       }
-    } catch (e) {
+    } catch {
       Alert.alert("Error", "Failed to pick image.");
     }
   };
@@ -112,7 +109,7 @@ export default function CaptureScreen() {
         );
         processAndNavigate(processed.uri, processed.base64);
       }
-    } catch (e) {
+    } catch {
       // console.error(e);
       Alert.alert("Error", "Failed to capture image.");
       HapticService.error();

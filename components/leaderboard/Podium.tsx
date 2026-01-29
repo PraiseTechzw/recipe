@@ -3,6 +3,7 @@ import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Image, StyleSheet, Text, View, ViewStyle } from "react-native";
+import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
 
 interface PodiumProps {
   topThree: LeaderboardEntry[];
@@ -11,7 +12,7 @@ interface PodiumProps {
 }
 
 export function Podium({ topThree, mode, style }: PodiumProps) {
-  const { colors, typography, spacing, radius } = useTheme();
+  const { colors, typography, spacing } = useTheme();
 
   // Helper to get correct item for position (1st, 2nd, 3rd)
   // Input array is sorted by rank (0=1st, 1=2nd, 2=3rd)
@@ -27,10 +28,7 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
 
     const isFirst = rank === 1;
     const isSecond = rank === 2;
-    const isThird = rank === 3;
 
-    // Height based on rank
-    const stepHeight = isFirst ? 140 : isSecond ? 110 : 90;
     const avatarSize = isFirst ? 80 : 60;
     const borderColor = isFirst ? "#FFD700" : isSecond ? "#C0C0C0" : "#CD7F32";
     const rankColor = isFirst ? "#FFD700" : isSecond ? "#C0C0C0" : "#CD7F32";

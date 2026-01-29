@@ -5,15 +5,15 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
@@ -180,7 +180,7 @@ export default function CreateScreen() {
     HapticService.light();
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
         aspect: [16, 9],
         quality: 0.5, // Compression hint: reduced quality
@@ -189,7 +189,7 @@ export default function CreateScreen() {
       if (!result.canceled) {
         setImage(result.assets[0].uri);
       }
-    } catch (error) {
+    } catch {
       ToastService.error(
         i18n.t("error"),
         i18n.t("imagePickerError") || "Failed to pick image",
@@ -346,7 +346,12 @@ export default function CreateScreen() {
               <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <Ionicons name="sparkles" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Ionicons
+                  name="sparkles"
+                  size={20}
+                  color="#fff"
+                  style={{ marginRight: 8 }}
+                />
                 <Text style={styles.aiButtonText}>Magic AI Chef</Text>
               </>
             )}
