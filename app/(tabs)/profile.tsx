@@ -110,12 +110,7 @@ export default function ProfileScreen() {
   //   Animated.createAnimatedComponent(TouchableOpacity);
 
   return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: isDarkMode ? "#121212" : "#F8F9FA" },
-      ]}
-    >
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -123,7 +118,7 @@ export default function ProfileScreen() {
         {/* Modern Header Section */}
         <View style={styles.headerContainer}>
           <LinearGradient
-            colors={["#FF6B6B", "#E65100"]}
+            colors={[colors.primary, "#E65100"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.gradientHeader, { paddingTop: insets.top + 20 }]}
@@ -172,7 +167,7 @@ export default function ProfileScreen() {
                     style={styles.editButton}
                     onPress={() => router.push("/edit-profile")}
                   >
-                    <Ionicons name="pencil" size={16} color="#E65100" />
+                    <Ionicons name="pencil" size={16} color={colors.primary} />
                   </TouchableOpacity>
                 </View>
 
@@ -241,10 +236,7 @@ export default function ProfileScreen() {
 
           {/* Decorative Curve */}
           <View
-            style={[
-              styles.curveLayer,
-              { backgroundColor: isDarkMode ? "#121212" : "#F8F9FA" },
-            ]}
+            style={[styles.curveLayer, { backgroundColor: colors.background }]}
           />
         </View>
 
@@ -253,7 +245,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             style={[
               styles.leaderboardRow,
-              isDarkMode && styles.leaderboardRowDark,
+              { backgroundColor: colors.surface, borderColor: colors.border },
             ]}
             onPress={() => router.push("/leaderboard")}
             activeOpacity={0.7}
@@ -262,19 +254,22 @@ export default function ProfileScreen() {
               <Ionicons name="trophy" size={24} color="#FFD700" />
             </View>
             <View style={styles.leaderboardInfo}>
-              <Text
-                style={[styles.leaderboardTitle, isDarkMode && styles.textDark]}
-              >
+              <Text style={[styles.leaderboardTitle, { color: colors.text }]}>
                 Leaderboard
               </Text>
-              <Text style={styles.leaderboardSubtitle}>
+              <Text
+                style={[
+                  styles.leaderboardSubtitle,
+                  { color: colors.textSecondary },
+                ]}
+              >
                 Compare your cooking stats
               </Text>
             </View>
             <Ionicons
               name="chevron-forward"
               size={20}
-              color={isDarkMode ? "#666" : "#CCC"}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         </Animated.View>
@@ -282,18 +277,28 @@ export default function ProfileScreen() {
         {/* Sync Status Widget */}
         <Animated.View entering={FadeInUp.delay(250).springify()}>
           <View
-            style={[styles.syncWidget, isDarkMode && styles.syncWidgetDark]}
+            style={[
+              styles.syncWidget,
+              {
+                backgroundColor: colors.surface,
+                shadowColor: isDark ? "#000" : "#000",
+              },
+            ]}
           >
             <View style={styles.syncInfo}>
-              <Text style={[styles.syncTitle, isDarkMode && styles.textDark]}>
+              <Text style={[styles.syncTitle, { color: colors.text }]}>
                 Sync Status
               </Text>
-              <Text style={styles.syncSubtitle}>
+              <Text
+                style={[styles.syncSubtitle, { color: colors.textSecondary }]}
+              >
                 {lastSynced
                   ? `Last synced: ${lastSynced}`
                   : "Not synced recently"}
               </Text>
-              <Text style={styles.syncSubtitle}>
+              <Text
+                style={[styles.syncSubtitle, { color: colors.textSecondary }]}
+              >
                 {pendingUploads > 0
                   ? `${pendingUploads} pending upload${pendingUploads !== 1 ? "s" : ""}`
                   : "All recipes synced"}
@@ -302,6 +307,7 @@ export default function ProfileScreen() {
             <TouchableOpacity
               style={[
                 styles.syncButton,
+                { backgroundColor: colors.primary },
                 isSyncing && styles.syncButtonDisabled,
               ]}
               onPress={handleSync}
@@ -319,29 +325,68 @@ export default function ProfileScreen() {
         {/* Stats Grid */}
         <Animated.View entering={FadeInUp.delay(300).springify()}>
           <View style={styles.statsGrid}>
-            <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-              <View style={[styles.statIcon, { backgroundColor: "#FFF3E0" }]}>
-                <Ionicons name="restaurant" size={22} color="#E65100" />
+            <View
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
+            >
+              <View
+                style={[
+                  styles.statIcon,
+                  {
+                    backgroundColor: isDark ? colors.surfaceVariant : "#FFF3E0",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="restaurant"
+                  size={22}
+                  color={isDark ? colors.primary : "#E65100"}
+                />
               </View>
-              <Text style={[styles.statValue, isDarkMode && styles.textDark]}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {userProfile.stats?.recipesCooked || 0}
               </Text>
               <Text style={styles.statLabel}>Cooked</Text>
             </View>
-            <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-              <View style={[styles.statIcon, { backgroundColor: "#E3F2FD" }]}>
-                <Ionicons name="bookmark" size={22} color="#1976D2" />
+            <View
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
+            >
+              <View
+                style={[
+                  styles.statIcon,
+                  {
+                    backgroundColor: isDark ? colors.surfaceVariant : "#E3F2FD",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="bookmark"
+                  size={22}
+                  color={isDark ? "#64B5F6" : "#1976D2"}
+                />
               </View>
-              <Text style={[styles.statValue, isDarkMode && styles.textDark]}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {userProfile.stats?.savedRecipes || 0}
               </Text>
               <Text style={styles.statLabel}>Saved</Text>
             </View>
-            <View style={[styles.statCard, isDarkMode && styles.statCardDark]}>
-              <View style={[styles.statIcon, { backgroundColor: "#F3E5F5" }]}>
-                <Ionicons name="share-social" size={22} color="#7B1FA2" />
+            <View
+              style={[styles.statCard, { backgroundColor: colors.surface }]}
+            >
+              <View
+                style={[
+                  styles.statIcon,
+                  {
+                    backgroundColor: isDark ? colors.surfaceVariant : "#F3E5F5",
+                  },
+                ]}
+              >
+                <Ionicons
+                  name="share-social"
+                  size={22}
+                  color={isDark ? "#BA68C8" : "#7B1FA2"}
+                />
               </View>
-              <Text style={[styles.statValue, isDarkMode && styles.textDark]}>
+              <Text style={[styles.statValue, { color: colors.text }]}>
                 {userProfile.stats?.sharedRecipes || 0}
               </Text>
               <Text style={styles.statLabel}>Shared</Text>
@@ -354,13 +399,13 @@ export default function ProfileScreen() {
           <Animated.View entering={FadeInUp.delay(350).springify()}>
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text
-                  style={[styles.sectionTitle, isDarkMode && styles.textDark]}
-                >
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>
                   My Recipes
                 </Text>
                 <TouchableOpacity>
-                  <Text style={styles.seeAll}>{myRecipes.length}</Text>
+                  <Text style={[styles.seeAll, { color: colors.primary }]}>
+                    {myRecipes.length}
+                  </Text>
                 </TouchableOpacity>
               </View>
               <ScrollView
@@ -373,7 +418,7 @@ export default function ProfileScreen() {
                     key={recipe.id}
                     style={[
                       styles.recipeCard,
-                      isDarkMode && styles.recipeCardDark,
+                      { backgroundColor: colors.surface },
                     ]}
                     onPress={() => router.push(`/cooking/${recipe.id}`)}
                   >
@@ -384,17 +429,25 @@ export default function ProfileScreen() {
                     />
                     <View style={styles.recipeInfo}>
                       <Text
-                        style={[
-                          styles.recipeTitle,
-                          isDarkMode && styles.textDark,
-                        ]}
+                        style={[styles.recipeTitle, { color: colors.text }]}
                         numberOfLines={1}
                       >
                         {recipe.title}
                       </Text>
                       <View style={styles.recipeMeta}>
-                        <Ionicons name="time-outline" size={12} color="#999" />
-                        <Text style={styles.recipeTime}>{recipe.time}</Text>
+                        <Ionicons
+                          name="time-outline"
+                          size={12}
+                          color={colors.textSecondary}
+                        />
+                        <Text
+                          style={[
+                            styles.recipeTime,
+                            { color: colors.textSecondary },
+                          ]}
+                        >
+                          {recipe.time}
+                        </Text>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -407,11 +460,11 @@ export default function ProfileScreen() {
         {/* Badges Section (Trophy Case) */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, isDarkMode && styles.textDark]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               {i18n.t("achievements")}
             </Text>
             <TouchableOpacity onPress={() => router.push("/achievements")}>
-              <Text style={styles.seeAll}>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>
                 {userProfile.badges.length}/{BADGES.length} &gt;
               </Text>
             </TouchableOpacity>
@@ -433,8 +486,14 @@ export default function ProfileScreen() {
                   <View
                     style={[
                       styles.badgeCard,
-                      isDarkMode && styles.badgeCardDark,
-                      !isUnlocked && styles.badgeLocked,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                      },
+                      !isUnlocked && {
+                        backgroundColor: isDark ? "#222" : "#f5f5f5",
+                        opacity: 0.5,
+                      },
                     ]}
                   >
                     <View
@@ -451,12 +510,16 @@ export default function ProfileScreen() {
                       )}
                     </View>
                     <Text
-                      style={[styles.badgeName, isDarkMode && styles.textDark]}
+                      style={[styles.badgeName, { color: colors.text }]}
                       numberOfLines={1}
                     >
                       {badge.name}
                     </Text>
-                    <Text style={styles.badgeReward}>+{badge.xpReward} XP</Text>
+                    <Text
+                      style={[styles.badgeReward, { color: colors.primary }]}
+                    >
+                      +{badge.xpReward} XP
+                    </Text>
                   </View>
                 </Animated.View>
               );
@@ -466,38 +529,66 @@ export default function ProfileScreen() {
 
         {/* Menu Actions */}
         <View style={styles.menuContainer}>
-          <Text style={styles.menuHeader}>PREFERENCES</Text>
-          <View style={[styles.menuGroup, isDarkMode && styles.menuGroupDark]}>
+          <Text style={[styles.menuHeader, { color: colors.textSecondary }]}>
+            PREFERENCES
+          </Text>
+          <View
+            style={[
+              styles.menuGroup,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             <MenuOption
               icon="person-outline"
               label={i18n.t("personalInfo")}
               onPress={() => router.push("/edit-profile")}
-              isDark={isDarkMode}
+              colors={colors}
+              isDark={isDark}
             />
-            <View style={[styles.menuItem, isDarkMode && styles.menuItemDark]}>
+            <View
+              style={[
+                styles.menuItem,
+                {
+                  backgroundColor: colors.surface,
+                  borderBottomColor: colors.border,
+                },
+              ]}
+            >
               <View
                 style={[
                   styles.menuIconBox,
-                  { backgroundColor: isDarkMode ? "#333" : "#F3E5F5" },
+                  {
+                    backgroundColor: isDark ? colors.surfaceVariant : "#F3E5F5",
+                  },
                 ]}
               >
                 <Ionicons name="moon-outline" size={20} color="#7B1FA2" />
               </View>
-              <Text style={[styles.menuText, isDarkMode && styles.textDark]}>
+              <Text style={[styles.menuText, { color: colors.text }]}>
                 {i18n.t("darkMode")}
               </Text>
               <Switch
-                value={isDarkMode}
+                value={isDark} // Use isDark from theme (synced with store)
                 onValueChange={toggleDarkMode}
-                trackColor={{ false: "#eee", true: "#E65100" }}
+                trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor="#fff"
               />
             </View>
-            <View style={[styles.menuItem, isDarkMode && styles.menuItemDark]}>
+            <View
+              style={[
+                styles.menuItem,
+                {
+                  backgroundColor: colors.surface,
+                  borderBottomColor: colors.border,
+                },
+              ]}
+            >
               <View
                 style={[
                   styles.menuIconBox,
-                  { backgroundColor: isDarkMode ? "#333" : "#FFEBEE" },
+                  {
+                    backgroundColor: isDark ? colors.surfaceVariant : "#FFEBEE",
+                  },
                 ]}
               >
                 <Ionicons
@@ -506,13 +597,13 @@ export default function ProfileScreen() {
                   color="#D32F2F"
                 />
               </View>
-              <Text style={[styles.menuText, isDarkMode && styles.textDark]}>
+              <Text style={[styles.menuText, { color: colors.text }]}>
                 {i18n.t("notifications")}
               </Text>
               <Switch
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#eee", true: "#E65100" }}
+                trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor="#fff"
               />
             </View>
@@ -520,29 +611,47 @@ export default function ProfileScreen() {
               icon="language-outline"
               label="Language"
               color="#009688"
-              bg={isDarkMode ? "#333" : "#E0F2F1"}
-              isDark={isDarkMode}
+              bg={isDark ? colors.surfaceVariant : "#E0F2F1"}
               onPress={handleLanguage}
+              colors={colors}
+              isDark={isDark}
             />
           </View>
 
-          <Text style={styles.menuHeader}>SUPPORT</Text>
-          <View style={[styles.menuGroup, isDarkMode && styles.menuGroupDark]}>
+          <Text style={[styles.menuHeader, { color: colors.textSecondary }]}>
+            SUPPORT
+          </Text>
+          <View
+            style={[
+              styles.menuGroup,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             <MenuOption
               icon="help-circle-outline"
               label={i18n.t("helpCenter")}
-              isDark={isDarkMode}
               onPress={handleHelpCenter}
+              colors={colors}
+              isDark={isDark}
             />
             <MenuOption
               icon="star-outline"
               label={i18n.t("rateUs")}
-              isDark={isDarkMode}
               onPress={handleRateUs}
+              colors={colors}
+              isDark={isDark}
             />
           </View>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <TouchableOpacity
+            style={[
+              styles.logoutButton,
+              {
+                backgroundColor: isDark ? "rgba(211, 47, 47, 0.2)" : "#FFEBEE",
+              },
+            ]}
+            onPress={handleLogout}
+          >
             <Ionicons
               name="log-out-outline"
               size={20}
@@ -563,6 +672,7 @@ function MenuOption({
   color = "#E65100",
   bg = "#FFF3E0",
   onPress,
+  colors,
   isDark,
 }: {
   icon: any;
@@ -570,24 +680,27 @@ function MenuOption({
   color?: string;
   bg?: string;
   onPress?: () => void;
-  isDark?: boolean;
+  colors: any;
+  isDark: boolean;
 }) {
   return (
     <TouchableOpacity
-      style={[styles.menuItem, isDark && styles.menuItemDark]}
+      style={[
+        styles.menuItem,
+        { backgroundColor: colors.surface, borderBottomColor: colors.border },
+      ]}
       onPress={onPress}
     >
       <View
-        style={[styles.menuIconBox, { backgroundColor: isDark ? "#333" : bg }]}
+        style={[
+          styles.menuIconBox,
+          { backgroundColor: isDark ? colors.surfaceVariant : bg },
+        ]}
       >
         <Ionicons name={icon} size={20} color={color} />
       </View>
-      <Text style={[styles.menuText, isDark && styles.textDark]}>{label}</Text>
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color={isDark ? "#666" : "#ccc"}
-      />
+      <Text style={[styles.menuText, { color: colors.text }]}>{label}</Text>
+      <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
     </TouchableOpacity>
   );
 }
@@ -671,7 +784,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#888",
   },
-});
   profileContent: {
     alignItems: "center",
   },
