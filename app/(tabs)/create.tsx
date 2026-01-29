@@ -38,6 +38,7 @@ export default function CreateScreen() {
 
   const [image, setImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Validation errors
   const [errors, setErrors] = useState<{
@@ -89,6 +90,19 @@ export default function CreateScreen() {
     return isValid;
   };
 
+  const generateRecipeFromImage = async (base64: string) => {
+    // 1. Extract ingredients
+    const extraction = await aiRecipeService.extractIngredients(base64);
+    const ingredientNames = extraction.ingredients.map((i) => i.name);
+
+    if (ingredientNames.length === 0) {
+      throw new Error("No ingredients found");
+    }
+
+    // 2. Generate recipe
+    return await aiRecipeService.generateRecipe(ingredientNames);
+  };
+
   const performScan = async (useCamera: boolean) => {
     try {
       let result;
@@ -125,9 +139,9 @@ export default function CreateScreen() {
       // Populate
       setTitle(recipe.title);
       setDescription(recipe.description);
-      setTime(recipe.time);
+      setTime(`${recipe.time_minutes} mins`);
 
-      const s = parseInt(recipe.servings) || 2;
+      const s = recipe.servings || 2;
       setServings(s.toString());
 
       // Ingredients: API {name, quantity} -> UI string

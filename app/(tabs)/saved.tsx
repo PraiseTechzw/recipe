@@ -6,6 +6,7 @@ import { Link, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   Dimensions,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,6 +32,8 @@ export default function SavedScreen() {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [sortBy, setSortBy] = useState<"newest" | "rating" | "alpha">("newest");
 
   const filteredRecipes = useMemo(() => {
     let result = recipes.filter((r) => favorites.includes(r.id));
@@ -47,8 +50,38 @@ export default function SavedScreen() {
       );
     }
 
+    // Sorting logic
+    switch (sortBy) {
+      case "rating":
+        result = result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        break;
+      case "alpha":
+        result = result.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "newest":
+      default:
+        // Assuming higher ID or inherent order is "newest" if no date field
+        // If there's a createdAt, use it. Otherwise, reverse order of addition (if array preserves it)
+        // Let's assume the array order is roughly chronological or reverse it.
+        // Actually, let's look at the Recipe type.
+        // If no date, we can't strictly sort by date, but we can just leave as is (which is usually insertion order).
+        // Let's just reverse it for "newest" if we assume append-only.
+        // Or if we have IDs that are timestamps (which we do: Date.now().toString())
+        result = result.sort((a, b) => {
+          const tA = Number(a.id) || 0;
+          const tB = Number(b.id) || 0;
+          return tB - tA;
+        });
+        break;
+    }
+
     return result;
-  }, [favorites, recipes, searchQuery, activeCategory]);
+  }, [favorites, recipes, searchQuery, activeCategory, sortBy]);
+
+  const toggleFilterModal = () => {
+    HapticService.selection();
+    setShowFilterModal(!showFilterModal);
+  };
 
   const CompactRecipeCard = ({
     recipe,
@@ -58,35 +91,45 @@ export default function SavedScreen() {
     index: number;
   }) => (
     <Link href={`/recipe/${recipe.id}`} asChild>
-      <TouchableOpacity activeOpacity={0.8} style={{ marginBottom: spacing.m }}>
+      <TouchableOpacity activeOpacity={0.9} style={{ marginBottom: spacing.m }}>
         <Animated.View entering={FadeInUp.delay(index * 100).springify()}>
           <View
             style={[
               styles.card,
-              { backgroundColor: colors.card, borderRadius: radius.m },
-              shadows.small,
+              { backgroundColor: colors.card, borderRadius: radius.l },
+              shadows.medium,
             ]}
           >
-            <Image
-              source={
-                recipe.image
-                  ? { uri: recipe.image }
-                  : require("../../assets/images/placeholder.png")
-              }
-              style={styles.cardImage}
-              contentFit="cover"
-              transition={200}
-            />
-            <View style={styles.cardOverlay}>
-              <View style={styles.cardBadge}>
-                <Ionicons name="time-outline" size={12} color="#fff" />
-                <Text style={styles.cardBadgeText}>{recipe.time}</Text>
+            <View>
+              <Image
+                source={
+                  recipe.image
+                    ? { uri: recipe.image }
+                    : require("../../assets/images/placeholder.png")
+                }
+                style={styles.cardImage}
+                contentFit="cover"
+                transition={200}
+              />
+              <View style={styles.cardOverlay}>
+                <View style={styles.cardBadge}>
+                  <Ionicons name="time-outline" size={12} color="#fff" />
+                  <Text style={styles.cardBadgeText}>{recipe.time}</Text>
+                </View>
               </View>
             </View>
 
             <View style={styles.cardContent}>
               <Text
-                style={[typography.h4, { color: colors.text }]}
+                style={[
+                  typography.h4,
+                  {
+                    color: colors.text,
+                    fontSize: 16,
+                    marginBottom: 4,
+                    height: 40,
+                  },
+                ]}
                 numberOfLines={2}
               >
                 {recipe.title}
@@ -94,14 +137,14 @@ export default function SavedScreen() {
 
               <View style={styles.cardFooter}>
                 <View style={styles.ratingContainer}>
-                  <Ionicons name="star" size={12} color="#FFD700" />
+                  <Ionicons name="star" size={14} color="#FFD700" />
                   <Text
                     style={[
                       typography.caption,
-                      { color: colors.textSecondary },
+                      { color: colors.textSecondary, marginLeft: 4 },
                     ]}
                   >
-                    {recipe.rating || 0}
+                    {recipe.rating || "New"}
                   </Text>
                 </View>
                 <Text
@@ -133,6 +176,7 @@ export default function SavedScreen() {
             styles.filterBtn,
             { backgroundColor: colors.card, borderColor: colors.border },
           ]}
+          onPress={toggleFilterModal}
         >
           <Ionicons name="options-outline" size={24} color={colors.text} />
         </TouchableOpacity>
@@ -286,6 +330,88 @@ export default function SavedScreen() {
           </View>
         </ScrollView>
       )}
+      {/* Sort Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent
+        animationType="fade"
+        onRequestClose={toggleFilterModal}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={toggleFilterModal}
+        >
+          <Animated.View
+            entering={FadeInUp.springify()}
+            style={[styles.modalContent, { backgroundColor: colors.card }]}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={[typography.h3, { color: colors.text }]}>
+                Sort Recipes
+              </Text>
+              <TouchableOpacity onPress={toggleFilterModal}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalOptions}>
+              {[
+                { id: "newest", label: "Newest Added", icon: "time" },
+                { id: "rating", label: "Highest Rated", icon: "star" },
+                { id: "alpha", label: "Alphabetical (A-Z)", icon: "text" },
+              ].map((option) => (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.modalOption,
+                    sortBy === option.id && {
+                      backgroundColor: colors.primary + "15",
+                    },
+                  ]}
+                  onPress={() => {
+                    HapticService.selection();
+                    setSortBy(option.id as any);
+                    toggleFilterModal();
+                  }}
+                >
+                  <View style={styles.modalOptionLeft}>
+                    <Ionicons
+                      name={option.icon as any}
+                      size={20}
+                      color={
+                        sortBy === option.id
+                          ? colors.primary
+                          : colors.textSecondary
+                      }
+                    />
+                    <Text
+                      style={[
+                        typography.body,
+                        {
+                          color:
+                            sortBy === option.id ? colors.primary : colors.text,
+                          marginLeft: 12,
+                          fontWeight: sortBy === option.id ? "600" : "400",
+                        },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </View>
+                  {sortBy === option.id && (
+                    <Ionicons
+                      name="checkmark"
+                      size={20}
+                      color={colors.primary}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
@@ -293,6 +419,43 @@ export default function SavedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalOptions: {
+    gap: 12,
+  },
+  modalOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: "transparent",
+  },
+  modalOptionLeft: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   center: {
     flex: 1,
