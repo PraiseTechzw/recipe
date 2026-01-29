@@ -2,23 +2,23 @@ import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { CameraType, CameraView, FlashMode } from "expo-camera";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, {
-    FadeIn,
-    FadeInDown,
-    FadeInUp,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppPermissions } from "../../hooks/useCameraPermissions";
@@ -32,29 +32,18 @@ export default function CaptureScreen() {
   const router = useRouter();
   const isFocused = useIsFocused();
   const cameraRef = useRef<CameraView>(null);
-  const { verifyCameraPermission, verifyMediaLibraryPermission } =
+  const { cameraStatus, verifyCameraPermission, verifyMediaLibraryPermission } =
     useAppPermissions();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
   const [flash, setFlash] = useState<FlashMode>("off");
-  const [hasPermission, setHasPermission] = useState<boolean>(false);
 
   // Animations
   const shutterScale = useSharedValue(1);
   const shutterStyle = useAnimatedStyle(() => ({
     transform: [{ scale: shutterScale.value }],
   }));
-
-  useEffect(() => {
-    // Check permission on mount
-    checkPermissions();
-  }, [checkPermissions]);
-
-  const checkPermissions = useCallback(async () => {
-    const granted = await verifyCameraPermission();
-    setHasPermission(granted);
-  }, [verifyCameraPermission]);
 
   const handleGalleryPick = async () => {
     const isOnline = await SyncService.checkConnectivity();
@@ -139,23 +128,24 @@ export default function CaptureScreen() {
     HapticService.selection();
   };
 
-  if (!hasPermission) {
+  if (!cameraStatus) {
     return (
       <View style={[styles.container, styles.permissionContainer]}>
-        <Ionicons name="camera-off-outline" size={64} color="#666" />
+        <ActivityIndicator size="large" color="#E65100" />
+      </View>
+    );
+  }
+
+  if (!cameraStatus.granted) {
+    return (
+      <View style={[styles.container, styles.permissionContainer]}>
+        <Ionicons name="camera-outline" size={64} color="#666" />
         <Text style={styles.permissionText}>Camera permission is required</Text>
         <TouchableOpacity
           style={styles.permissionButton}
-          onPress={async () => {
-            const granted = await verifyCameraPermission();
-            if (!granted) {
-              Linking.openSettings();
-            } else {
-              checkPermissions();
-            }
-          }}
+          onPress={() => verifyCameraPermission(true)}
         >
-          <Text style={styles.permissionButtonText}>Open Settings</Text>
+          <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.closeButtonAbsolute}

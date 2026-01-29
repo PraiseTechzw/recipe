@@ -2,7 +2,7 @@
   "expo": {
     "name": "Zimbabwe Traditional Recipes",
     "slug": "tasteofzimbabwe",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tasteofzimbabwe",
@@ -55,7 +55,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "402af6cd-7c51-4df1-a17c-04875cb1ea37"
+        "projectId": "40448dcc-aaef-488c-bc1c-57ba239df57a"
       }
     }
   }

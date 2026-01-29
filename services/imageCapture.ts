@@ -1,5 +1,5 @@
-import * as ImagePicker from 'expo-image-picker';
-import { prepareImageForAI, ProcessedImage } from '../utils/imagePrep';
+import * as ImagePicker from "expo-image-picker";
+import { prepareImageForAI, ProcessedImage } from "../utils/imagePrep";
 
 /**
  * Service to handle image picking and normalization.
@@ -18,7 +18,7 @@ export const ImageCaptureService = {
         base64: false, // We read it later
       });
 
-      if (result.canceled || !result.assets[0]) {
+      if (result.canceled || !result.assets?.[0]) {
         return null;
       }
 
@@ -41,5 +41,5 @@ export const ImageCaptureService = {
       console.error("Camera process error:", error);
       throw error;
     }
-  }
+  },
 };

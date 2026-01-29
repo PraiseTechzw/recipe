@@ -110,10 +110,14 @@ export default function CreateScreen() {
         result = await ImagePicker.launchImageLibraryAsync(options);
       }
 
-      if (result.canceled || !result.assets[0].base64) return;
+      if (result.canceled || !result.assets?.[0]?.base64) return;
 
       setIsGenerating(true);
-      const asset = result.assets[0];
+      const asset = result.assets?.[0];
+      if (!asset?.base64) {
+        setIsGenerating(false);
+        return;
+      }
 
       // Call AI
       const recipe = await generateRecipeFromImage(asset.base64);

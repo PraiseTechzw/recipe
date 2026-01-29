@@ -1,6 +1,5 @@
 import { SortModal } from "@/components/features/SortModal";
 import { EmptyState } from "@/components/feedback/EmptyState";
-import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { Chip } from "@/components/ui/Chip";
 import { SearchInput } from "@/components/ui/SearchInput";
@@ -10,7 +9,7 @@ import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -49,10 +48,7 @@ export default function ExploreScreen() {
   >("newest");
 
   // Data State
-  const [isLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const { setLocale, recipes, categories } = useStore();
+  const { setLocale, recipes, categories, locale } = useStore();
 
   const router = useRouter();
 
@@ -191,7 +187,7 @@ export default function ExploreScreen() {
   );
 
   const renderContent = () => {
-    if (isLoading || isSearching) {
+    if (isSearching) {
       return (
         <View style={{ padding: 16, gap: 16 }}>
           <Skeleton height={200} borderRadius={16} />
@@ -199,10 +195,6 @@ export default function ExploreScreen() {
           <Skeleton height={120} borderRadius={16} />
         </View>
       );
-    }
-
-    if (error) {
-      return <ErrorState message={error} onRetry={() => setError(null)} />;
     }
 
     if (debouncedQuery.length > 0 || activeCategory !== "All") {

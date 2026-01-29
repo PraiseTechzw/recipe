@@ -1,5 +1,6 @@
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import * as ImageManipulator from "expo-image-manipulator";
+import { Image } from "react-native";
 
 export interface ProcessedImage {
   uri: string;
@@ -34,8 +35,6 @@ async function processImage(
     width: number;
     height: number;
   }>((resolve, reject) => {
-    // dynamic import to avoid issues if used in non-RN env (though this is RN project)
-    const { Image } = require("react-native");
     Image.getSize(
       uri,
       (w: number, h: number) => resolve({ width: w, height: h }),
@@ -43,26 +42,22 @@ async function processImage(
     );
   });
 
-  let resizeAction = {};
+  const actions: ImageManipulator.Action[] = [];
+
   if (width > maxDimension || height > maxDimension) {
     if (width > height) {
-      resizeAction = { resize: { width: maxDimension } };
+      actions.push({ resize: { width: maxDimension } });
     } else {
-      resizeAction = { resize: { height: maxDimension } };
+      actions.push({ resize: { height: maxDimension } });
     }
-  } else {
-    // No resize needed if smaller than maxDimension
-    // But we still want to compress.
-    // We pass empty actions array or just skip resize.
   }
-
-  const actions = Object.keys(resizeAction).length > 0 ? [resizeAction] : [];
 
   const result = await ImageManipulator.manipulateAsync(
     uri,
     actions,
     {
       compress: quality,
+
       format: ImageManipulator.SaveFormat.JPEG,
       base64: false,
     }, // We read base64 separately as requested
@@ -70,7 +65,7 @@ async function processImage(
 
   // 2. Read Base64 using Expo FileSystem
   const base64 = await FileSystem.readAsStringAsync(result.uri, {
-    encoding: FileSystem.EncodingType.Base64,
+    encoding: "base64",
   });
 
   return {

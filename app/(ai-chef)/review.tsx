@@ -30,6 +30,7 @@ import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
+import { useStore } from "@/store/useStore";
 const LOADING_STEPS = [
   "Analyzing image...",
   "Detecting ingredients...",
