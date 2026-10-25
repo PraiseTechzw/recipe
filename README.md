@@ -144,6 +144,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **GitHub**: [@PraiseTechzw](https://github.com/PraiseTechzw)
 - **Role**: Lead Developer & Creator
 
+## Avatar Artwork
+
+The chef cartoon avatars use the Adventurer style by Lisa Wischofsky, served through [DiceBear](https://www.dicebear.com/styles/adventurer/). The style is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 ---
 
 _Built with ❤️ for Zimbabwe_

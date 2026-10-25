@@ -1,5 +1,6 @@
 import { LeaderboardEntry } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
+import { getChefAvatarUri } from "@/utils/chefIdentity";
 import React from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import { LevelPill } from "../ui/LevelPill";
@@ -47,7 +48,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
       {/* Avatar */}
       <Image
         source={{
-          uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${item.chefs?.avatar_seed || item.chef_id}`,
+          uri: getChefAvatarUri(item.chefs?.avatar_seed || item.chef_id),
         }}
         style={styles.avatar}
       />

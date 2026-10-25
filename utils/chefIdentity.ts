@@ -23,6 +23,24 @@ const AVATAR_COLORS = [
   '#607D8B', // Blue Grey
 ];
 
+const AVATAR_BACKGROUNDS = [
+  'ffe1c2', 'ffd8d2', 'f6d9e8', 'e8ddff', 'd8e7ff', 'd4f0e3', 'fff0b8', 'd7f0f2',
+];
+
+function hashSeed(seed: string): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
+
+/** Returns the same friendly cartoon avatar and pastel background for a seed. */
+export function getChefAvatarUri(seed: string, backgroundColor?: string): string {
+  const background = backgroundColor || AVATAR_BACKGROUNDS[hashSeed(seed) % AVATAR_BACKGROUNDS.length];
+  return `https://api.dicebear.com/7.x/adventurer/png?seed=${encodeURIComponent(seed)}&backgroundColor=${background}`;
+}
+
 /**
  * Generates a deterministic avatar seed (color + initials logic)
  * The seed is just a string that we can parse later, or use as a key.
@@ -38,11 +56,7 @@ export function generateAvatarSeed(): string {
  * Derives a background color from a string seed/ID deterministically.
  */
 export function getAvatarColor(seed: string): string {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % AVATAR_COLORS.length;
+  const index = hashSeed(seed) % AVATAR_COLORS.length;
   return AVATAR_COLORS[index];
 }
 

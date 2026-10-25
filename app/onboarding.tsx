@@ -14,6 +14,21 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
 import { useStore } from "../store/useStore";
+import { getChefAvatarUri } from "../utils/chefIdentity";
+
+const CHEF_AVATARS = [
+  { seed: "Tariro", background: "ffe1c2" },
+  { seed: "Kudzai", background: "ffd8d2" },
+  { seed: "Nyasha", background: "f6d9e8" },
+  { seed: "Tendai", background: "e8ddff" },
+  { seed: "Rudo", background: "d8e7ff" },
+  { seed: "Farai", background: "d4f0e3" },
+  { seed: "Tawanda", background: "fff0b8" },
+  { seed: "Rutendo", background: "d7f0f2" },
+].map(({ seed, background }) => ({
+  seed,
+  uri: getChefAvatarUri(seed, background),
+}));
 
 export default function UserInfoScreen() {
   const router = useRouter();
@@ -24,7 +39,7 @@ export default function UserInfoScreen() {
     "Beginner",
   );
   const [diet, setDiet] = useState<string[]>([]);
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<string | null>(CHEF_AVATARS[0].uri);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -55,7 +70,7 @@ export default function UserInfoScreen() {
 
     setUserProfile({
       name: name.trim(),
-      chefLevel: "Beginner", // Start everyone as Beginner
+      chefLevel: level,
       dietaryPreferences: diet,
       avatar: avatar || undefined,
     });
@@ -104,7 +119,12 @@ export default function UserInfoScreen() {
 
         {/* Chef Avatar */}
         <View style={styles.centerSection}>
-          <TouchableOpacity onPress={pickImage} style={styles.avatarContainer}>
+          <TouchableOpacity
+            onPress={pickImage}
+            style={styles.avatarContainer}
+            accessibilityRole="button"
+            accessibilityLabel="Choose a profile photo"
+          >
             {avatar ? (
               <Image source={{ uri: avatar }} style={styles.avatar} />
             ) : (
@@ -116,7 +136,38 @@ export default function UserInfoScreen() {
               <Ionicons name="camera" size={18} color="#fff" />
             </View>
           </TouchableOpacity>
-          <Text style={styles.uploadText}>{i18n.t("uploadPhoto")}</Text>
+          <Text style={styles.uploadText}>Tap to use your own photo</Text>
+          <Text style={[styles.label, styles.avatarChoiceLabel]}>
+            Or choose a chef cartoon
+          </Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.avatarChoices}
+          >
+            {CHEF_AVATARS.map((choice) => {
+              const selected = avatar === choice.uri;
+              return (
+                <TouchableOpacity
+                  key={choice.seed}
+                  onPress={() => setAvatar(choice.uri)}
+                  style={[
+                    styles.avatarChoice,
+                    selected && styles.avatarChoiceSelected,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${choice.seed} chef avatar${selected ? ", selected" : ""}`}
+                  accessibilityState={{ selected }}
+                >
+                  <Image
+                    source={{ uri: choice.uri }}
+                    style={styles.avatarChoiceImage}
+                    contentFit="cover"
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* Name Input */}
@@ -330,6 +381,33 @@ const styles = StyleSheet.create({
     color: "#E65100",
     fontWeight: "600",
     fontSize: 16,
+  },
+  avatarChoiceLabel: {
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  avatarChoices: {
+    gap: 12,
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+  },
+  avatarChoice: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    padding: 3,
+    backgroundColor: "#F5F5F5",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  avatarChoiceSelected: {
+    borderColor: "#E65100",
+    backgroundColor: "#FFF3E0",
+  },
+  avatarChoiceImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 28,
   },
   button: {
     backgroundColor: "#E65100",

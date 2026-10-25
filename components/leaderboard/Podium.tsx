@@ -1,6 +1,7 @@
 import { LeaderboardEntry } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
+import { getChefAvatarUri } from "@/utils/chefIdentity";
 import React from "react";
 import { Image, StyleSheet, Text, View, ViewStyle } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
@@ -65,7 +66,7 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
           >
             <Image
               source={{
-                uri: `https://api.dicebear.com/7.x/avataaars/png?seed=${entry.chefs?.avatar_seed || entry.chef_id}`,
+                uri: getChefAvatarUri(entry.chefs?.avatar_seed || entry.chef_id),
               }}
               style={{
                 width: avatarSize,
