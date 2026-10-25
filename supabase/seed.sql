@@ -1,15 +1,18 @@
--- 1. Insert Praisetech Profile
+-- 1. Seed Praise Masunga's public chef profile before recipes reference it.
 INSERT INTO public.profiles (id, name, avatar_url, bio, chef_level, xp, badges)
 VALUES (
     'praisetech-official',
-    'Praisetech',
-    'https://github.com/shadcn.png',
-    'Official account for Top Zimbabwean Recipes.',
+    'Praise Masunga',
+    'https://github.com/PraiseTechzw.png',
+    'Official account for Taste of Zimbabwe recipes.',
     'Master Chef',
     99999,
     '["Verified", "Admin"]'::jsonb
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  name = excluded.name,
+  avatar_url = excluded.avatar_url,
+  bio = excluded.bio;
 
 -- 2. Insert Top Recipes (Examples)
 -- Note: The app's SeedService automatically syncs all recipes from data/recipes.ts to Supabase on startup.

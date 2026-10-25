@@ -7,36 +7,21 @@ export const SeedService = {
   async seedInitialData() {
     console.log('🌱 Starting seed process...');
 
-    // 1. Ensure Praisetech Profile Exists
+    // 1. Ensure Praise Masunga's official public chef profile exists
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', PRAISETECH_ID)
-        .single();
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: PRAISETECH_ID,
+        name: 'Praise Masunga',
+        avatar_url: 'https://github.com/PraiseTechzw.png',
+        bio: 'Official account for Taste of Zimbabwe recipes.',
+        chef_level: 'Master Chef',
+        xp: 99999,
+        badges: ['Verified', 'Admin'],
+      }, { onConflict: 'id' });
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error checking profile:', profileError);
-      }
-
-      if (!profile) {
-        console.log('Creating Praisetech profile...');
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: PRAISETECH_ID,
-            name: 'Praisetechzw',
-            avatar_url: 'https://github.com/shadcn.png', // Placeholder or use a real logo
-            bio: 'Official account for Top Zimbabwean Recipes.',
-            chef_level: 'Master Chef',
-            xp: 99999,
-            badges: ['Verified', 'Admin'],
-          });
-        
-        if (insertError) console.error('Failed to create profile:', insertError);
-      }
+      if (profileError) console.error('Failed to sync official profile:', profileError);
     } catch (e) {
-      console.error('Profile seed failed:', e);
+      console.error('Official profile sync failed:', e);
     }
 
     // 2. Sync Top Recipes

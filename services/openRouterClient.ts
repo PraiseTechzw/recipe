@@ -38,7 +38,7 @@ export class OpenRouterClient {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           "Content-Type": "application/json",
-          "X-OpenRouter-Title": "Taste of Zimbabwe",
+          "X-Title": "Taste of Zimbabwe",
         },
         body: JSON.stringify({
           model: MODEL,

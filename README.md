@@ -94,7 +94,20 @@ Follow these steps to get the project running on your local machine.
     EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
     ```
 
-4.  **Run the App**
+4.  **Set up Supabase locally (optional)**
+
+    Install and run the [Supabase CLI](https://supabase.com/docs/guides/cli) with Docker, then apply the ordered migrations and seed data:
+
+    ```bash
+    supabase start
+    supabase db reset
+    ```
+
+    The schema is in `supabase/migrations/` with timestamped migrations; `supabase/seed.sql` adds the sample profile and recipes. For a linked hosted project, inspect the pending changes with `supabase db push --dry-run` before applying them with `supabase db push`.
+
+    The current app uses anonymous client IDs rather than Supabase Auth, so the policies preserve public recipe/profile writes and leaderboard updates. Treat that data as public and untrusted; add authenticated ownership policies before storing private user data.
+
+5.  **Run the App**
     ```bash
     npx expo start
     ```

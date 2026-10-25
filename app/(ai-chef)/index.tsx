@@ -141,7 +141,7 @@ export default function CaptureScreen() {
   if (!hasPermission) {
     return (
       <View style={[styles.container, styles.permissionContainer]}>
-        <Ionicons name="camera-off-outline" size={64} color="#666" />
+        <Ionicons name="camera-outline" size={64} color="#666" />
         <Text style={styles.permissionText}>Camera permission is required</Text>
         <TouchableOpacity
           style={styles.permissionButton}

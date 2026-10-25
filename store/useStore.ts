@@ -238,11 +238,11 @@ export const useStore = create<AppState>()(
                     )
                 `);
           // We can filter by author_id if we only want official ones,
-          // or fetch all public recipes. User asked for "Top Zimbabwean Recipes by Praisetech"
+          // or fetch all public recipes. User asked for "Top Zimbabwean Recipes by Praise Masunga"
           // but "also sync them with cloud".
           // Let's fetch all recipes that are NOT current user's (since those are in myRecipes)
           // Actually, let's just fetch everything for now and maybe filter in UI.
-          // But for "Top Recipes", let's assume they are the ones from Praisetech.
+          // But for "Top Recipes", let's assume they are the ones from Praise Masunga.
           // .eq('author_id', 'praisetech-official');
 
           if (error) {

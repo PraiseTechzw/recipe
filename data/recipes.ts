@@ -25,7 +25,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.9,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png', // Placeholder or use a real logo
     },
     ingredients: [
@@ -77,7 +77,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.8,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png', // Placeholder or use a real logo
     },
     ingredients: [
@@ -125,7 +125,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.5,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png', // Placeholder or use a real logo
     },
     ingredients: [
@@ -162,7 +162,7 @@ export const RECIPES: Recipe[] = [
     calories: '220 Kcal',
     isTraditional: true,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png', // Placeholder or use a real logo
     },
     ingredients: [
@@ -198,7 +198,7 @@ export const RECIPES: Recipe[] = [
     calories: '420 Kcal',
     isTraditional: true,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png', // Placeholder or use a real logo
     },
     ingredients: [
@@ -236,7 +236,7 @@ export const RECIPES: Recipe[] = [
     calories: '160 Kcal',
     isTraditional: true,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png', // Placeholder or use a real logo
     },
     ingredients: [
@@ -274,7 +274,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.2,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png',
     },
     ingredients: [
@@ -311,7 +311,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.6,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png',
     },
     ingredients: [
@@ -350,7 +350,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.7,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png',
     },
     ingredients: [
@@ -390,7 +390,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.3,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png',
     },
     ingredients: [
@@ -430,7 +430,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.8,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png',
     },
     ingredients: [
@@ -469,7 +469,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.6,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png',
     },
     ingredients: [
@@ -507,7 +507,7 @@ export const RECIPES: Recipe[] = [
     isTraditional: true,
     rating: 4.4,
     author: {
-      name: 'Praisetechzw',
+      name: 'Praise Masunga',
       avatar: 'https://github.com/shadcn.png',
     },
     ingredients: [

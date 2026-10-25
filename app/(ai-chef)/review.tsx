@@ -104,7 +104,7 @@ export default function ReviewScreen() {
 
   // Loading Steps Logic
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isLoading) {
       setLoadingStepIndex(0);
       interval = setInterval(() => {
@@ -230,7 +230,7 @@ export default function ReviewScreen() {
                 >
                   <Chip
                     label={ing}
-                    active={true}
+                    selected={true}
                     onPress={() => handleRemoveIngredient(ing)}
                     style={styles.chip}
                   />
@@ -288,7 +288,7 @@ export default function ReviewScreen() {
                       <Chip
                         key={item}
                         label={item}
-                        active={false}
+                        selected={false}
                         onPress={() => {
                           addIngredient(item);
                           HapticService.selection();
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.2)",
   },
   imageLabel: {

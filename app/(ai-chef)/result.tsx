@@ -151,8 +151,11 @@ export default function ResultScreen() {
     };
 
     router.push({
-      pathname: "/cooking/ai-temp",
-      params: { recipeParams: JSON.stringify(cookingRecipe) },
+      pathname: "/cooking/[id]",
+      params: {
+        id: "ai-temp",
+        recipeParams: JSON.stringify(cookingRecipe),
+      },
     });
   };
 
@@ -672,7 +675,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   successOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: "rgba(0,0,0,0.7)",
     justifyContent: "center",
     alignItems: "center",
