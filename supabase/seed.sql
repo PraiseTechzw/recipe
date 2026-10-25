@@ -1,7 +1,7 @@
 -- 1. Seed Praise Masunga's public chef profile before recipes reference it.
 INSERT INTO public.profiles (id, name, avatar_url, bio, chef_level, xp, badges)
 VALUES (
-    'praisetech-official',
+    'praisetechzw',
     'Praise Masunga',
     'https://github.com/PraiseTechzw.png',
     'Official account for Taste of Zimbabwe recipes.',
@@ -21,7 +21,7 @@ ON CONFLICT (id) DO UPDATE SET
 -- Recipe 1: Sadza & Beef Stew
 INSERT INTO public.recipes (author_id, original_id, title, description, image_url, category, tags, time, servings, calories, ingredients, steps, is_traditional, rating)
 VALUES (
-    'praisetech-official',
+    'praisetechzw',
     '1',
     'Sadza & Beef Stew',
     'A staple dish of thick cornmeal porridge served with tender beef stew and greens.',
@@ -50,7 +50,7 @@ VALUES (
 -- Recipe 2: Dovi
 INSERT INTO public.recipes (author_id, original_id, title, description, image_url, category, tags, time, servings, calories, ingredients, steps, is_traditional, rating)
 VALUES (
-    'praisetech-official',
+    'praisetechzw',
     '2',
     'Dovi (Peanut Butter Stew)',
     'A rich and creamy peanut butter stew usually made with chicken or beef.',
@@ -77,7 +77,7 @@ VALUES (
 -- Recipe 3: Mopane Worms
 INSERT INTO public.recipes (author_id, original_id, title, description, image_url, category, tags, time, servings, calories, ingredients, steps, is_traditional, rating)
 VALUES (
-    'praisetech-official',
+    'praisetechzw',
     '3',
     'Mopane Worms',
     'A high-protein traditional delicacy, crunchy and savory.',
@@ -96,7 +96,7 @@ VALUES (
 -- Recipe 4: Nhopi
 INSERT INTO public.recipes (author_id, original_id, title, description, image_url, category, tags, time, servings, calories, ingredients, steps, is_traditional, rating)
 VALUES (
-    'praisetech-official',
+    'praisetechzw',
     '4',
     'Nhopi (Pumpkin Mash)',
     'Sweet pumpkin mash blended with peanut butter.',
@@ -115,7 +115,7 @@ VALUES (
 -- Recipe 5: Mutakura
 INSERT INTO public.recipes (author_id, original_id, title, description, image_url, category, tags, time, servings, calories, ingredients, steps, is_traditional, rating)
 VALUES (
-    'praisetech-official',
+    'praisetechzw',
     '5',
     'Mutakura',
     'A mixture of maize and peanuts/beans boiled together.',
@@ -134,7 +134,7 @@ VALUES (
 -- Recipe 6: Maheu
 INSERT INTO public.recipes (author_id, original_id, title, description, image_url, category, tags, time, servings, calories, ingredients, steps, is_traditional, rating)
 VALUES (
-    'praisetech-official',
+    'praisetechzw',
     '6',
     'Maheu (Sorghum Drink)',
     'A traditional non-alcoholic fermented drink made from maize or sorghum meal.',

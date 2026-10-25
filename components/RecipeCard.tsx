@@ -15,11 +15,11 @@ export default function RecipeCard({ recipe }: RecipeCardProps) {
   return (
     <Link href={`/recipe/${recipe.id}`} asChild>
       <TouchableOpacity 
-        style={[
+        style={StyleSheet.flatten([
           styles.card, 
-          { backgroundColor: colors.card, borderRadius: radius.m },
+          { backgroundColor: colors.surface, borderRadius: radius.m },
           shadows.small
-        ]}
+        ])}
         activeOpacity={0.8}
       >
         <Image 

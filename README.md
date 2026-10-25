@@ -105,7 +105,7 @@ Follow these steps to get the project running on your local machine.
 
     The schema is in `supabase/migrations/` with timestamped migrations; `supabase/seed.sql` adds the sample profile and recipes. For a linked hosted project, inspect the pending changes with `supabase db push --dry-run` before applying them with `supabase db push`.
 
-    The seed creates the public chef profile for Praise Masunga (`praisetech-official`) first, then links the initial recipes to that ID. To also create and link his Supabase Auth account, put `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a private `PRAISE_MASUNGA_PASSWORD` in an ignored `.env.local` file, then run:
+    The seed creates the public chef profile for Praise Masunga (`praisetechzw`) first, then links the initial recipes to that ID. To also create and link his Supabase Auth account, put `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a private `PRAISE_MASUNGA_PASSWORD` in an ignored `.env.local` file, then run:
 
     ```bash
     npm run seed:official-account

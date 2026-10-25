@@ -72,7 +72,7 @@ export const NotificationService = {
   },
 
   async scheduleDailyReminder() {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === 'android' && !isRunningInExpoGo()) {
       await setNotificationChannelAsync('default', {
         name: 'default',
         importance: 5,

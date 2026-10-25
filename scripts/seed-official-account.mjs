@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const email = "praisetechzw@gmail.com";
-const profileId = "praisetech-official";
+const profileId = "praisetechzw";
 const name = "Praise Masunga";
 
 const supabaseUrl = process.env.SUPABASE_URL;

@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { RECIPES } from '../data/recipes';
 
-const PRAISETECH_ID = 'praisetech-official';
+const PRAISETECH_ID = 'praisetechzw';
 
 export const SeedService = {
   async seedInitialData() {

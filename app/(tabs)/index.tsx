@@ -251,16 +251,16 @@ export default function HomeScreen() {
                 asChild
               >
                 <TouchableOpacity
-                  style={[
+                  style={StyleSheet.flatten([
                     styles.searchBar,
                     {
                       backgroundColor: colors.surfaceVariant,
-                        borderColor: colors.border,
+                      borderColor: colors.border,
                       flex: 1,
                       flexDirection: "row",
                       alignItems: "center",
                     },
-                  ]}
+                  ])}
                 >
                   <Ionicons
                     name="search"

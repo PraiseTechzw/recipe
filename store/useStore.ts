@@ -243,7 +243,7 @@ export const useStore = create<AppState>()(
           // Let's fetch all recipes that are NOT current user's (since those are in myRecipes)
           // Actually, let's just fetch everything for now and maybe filter in UI.
           // But for "Top Recipes", let's assume they are the ones from Praise Masunga.
-          // .eq('author_id', 'praisetech-official');
+          // .eq('author_id', 'praisetechzw');
 
           if (error) {
             console.log("Supabase fetch error:", error.message);
