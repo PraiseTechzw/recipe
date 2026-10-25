@@ -35,7 +35,6 @@ export default function RootLayout() {
       try {
         await SeedService.seedInitialData();
         await fetchRecipes();
-        await SyncService.syncRecipes();
       } catch (e) {
         console.log("Initialization failed", e);
       }
@@ -62,7 +61,10 @@ export default function RootLayout() {
   }, [fetchRecipes, setUserProfile]);
 
   useEffect(() => {
-    if (!isOffline) void SyncService.initializeAppStateSync();
+    if (!isOffline) {
+      void SyncService.initializeAppStateSync();
+      void SyncService.syncRecipes();
+    }
   }, [isOffline]);
 
   if (locale) {

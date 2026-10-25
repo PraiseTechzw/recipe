@@ -211,8 +211,11 @@ export const SyncService = {
   },
 
   async initializeAppStateSync() {
-    if (stateSyncStarted) return;
     if (!isSupabaseConfigured) return;
+    if (stateSyncStarted) {
+      await writeAppState();
+      return;
+    }
     if (!(await this.checkConnectivity())) return;
 
     try {

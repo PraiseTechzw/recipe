@@ -6,6 +6,8 @@ create table if not exists public.chef_app_state (
 );
 
 alter table public.chef_app_state enable row level security;
+revoke all on table public.chef_app_state from anon, public;
+grant select, insert, update, delete on table public.chef_app_state to authenticated;
 
 drop policy if exists "Users can read their own app state" on public.chef_app_state;
 create policy "Users can read their own app state"

@@ -179,6 +179,7 @@ interface AppState {
   setLeaderboardLoading: (loading: boolean) => void;
   setLeaderboardError: (error: string | null) => void;
   setLeaderboardLive: (live: boolean) => void;
+  setLeaderboardLastUpdated: (time: number) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -541,6 +542,7 @@ export const useStore = create<AppState>()(
       userRank: null,
       isLeaderboardLoading: false,
       leaderboardError: null,
+      isLeaderboardLive: false,
       leaderboardLastUpdated: 0,
       setTopWeekly: (entries: LeaderboardEntry[]) =>
         set({ topWeekly: entries }),
