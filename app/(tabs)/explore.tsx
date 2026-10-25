@@ -10,7 +10,7 @@ import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { Link, useLocalSearchParams } from "expo-router";
+import { Link, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   Dimensions,
@@ -34,7 +34,7 @@ export default function ExploreScreen() {
     autoFocus: string;
     openScan: string;
   }>();
-  const searchInputRef = useRef<TextInput>(null);
+  const searchInputRef = useRef<any>(null);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
@@ -52,7 +52,7 @@ export default function ExploreScreen() {
   const [isLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { setLocale, recipes, categories } = useStore();
+  const { setLocale, locale, recipes, categories, favorites, toggleFavorite } = useStore();
 
   const router = useRouter();
 
@@ -94,7 +94,7 @@ export default function ExploreScreen() {
     }
   });
 
-  const trendingRecipe = recipes.find((r) => r.rating >= 4.9) || recipes[0];
+  const trendingRecipe = recipes.find((r) => (r.rating ?? 0) >= 4.9) || recipes[0];
   const otherTrending =
     recipes.find((r) => r.id !== trendingRecipe?.id) || recipes[1];
 
@@ -122,7 +122,12 @@ export default function ExploreScreen() {
             <Animated.View
               entering={FadeInDown.delay(delayBase + index * 100).springify()}
             >
-              <View style={styles.listCard}>
+              <View
+                style={[
+                  styles.listCard,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+              >
                 <Image
                   source={{ uri: recipe.image }}
                   style={styles.listImage}
@@ -131,15 +136,28 @@ export default function ExploreScreen() {
                 />
                 <View style={styles.listContent}>
                   <View style={styles.listHeader}>
-                    <Text style={styles.listTitle} numberOfLines={1}>
+                      <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1}>
                       {recipe.title}
                     </Text>
-                    <TouchableOpacity style={styles.favoriteButtonSmall}>
-                      <Ionicons name="heart-outline" size={16} color="#666" />
+                    <TouchableOpacity
+                      style={styles.favoriteButtonSmall}
+                      accessibilityRole="button"
+                      accessibilityLabel={favorites.includes(recipe.id) ? "Remove from saved recipes" : "Save recipe"}
+                      onPress={(event) => {
+                        event.stopPropagation();
+                        HapticService.selection();
+                        toggleFavorite(recipe.id);
+                      }}
+                    >
+                      <Ionicons
+                        name={favorites.includes(recipe.id) ? "heart" : "heart-outline"}
+                        size={18}
+                        color={favorites.includes(recipe.id) ? colors.error : colors.textSecondary}
+                      />
                     </TouchableOpacity>
                   </View>
 
-                  <Text style={styles.listDescription} numberOfLines={2}>
+                  <Text style={[styles.listDescription, { color: colors.textSecondary }]} numberOfLines={2}>
                     {recipe.description}
                   </Text>
 
@@ -147,11 +165,11 @@ export default function ExploreScreen() {
                     <View style={styles.metaRow}>
                       <View style={styles.metaItem}>
                         <Ionicons name="time-outline" size={14} color="#888" />
-                        <Text style={styles.metaText}>{recipe.time}</Text>
+                        <Text style={[styles.metaText, { color: colors.textSecondary }]}>{recipe.time}</Text>
                       </View>
                       <View style={[styles.metaItem, { marginLeft: 12 }]}>
                         <Ionicons name="flame-outline" size={14} color="#888" />
-                        <Text style={styles.metaText}>{recipe.calories}</Text>
+                        <Text style={[styles.metaText, { color: colors.textSecondary }]}>{recipe.calories}</Text>
                       </View>
                     </View>
 
@@ -393,13 +411,12 @@ export default function ExploreScreen() {
         </Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <TouchableOpacity
-            onPress={handleScanIngredients}
-            style={styles.iconButton}
+            onPress={toggleLanguage}
+            style={[styles.langButton, { backgroundColor: colors.surfaceVariant }]}
+            accessibilityRole="button"
+            accessibilityLabel={`Change language, current language ${locale.toUpperCase()}`}
           >
-            <Ionicons name="scan" size={24} color="#E65100" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={toggleLanguage} style={styles.langButton}>
-            <Text style={styles.langText}>{locale.toUpperCase()}</Text>
+            <Text style={[styles.langText, { color: colors.primary }]}>{locale.toUpperCase()}</Text>
           </TouchableOpacity>
         </View>
       </View>

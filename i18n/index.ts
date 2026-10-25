@@ -101,7 +101,7 @@ const i18n = new I18n({
     cameraPermission: "Camera permission is required to scan ingredients.",
     recipeSaved: "Recipe saved to your collection!",
     analyzing: "Analyzing ingredients & creating recipe...",
-    poweredBy: "Powered by Gemini AI",
+    poweredBy: "Powered by OpenRouter AI",
     saveRecipe: "Save Recipe",
     recipeNotFound: "Recipe not found",
     createTitle: "Share Your Recipe",

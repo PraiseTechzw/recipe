@@ -255,6 +255,7 @@ export default function HomeScreen() {
                     styles.searchBar,
                     {
                       backgroundColor: colors.surfaceVariant,
+                        borderColor: colors.border,
                       flex: 1,
                       flexDirection: "row",
                       alignItems: "center",
@@ -603,16 +604,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    height: 52,
     borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   placeholderText: {
     flex: 1,
     fontSize: 16,
   },
   aiButtonHome: {
-    width: 32,
-    height: 32,
+    width: 52,
+    height: 52,
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",

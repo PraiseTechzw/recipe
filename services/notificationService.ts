@@ -1,10 +1,17 @@
+import { isRunningInExpoGo } from 'expo';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
+import { getAllScheduledNotificationsAsync } from 'expo-notifications/build/getAllScheduledNotificationsAsync';
+import { getExpoPushTokenAsync } from 'expo-notifications/build/getExpoPushTokenAsync';
+import { getPermissionsAsync, requestPermissionsAsync } from 'expo-notifications/build/NotificationPermissions';
+import { setNotificationHandler } from 'expo-notifications/build/NotificationsHandler';
+import { scheduleNotificationAsync } from 'expo-notifications/build/scheduleNotificationAsync';
+import { setNotificationChannelAsync } from 'expo-notifications/build/setNotificationChannelAsync';
 import { Platform } from 'react-native';
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
+// Import the specific modules used here. The package barrel also loads the
+// topic subscription native module, which is not included in Expo Go.
+setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
@@ -16,78 +23,76 @@ Notifications.setNotificationHandler({
 
 export const NotificationService = {
   async registerForPushNotificationsAsync() {
-    let token;
+    // Expo Go does not include native remote push support. Local notifications
+    // remain available there.
+    if (isRunningInExpoGo()) return undefined;
 
     if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', {
+      await setNotificationChannelAsync('default', {
         name: 'default',
-        importance: Notifications.AndroidImportance.MAX,
+        importance: 5,
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#FF231F7C',
       });
     }
 
-    if (Device.isDevice) {
-      const { status: existingStatus } = await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== 'granted') {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== 'granted') {
-        console.log('Failed to get push token for push notification!');
-        return;
-      }
-
-      try {
-        const projectId =
-          Constants?.expoConfig?.extra?.eas?.projectId || Constants?.easConfig?.projectId;
-        if (!projectId) {
-            // If projectId is missing (common in bare workflow or misconfig), try without it
-            // or log a warning. For now, we proceed.
-             console.log('Project ID not found, attempting default registration');
-        }
-        
-        token = (await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })).data;
-        
-        console.log('Push Token:', token);
-      } catch (e) {
-        console.error('Error getting push token:', e);
-      }
-    } else {
-      console.log('Must use physical device for Push Notifications');
+    if (!Device.isDevice) {
+      console.log('Must use a physical device for push notifications');
+      return undefined;
     }
 
-    return token;
+    const { status: existingStatus } = await getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      console.log('Push notification permission was not granted');
+      return undefined;
+    }
+
+    try {
+      const projectId =
+        Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId;
+      if (!projectId) {
+        console.warn('Expo project ID is missing; unable to register a push token');
+        return undefined;
+      }
+
+      const token = (await getExpoPushTokenAsync({ projectId })).data;
+      console.log('Push Token:', token);
+      return token;
+    } catch (error) {
+      console.error('Error getting push token:', error);
+      return undefined;
+    }
   },
 
   async scheduleDailyReminder() {
-    // Check if already scheduled to avoid duplicates
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const hasDaily = scheduled.some(n => n.content.title === "Time to cook!");
-    
+    if (Platform.OS === 'android') {
+      await setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: 5,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    const scheduled = await getAllScheduledNotificationsAsync();
+    const hasDaily = scheduled.some((notification) => notification.content.title === 'Time to cook! 🍳');
     if (hasDaily) return;
 
-    const trigger: any = Platform.OS === 'android' ? {
-      type: 'daily',
-      hour: 17,
-      minute: 0,
-      channelId: 'default',
-    } : {
-      type: 'calendar',
-      hour: 17,
-      minute: 0,
-      repeats: true,
-    };
+    const trigger: any = Platform.OS === 'android'
+      ? { type: 'daily', hour: 17, minute: 0, channelId: 'default' }
+      : { type: 'calendar', hour: 17, minute: 0, repeats: true };
 
-    await Notifications.scheduleNotificationAsync({
+    await scheduleNotificationAsync({
       content: {
-        title: "Time to cook! 🍳",
-        body: "Discover a new Zimbabwean recipe for dinner tonight.",
+        title: 'Time to cook! 🍳',
+        body: 'Discover a new Zimbabwean recipe for dinner tonight.',
         sound: true,
       },
       trigger,
@@ -95,14 +100,9 @@ export const NotificationService = {
   },
 
   async sendLocalNotification(title: string, body: string, data = {}) {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title,
-        body,
-        data,
-        sound: true,
-      },
-      trigger: null, // Immediate
+    await scheduleNotificationAsync({
+      content: { title, body, data, sound: true },
+      trigger: null,
     });
-  }
+  },
 };

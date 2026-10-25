@@ -5,8 +5,9 @@ import i18n from "../../i18n";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@/theme/useTheme";
 
-const CustomTabBarButton = ({ children, onPress }: any) => (
+const CustomTabBarButton = ({ children, onPress, color }: any) => (
   <TouchableOpacity
     style={{
       top: -20,
@@ -20,10 +21,10 @@ const CustomTabBarButton = ({ children, onPress }: any) => (
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: "#E65100",
+        backgroundColor: color,
         justifyContent: "center",
         alignItems: "center",
-        shadowColor: "#E65100",
+        shadowColor: color,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
@@ -36,13 +37,14 @@ const CustomTabBarButton = ({ children, onPress }: any) => (
 );
 
 export default function TabLayout() {
-  // const colorScheme = useColorScheme();
+  const { colors } = useTheme();
+  const tabPrimary = String(colors.primary);
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#E65100", // Override with brand color
-        tabBarInactiveTintColor: "#999",
+          tabBarActiveTintColor: tabPrimary,
+        tabBarInactiveTintColor: colors.textSecondary,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
@@ -51,26 +53,26 @@ export default function TabLayout() {
           left: 0,
           right: 0,
           elevation: 0,
-          backgroundColor: "#ffffff",
-          borderTopWidth: 0,
-          height: 70, // Taller tab bar
+          backgroundColor: String(colors.surface),
+          borderTopWidth: 1,
+          borderTopColor: String(colors.border),
+          height: 76,
+          paddingTop: 8,
           paddingBottom: 10,
           ...Platform.select({
             ios: {
               shadowColor: "#000",
               shadowOffset: { width: 0, height: -2 },
-              shadowOpacity: 0.1,
-              shadowRadius: 4,
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
             },
-            android: {
-              elevation: 8,
-            },
+            android: { elevation: 8 },
           }),
         },
         tabBarLabelStyle: {
           fontSize: 10,
           fontWeight: "600",
-          marginTop: -5,
+          marginTop: 0,
         },
       }}
     >
@@ -79,7 +81,7 @@ export default function TabLayout() {
         options={{
           title: i18n.t("home"),
           tabBarIcon: ({ color }) => (
-            <Ionicons size={24} name="home" color={color} />
+            <Ionicons size={24} name="home" color={String(color)} />
           ),
         }}
       />
@@ -89,7 +91,7 @@ export default function TabLayout() {
         options={{
           title: i18n.t("explore"),
           tabBarIcon: ({ color }) => (
-            <Ionicons size={24} name="compass" color={color} />
+            <Ionicons size={24} name="compass" color={String(color)} />
           ),
         }}
       />
@@ -101,7 +103,9 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => (
             <Ionicons name="add" size={32} color="#fff" />
           ),
-          tabBarButton: (props) => <CustomTabBarButton {...props} />,
+          tabBarButton: (props) => (
+            <CustomTabBarButton {...props} color={tabPrimary} />
+          ),
         }}
       />
 
@@ -110,7 +114,7 @@ export default function TabLayout() {
         options={{
           title: i18n.t("saved"),
           tabBarIcon: ({ color }) => (
-            <Ionicons size={24} name="heart" color={color} />
+            <Ionicons size={24} name="heart" color={String(color)} />
           ),
         }}
       />
@@ -120,7 +124,7 @@ export default function TabLayout() {
         options={{
           title: "Leaders",
           tabBarIcon: ({ color }) => (
-            <Ionicons size={24} name="trophy" color={color} />
+            <Ionicons size={24} name="trophy" color={String(color)} />
           ),
         }}
       />
@@ -130,7 +134,7 @@ export default function TabLayout() {
         options={{
           title: i18n.t("profile"),
           tabBarIcon: ({ color }) => (
-            <Ionicons size={24} name="person" color={color} />
+            <Ionicons size={24} name="person" color={String(color)} />
           ),
         }}
       />

@@ -44,12 +44,18 @@ export default function RootLayout() {
 
     // 2. Setup Notifications
     const setupNotifications = async () => {
-      const token =
-        await NotificationService.registerForPushNotificationsAsync();
-      if (token) {
-        setUserProfile({ pushToken: token });
+      try {
+        const token =
+          await NotificationService.registerForPushNotificationsAsync();
+        if (token) {
+          setUserProfile({ pushToken: token });
+        }
+        await NotificationService.scheduleDailyReminder();
+      } catch (error) {
+        // Notification support can vary between Expo Go and native builds.
+        // Keep app startup available if the device cannot schedule reminders.
+        console.warn("Notification setup unavailable", error);
       }
-      await NotificationService.scheduleDailyReminder();
     };
 
     setupNotifications();

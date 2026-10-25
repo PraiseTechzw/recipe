@@ -20,7 +20,7 @@ Welcome to **Taste of Zimbabwe**, a premium culinary application dedicated to pr
 ### 🤖 AI-Powered Chef
 
 - **Ingredient Scanning**: Snap a photo of ingredients using the camera.
-- **Gemini AI Integration**: Our advanced AI analyzes the image to identify ingredients and generates a complete, authentic recipe (Ingredients, Steps, Nutrition) on the fly.
+- **OpenRouter AI Integration**: OpenRouter's free model router analyzes ingredient photos and generates complete recipes with ingredients, steps, and nutrition.
 - **Save AI Recipes**: Generated recipes can be saved directly to your personal collection.
 
 ### ☁️ Real-Time & Backend
@@ -53,7 +53,7 @@ The application boasts a modern, clean, and culturally inspired interface:
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
 - **Backend**: [Supabase](https://supabase.com/)
-- **AI**: [Google Gemini API](https://ai.google.dev/)
+- **AI**: [OpenRouter](https://openrouter.ai/) using the `openrouter/free` model router
 - **Ads**: [React Native Google Mobile Ads](https://github.com/invertase/react-native-google-mobile-ads)
 - **Localization**: `i18n-js` & `expo-localization`
 - **UI Components**: `react-native-reanimated`, `@expo/vector-icons`
@@ -89,7 +89,7 @@ Follow these steps to get the project running on your local machine.
     Create a `.env` file in the root directory and add your API keys:
 
     ```bash
-    EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+    EXPO_PUBLIC_OPENROUTER_API_KEY=your_openrouter_api_key
     EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
     EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
     ```

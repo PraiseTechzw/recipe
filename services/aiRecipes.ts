@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { geminiClient } from "./geminiClient";
+import { openRouterClient } from "./openRouterClient";
 
 // --- Schemas ---
 
@@ -99,15 +99,8 @@ export class AIRecipeService {
       Strictly JSON. No markdown formatting.
     `;
 
-    const imagePart = {
-      inlineData: {
-        data: imageBase64,
-        mimeType: "image/jpeg",
-      },
-    };
-
     try {
-      const rawText = await geminiClient.generateContent(prompt, [imagePart]);
+      const rawText = await openRouterClient.generateContent(prompt, imageBase64);
       const cleanedJson = this.cleanJson(rawText);
       const parsed = JSON.parse(cleanedJson);
       return ExtractIngredientsResponseSchema.parse(parsed);
@@ -179,7 +172,7 @@ export class AIRecipeService {
     `;
 
     try {
-      const rawText = await geminiClient.generateContent(prompt);
+      const rawText = await openRouterClient.generateContent(prompt);
       const cleanedJson = this.cleanJson(rawText);
       const parsed = JSON.parse(cleanedJson);
       return GenerateRecipeResponseSchema.parse(parsed);
