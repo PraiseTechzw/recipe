@@ -11,6 +11,7 @@
     "lint": "expo lint",
     "test": "jest",
     "bump-version": "node ./scripts/bump-version.js",
+    "seed:official-account": "node --env-file=.env.local scripts/seed-official-account.mjs",
     "eas-build": "npm run bump-version && eas build"
   },
   "dependencies": {
