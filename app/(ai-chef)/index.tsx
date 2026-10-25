@@ -7,6 +7,7 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
+    Linking,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -25,6 +26,7 @@ import { useAppPermissions } from "../../hooks/useCameraPermissions";
 import { HapticService } from "../../services/haptics";
 import { ImageCaptureService } from "../../services/imageCapture";
 import { SyncService } from "../../services/syncService";
+import { useAICaptureStore } from "../../stores/aiCaptureStore";
 
 const { width } = Dimensions.get("window");
 
@@ -34,6 +36,7 @@ export default function CaptureScreen() {
   const cameraRef = useRef<CameraView>(null);
   const { verifyCameraPermission, verifyMediaLibraryPermission } =
     useAppPermissions();
+  const setCapturedImage = useAICaptureStore((state) => state.setCapturedImage);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [facing, setFacing] = useState<CameraType>("back");
@@ -46,15 +49,15 @@ export default function CaptureScreen() {
     transform: [{ scale: shutterScale.value }],
   }));
 
-  useEffect(() => {
-    // Check permission on mount
-    checkPermissions();
-  }, [checkPermissions]);
-
   const checkPermissions = useCallback(async () => {
     const granted = await verifyCameraPermission();
     setHasPermission(granted);
   }, [verifyCameraPermission]);
+
+  useEffect(() => {
+    // Check permission on mount
+    void checkPermissions();
+  }, [checkPermissions]);
 
   const handleGalleryPick = async () => {
     const isOnline = await SyncService.checkConnectivity();
@@ -70,7 +73,7 @@ export default function CaptureScreen() {
     try {
       const result = await ImageCaptureService.pickFromGallery();
       if (result) {
-        processAndNavigate(result.uri);
+        processAndNavigate(result.uri, result.base64);
       }
     } catch {
       Alert.alert("Error", "Failed to pick image.");
@@ -117,14 +120,10 @@ export default function CaptureScreen() {
     }
   };
 
-  const processAndNavigate = (uri: string, base64?: string) => {
-    // Navigate to review - AI Logic deferred
+  const processAndNavigate = (uri: string, base64: string) => {
+    setCapturedImage(uri, base64);
     router.push({
       pathname: "/(ai-chef)/review",
-      params: {
-        imageUri: uri,
-        // ingredients: JSON.stringify([]) // We don't have ingredients yet, passing empty or undefined
-      },
     });
     setIsProcessing(false);
   };
