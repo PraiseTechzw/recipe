@@ -105,6 +105,8 @@ Follow these steps to get the project running on your local machine.
 
     The schema is in `supabase/migrations/` with timestamped migrations; `supabase/seed.sql` adds the sample profile and recipes. For a linked hosted project, inspect the pending changes with `supabase db push --dry-run` before applying them with `supabase db push`.
 
+    The app persists its full local Zustand state in AsyncStorage. With a configured Supabase project, it also signs in anonymously and syncs private onboarding/profile preferences, favorites, pantry and shopping lists, notification preferences, and recipe-view learning signals to `chef_app_state`. Enable **Allow anonymous sign-ins** in the hosted project's Auth settings before using this sync; it is enabled in the local Supabase config. Anonymous sessions persist on the same installation, but Supabase cannot recover them after sign-out, reinstall, or on another device unless an account-linking/sign-in flow is added.
+
     The seed creates the public chef profile for Praise Masunga (`praisetechzw`) first, then links the initial recipes to that ID. To also create and link his Supabase Auth account, put `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a private `PRAISE_MASUNGA_PASSWORD` in an ignored `.env.local` file, then run:
 
     ```bash
@@ -113,7 +115,7 @@ Follow these steps to get the project running on your local machine.
 
     On a hosted project, first apply the migrations, run `supabase/seed.sql` in the SQL Editor, and then run this account script. It stores the email in Supabase Auth and links the Auth user ID to the public chef profile; it does not put the email in the public profile table.
 
-    The current app uses anonymous client IDs rather than Supabase Auth, so the policies preserve public recipe/profile writes and leaderboard updates. Treat that data as public and untrusted; add authenticated ownership policies before storing private user data.
+    Recipe/profile and leaderboard APIs still include public write policies to support the current publishing workflow. Treat those public records as untrusted. Private user state has separate row-level policies tied to the authenticated Supabase user ID.
 
 5.  **Run the App**
     ```bash

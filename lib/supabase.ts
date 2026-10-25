@@ -8,10 +8,13 @@ const envUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const envKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 // Ensure URL is valid to prevent crash
-const isValidUrl = (url: string) => url && (url.startsWith('http://') || url.startsWith('https://'));
+const isValidUrl = (url?: string): url is string =>
+  !!url && (url.startsWith('http://') || url.startsWith('https://'));
 
 const SUPABASE_URL = isValidUrl(envUrl) ? envUrl! : 'https://placeholder-project.supabase.co';
 const SUPABASE_ANON_KEY = envKey || 'placeholder-anon-key';
+export const isSupabaseConfigured =
+  isValidUrl(envUrl) && !!envKey && !SUPABASE_URL.includes('placeholder');
 
 if (!isValidUrl(envUrl)) {
   console.warn('⚠️ Supabase URL is missing or invalid in .env. Using placeholder. Real-time features will not work.');

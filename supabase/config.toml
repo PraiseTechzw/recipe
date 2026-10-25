@@ -19,6 +19,9 @@ enabled = true
 port = 54323
 api_url = "http://127.0.0.1"
 
+[auth]
+enable_anonymous_sign_ins = true
+
 [analytics]
 enabled = false
 

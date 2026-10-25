@@ -128,7 +128,11 @@ export default function UserInfoScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         {step === "language" ? (
           <>
             <View style={styles.header}>
@@ -325,11 +329,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   scrollContent: {
+    flexGrow: 1,
     padding: 24,
+    paddingBottom: 32,
   },
   header: {
-    marginTop: 20,
-    marginBottom: 40,
+    marginTop: 12,
+    marginBottom: 32,
   },
   stepLabel: {
     color: "#E65100",
@@ -360,6 +366,9 @@ const styles = StyleSheet.create({
   },
   languageCopy: {
     gap: 3,
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 12,
   },
   languageName: {
     color: "#24201D",
@@ -392,10 +401,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#E65100",
   },
   title: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: "bold",
     color: "#1a1a1a",
     marginBottom: 8,
+    flexShrink: 1,
   },
   subtitle: {
     fontSize: 16,
@@ -420,10 +430,12 @@ const styles = StyleSheet.create({
   },
   optionsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   optionCard: {
     flex: 1,
+    minWidth: 88,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,

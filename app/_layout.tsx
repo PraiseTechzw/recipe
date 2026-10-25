@@ -61,6 +61,10 @@ export default function RootLayout() {
     setupNotifications();
   }, [fetchRecipes, setUserProfile]);
 
+  useEffect(() => {
+    if (!isOffline) void SyncService.initializeAppStateSync();
+  }, [isOffline]);
+
   if (locale) {
     i18n.locale = locale;
   }
