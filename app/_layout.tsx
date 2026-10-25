@@ -70,7 +70,7 @@ export default function RootLayout() {
       <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>
         <View style={{ flex: 1 }}>
           <OfflineBanner isOffline={isOffline} />
-          <Stack key={locale}>
+          <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen
               name="cooking/[id]"

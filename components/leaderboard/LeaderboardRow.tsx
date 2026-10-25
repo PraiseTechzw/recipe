@@ -86,7 +86,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
 
       {/* Score */}
       <View style={styles.scoreContainer}>
-        <Text style={[typography.h4, { color: colors.text }]}>
+        <Text style={[typography.h3, { color: colors.text }]}>
           {score.toLocaleString()}
         </Text>
         <Text style={[typography.caption, { color: colors.textSecondary }]}>

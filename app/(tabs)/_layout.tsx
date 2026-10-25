@@ -6,6 +6,8 @@ import i18n from "../../i18n";
 import { HapticTab } from "@/components/haptic-tab";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
+import { useStore } from "@/store/useStore";
+import { useMemo } from "react";
 
 const CustomTabBarButton = ({ children, onPress, color }: any) => (
   <TouchableOpacity
@@ -38,7 +40,17 @@ const CustomTabBarButton = ({ children, onPress, color }: any) => (
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const locale = useStore((state) => state.locale);
   const tabPrimary = String(colors.primary);
+  const titles = useMemo(
+    () => ({
+      home: i18n.t("home"),
+      explore: i18n.t("explore"),
+      saved: i18n.t("saved"),
+      profile: i18n.t("profile"),
+    }),
+    [locale],
+  );
 
   return (
     <Tabs
@@ -79,7 +91,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: i18n.t("home"),
+          title: titles.home,
           tabBarIcon: ({ color }) => (
             <Ionicons size={24} name="home" color={String(color)} />
           ),
@@ -89,7 +101,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
-          title: i18n.t("explore"),
+          title: titles.explore,
           tabBarIcon: ({ color }) => (
             <Ionicons size={24} name="compass" color={String(color)} />
           ),
@@ -112,7 +124,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="saved"
         options={{
-          title: i18n.t("saved"),
+          title: titles.saved,
           tabBarIcon: ({ color }) => (
             <Ionicons size={24} name="heart" color={String(color)} />
           ),
@@ -132,7 +144,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: i18n.t("profile"),
+          title: titles.profile,
           tabBarIcon: ({ color }) => (
             <Ionicons size={24} name="person" color={String(color)} />
           ),

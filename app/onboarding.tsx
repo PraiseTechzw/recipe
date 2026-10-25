@@ -30,9 +30,20 @@ const CHEF_AVATARS = [
   uri: getChefAvatarUri(seed, background),
 }));
 
+const LANGUAGES = [
+  { code: "en", name: "English", nativeName: "English" },
+  { code: "sn", name: "Shona", nativeName: "ChiShona" },
+  { code: "nd", name: "Ndebele", nativeName: "isiNdebele" },
+] as const;
+
 export default function UserInfoScreen() {
   const router = useRouter();
-  const { setUserProfile, dietaryOptions, experienceLevels } = useStore();
+  const { setUserProfile, setLocale, locale, dietaryOptions, experienceLevels } = useStore();
+
+  const [step, setStep] = useState<"language" | "about">("language");
+  const [selectedLocale, setSelectedLocale] = useState(
+    locale === "sn" || locale === "nd" ? locale : "en",
+  );
 
   const [name, setName] = useState("");
   const [level, setLevel] = useState<"Beginner" | "Home Cook" | "Pro">(
@@ -63,6 +74,12 @@ export default function UserInfoScreen() {
   };
 
   const handleNext = () => {
+    if (step === "language") {
+      setLocale(selectedLocale);
+      setStep("about");
+      return;
+    }
+
     if (name.trim().length === 0) {
       // Show error or shake
       return;
@@ -112,10 +129,62 @@ export default function UserInfoScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>{i18n.t("onboardingTitle")}</Text>
-          <Text style={styles.subtitle}>{i18n.t("onboardingSubtitle")}</Text>
-        </View>
+        {step === "language" ? (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.title}>Choose your language</Text>
+              <Text style={styles.subtitle}>
+                Sarudza mutauro · Khetha ulimi · Choose your language
+              </Text>
+            </View>
+            <View style={styles.languageList}>
+              {LANGUAGES.map((language) => {
+                const selected = selectedLocale === language.code;
+                return (
+                  <TouchableOpacity
+                    key={language.code}
+                    onPress={() => setSelectedLocale(language.code)}
+                    style={[
+                      styles.languageCard,
+                      selected && styles.languageCardSelected,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${language.name}, ${language.nativeName}${selected ? ", selected" : ""}`}
+                    accessibilityState={{ selected }}
+                  >
+                    <View style={styles.languageCopy}>
+                      <Text
+                        style={[
+                          styles.languageName,
+                          selected && styles.languageNameSelected,
+                        ]}
+                      >
+                        {language.name}
+                      </Text>
+                      <Text style={styles.languageNativeName}>
+                        {language.nativeName}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.languageRadio,
+                        selected && styles.languageRadioSelected,
+                      ]}
+                    >
+                      {selected && <View style={styles.languageRadioDot} />}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.header}>
+              <Text style={styles.stepLabel}>{i18n.t("onboardingStepTwo")}</Text>
+              <Text style={styles.title}>{i18n.t("onboardingTitle")}</Text>
+              <Text style={styles.subtitle}>{i18n.t("onboardingSubtitle")}</Text>
+            </View>
 
         {/* Chef Avatar */}
         <View style={styles.centerSection}>
@@ -136,9 +205,9 @@ export default function UserInfoScreen() {
               <Ionicons name="camera" size={18} color="#fff" />
             </View>
           </TouchableOpacity>
-          <Text style={styles.uploadText}>Tap to use your own photo</Text>
+          <Text style={styles.uploadText}>{i18n.t("chooseProfilePhoto")}</Text>
           <Text style={[styles.label, styles.avatarChoiceLabel]}>
-            Or choose a chef cartoon
+            {i18n.t("chooseCartoonAvatar")}
           </Text>
           <ScrollView
             horizontal
@@ -156,7 +225,7 @@ export default function UserInfoScreen() {
                     selected && styles.avatarChoiceSelected,
                   ]}
                   accessibilityRole="button"
-                  accessibilityLabel={`${choice.seed} chef avatar${selected ? ", selected" : ""}`}
+                  accessibilityLabel={`${choice.seed} ${i18n.t("cartoonAvatar")}${selected ? ", selected" : ""}`}
                   accessibilityState={{ selected }}
                 >
                   <Image
@@ -229,16 +298,18 @@ export default function UserInfoScreen() {
             ))}
           </View>
         </View>
+          </>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
         <TouchableOpacity
           style={[
             styles.button,
-            name.trim().length === 0 && styles.buttonDisabled,
+            step === "about" && name.trim().length === 0 && styles.buttonDisabled,
           ]}
           onPress={handleNext}
-          disabled={name.trim().length === 0}
+          disabled={step === "about" && name.trim().length === 0}
         >
           <Text style={styles.buttonText}>{i18n.t("continue")}</Text>
           <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -259,6 +330,66 @@ const styles = StyleSheet.create({
   header: {
     marginTop: 20,
     marginBottom: 40,
+  },
+  stepLabel: {
+    color: "#E65100",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1.4,
+    marginBottom: 10,
+  },
+  languageList: {
+    gap: 12,
+  },
+  languageCard: {
+    minHeight: 82,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#E8E1DA",
+    backgroundColor: "#FFFFFF",
+  },
+  languageCardSelected: {
+    borderWidth: 2,
+    borderColor: "#E65100",
+    backgroundColor: "#FFF8F0",
+  },
+  languageCopy: {
+    gap: 3,
+  },
+  languageName: {
+    color: "#24201D",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  languageNameSelected: {
+    color: "#B84400",
+  },
+  languageNativeName: {
+    color: "#77716C",
+    fontSize: 14,
+  },
+  languageRadio: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#CFC7C0",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  languageRadioSelected: {
+    borderColor: "#E65100",
+  },
+  languageRadioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#E65100",
   },
   title: {
     fontSize: 32,

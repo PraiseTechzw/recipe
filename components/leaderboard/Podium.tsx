@@ -46,7 +46,7 @@ export function Podium({ topThree, mode, style }: PodiumProps) {
           {isFirst && (
             <Animated.View entering={ZoomIn.delay(400).springify()}>
               <Ionicons
-                name="crown"
+                name="trophy"
                 size={24}
                 color="#FFD700"
                 style={styles.crown}
