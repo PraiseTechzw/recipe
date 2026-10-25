@@ -4,6 +4,8 @@ import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
+    KeyboardAvoidingView,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -14,6 +16,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
 import { useStore } from "../store/useStore";
+import { useTheme } from "../theme/useTheme";
 import { getChefAvatarUri } from "../utils/chefIdentity";
 
 const CHEF_AVATARS = [
@@ -39,6 +42,7 @@ const LANGUAGES = [
 export default function UserInfoScreen() {
   const router = useRouter();
   const { setUserProfile, setLocale, locale, dietaryOptions, experienceLevels } = useStore();
+  const { colors, isDark } = useTheme();
 
   const [step, setStep] = useState<"language" | "about">("language");
   const [selectedLocale, setSelectedLocale] = useState(
@@ -66,10 +70,14 @@ export default function UserInfoScreen() {
   };
 
   const toggleDiet = (item: string) => {
+    if (item === "None") {
+      setDiet(diet.includes("None") ? [] : ["None"]);
+      return;
+    }
     if (diet.includes(item)) {
       setDiet(diet.filter((i) => i !== item));
     } else {
-      setDiet([...diet, item]);
+      setDiet([...diet.filter((i) => i !== "None"), item]);
     }
   };
 
@@ -127,7 +135,11 @@ export default function UserInfoScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardContainer}
+      >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -136,8 +148,8 @@ export default function UserInfoScreen() {
         {step === "language" ? (
           <>
             <View style={styles.header}>
-              <Text style={styles.title}>Choose your language</Text>
-              <Text style={styles.subtitle}>
+              <Text style={[styles.title, { color: colors.text }]}>Choose your language</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                 Sarudza mutauro · Khetha ulimi · Choose your language
               </Text>
             </View>
@@ -150,7 +162,9 @@ export default function UserInfoScreen() {
                     onPress={() => setSelectedLocale(language.code)}
                     style={[
                       styles.languageCard,
+                      { backgroundColor: colors.surface, borderColor: colors.border },
                       selected && styles.languageCardSelected,
+                      selected && { backgroundColor: isDark ? "#3A2A20" : "#FFF8F0" },
                     ]}
                     accessibilityRole="button"
                     accessibilityLabel={`${language.name}, ${language.nativeName}${selected ? ", selected" : ""}`}
@@ -160,12 +174,12 @@ export default function UserInfoScreen() {
                       <Text
                         style={[
                           styles.languageName,
-                          selected && styles.languageNameSelected,
+                          { color: selected ? (isDark ? colors.primary : "#B84400") : colors.text },
                         ]}
                       >
                         {language.name}
                       </Text>
-                      <Text style={styles.languageNativeName}>
+                      <Text style={[styles.languageNativeName, { color: colors.textSecondary }]}>
                         {language.nativeName}
                       </Text>
                     </View>
@@ -173,6 +187,7 @@ export default function UserInfoScreen() {
                       style={[
                         styles.languageRadio,
                         selected && styles.languageRadioSelected,
+                        { borderColor: selected ? colors.primary : colors.border },
                       ]}
                     >
                       {selected && <View style={styles.languageRadioDot} />}
@@ -185,140 +200,179 @@ export default function UserInfoScreen() {
         ) : (
           <>
             <View style={styles.header}>
-              <Text style={styles.stepLabel}>{i18n.t("onboardingStepTwo")}</Text>
-              <Text style={styles.title}>{i18n.t("onboardingTitle")}</Text>
-              <Text style={styles.subtitle}>{i18n.t("onboardingSubtitle")}</Text>
-            </View>
-
-        {/* Chef Avatar */}
-        <View style={styles.centerSection}>
-          <TouchableOpacity
-            onPress={pickImage}
-            style={styles.avatarContainer}
-            accessibilityRole="button"
-            accessibilityLabel="Choose a profile photo"
-          >
-            {avatar ? (
-              <Image source={{ uri: avatar }} style={styles.avatar} />
-            ) : (
-              <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={50} color="#E65100" />
-              </View>
-            )}
-            <View style={styles.editIcon}>
-              <Ionicons name="camera" size={18} color="#fff" />
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.uploadText}>{i18n.t("chooseProfilePhoto")}</Text>
-          <Text style={[styles.label, styles.avatarChoiceLabel]}>
-            {i18n.t("chooseCartoonAvatar")}
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.avatarChoices}
-          >
-            {CHEF_AVATARS.map((choice) => {
-              const selected = avatar === choice.uri;
-              return (
+              <View style={styles.progressRow}>
                 <TouchableOpacity
-                  key={choice.seed}
-                  onPress={() => setAvatar(choice.uri)}
-                  style={[
-                    styles.avatarChoice,
-                    selected && styles.avatarChoiceSelected,
-                  ]}
+                  onPress={() => setStep("language")}
+                  style={styles.stepBack}
                   accessibilityRole="button"
-                  accessibilityLabel={`${choice.seed} ${i18n.t("cartoonAvatar")}${selected ? ", selected" : ""}`}
-                  accessibilityState={{ selected }}
+                  accessibilityLabel={i18n.t("goBack")}
                 >
-                  <Image
-                    source={{ uri: choice.uri }}
-                    style={styles.avatarChoiceImage}
-                    contentFit="cover"
-                  />
+                  <Ionicons name="chevron-back" size={16} color={isDark ? colors.primary : "#B84400"} />
+                  <Text style={[styles.stepLabel, { color: isDark ? colors.primary : "#B84400" }]}>{i18n.t("onboardingStepTwo")}</Text>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+                <View style={[styles.progressTrack, { backgroundColor: isDark ? "#4A3A30" : "#E9DED4" }]}>
+                  <View style={[styles.progressFill, { backgroundColor: colors.primary }]} />
+                </View>
+              </View>
+              <Text style={[styles.title, { color: colors.text }]}>{i18n.t("onboardingTitle")}</Text>
+              <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{i18n.t("onboardingSubtitle")}</Text>
+            </View>
 
-        {/* Name Input */}
-        <View style={styles.section}>
-          <Text style={styles.label}>{i18n.t("nameLabel")}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={i18n.t("namePlaceholder")}
-            value={name}
-            onChangeText={setName}
-          />
-        </View>
-
-        {/* Chef Level */}
-        <View style={styles.section}>
-          <Text style={styles.label}>{i18n.t("experienceLabel")}</Text>
-          <View style={styles.optionsRow}>
-            {experienceLevels.map((l) => (
-              <TouchableOpacity
-                key={l}
-                style={[
-                  styles.optionCard,
-                  level === l && styles.optionSelected,
-                ]}
-                onPress={() => setLevel(l as any)}
-              >
-                <Text
-                  style={[
-                    styles.optionText,
-                    level === l && styles.optionTextSelected,
-                  ]}
+            <View style={[styles.avatarCard, { backgroundColor: isDark ? "#2A211C" : "#FFF3E9", borderColor: isDark ? "#49382E" : "#F3E1D3" }]}>
+              <View style={styles.avatarCardTop}>
+                <TouchableOpacity
+                  onPress={pickImage}
+                  style={styles.avatarContainer}
+                  accessibilityRole="button"
+                  accessibilityLabel={i18n.t("chooseProfilePhoto")}
                 >
-                  {getLevelLabel(l)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Dietary Preferences */}
-        <View style={styles.section}>
-          <Text style={styles.label}>{i18n.t("dietaryLabel")}</Text>
-          <View style={styles.chipsContainer}>
-            {dietaryOptions.map((d) => (
-              <TouchableOpacity
-                key={d}
-                style={[styles.chip, diet.includes(d) && styles.chipSelected]}
-                onPress={() => toggleDiet(d)}
+                  {avatar ? (
+                    <Image source={{ uri: avatar }} style={styles.avatar} />
+                  ) : (
+                    <View style={styles.avatarPlaceholder}>
+                      <Ionicons name="person" size={42} color="#E65100" />
+                    </View>
+                  )}
+                  <View style={styles.editIcon}>
+                    <Ionicons name="camera" size={17} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+                <View style={styles.avatarCopy}>
+                  <Text style={[styles.avatarTitle, { color: colors.text }]}>{i18n.t("chefAvatar")}</Text>
+                  <Text style={[styles.avatarHint, { color: colors.textSecondary }]}>{i18n.t("chooseProfilePhoto")}</Text>
+                </View>
+              </View>
+              <Text style={[styles.avatarChoiceLabel, { color: colors.textSecondary }]}>{i18n.t("chooseCartoonAvatar")}</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.avatarChoices}
               >
-                <Text
-                  style={[
-                    styles.chipText,
-                    diet.includes(d) && styles.chipTextSelected,
-                  ]}
-                >
-                  {getDietLabel(d)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+                {CHEF_AVATARS.map((choice) => {
+                  const selected = avatar === choice.uri;
+                  return (
+                    <TouchableOpacity
+                      key={choice.seed}
+                      onPress={() => setAvatar(choice.uri)}
+                      style={[styles.avatarChoice, selected && styles.avatarChoiceSelected]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${choice.seed} ${i18n.t("cartoonAvatar")}${selected ? ", selected" : ""}`}
+                      accessibilityState={{ selected }}
+                    >
+                      <Image source={{ uri: choice.uri }} style={styles.avatarChoiceImage} contentFit="cover" />
+                      {selected && <View style={styles.avatarCheck}><Ionicons name="checkmark" size={12} color="#fff" /></View>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.label, { color: colors.text }]}>{i18n.t("nameLabel")}</Text>
+              <View style={[styles.nameField, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Ionicons name="person-outline" size={20} color={colors.textSecondary} />
+                <TextInput
+                  style={[styles.input, { color: colors.text }]}
+                  placeholder={i18n.t("namePlaceholder")}
+                  placeholderTextColor={colors.textSecondary}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  maxLength={40}
+                />
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.label, { color: colors.text }]}>{i18n.t("experienceLabel")}</Text>
+              <View style={styles.optionsRow}>
+                {experienceLevels.map((l) => {
+                  const selected = level === l;
+                  const icon = l === "Beginner"
+                    ? "school-outline"
+                    : l === "Pro"
+                      ? "medal-outline"
+                      : "home-outline";
+                  return (
+                    <TouchableOpacity
+                      key={l}
+                      style={[
+                        styles.optionCard,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                        selected && styles.optionSelected,
+                        selected && { backgroundColor: isDark ? "#3A2A20" : "#FFF4EA" },
+                      ]}
+                      onPress={() => setLevel(l as "Beginner" | "Home Cook" | "Pro")}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                    >
+                      <View
+                        style={[
+                          styles.experienceIconWrap,
+                          {
+                            backgroundColor: selected
+                              ? isDark
+                                ? "#49351F"
+                                : "#FFE4CC"
+                              : colors.surfaceVariant,
+                          },
+                        ]}
+                      >
+                        <Ionicons name={icon} size={20} color={selected ? (isDark ? colors.primary : "#B84400") : colors.textSecondary} />
+                      </View>
+                      <Text style={[styles.optionText, { color: selected ? (isDark ? colors.primary : "#B84400") : colors.textSecondary }, selected && styles.optionTextSelected]}>{getLevelLabel(l)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={[styles.label, { color: colors.text }]}>{i18n.t("dietaryLabel")}</Text>
+              <View style={styles.chipsContainer}>
+                {dietaryOptions.map((d) => {
+                  const selected = diet.includes(d);
+                  return (
+                    <TouchableOpacity
+                      key={d}
+                      style={[
+                        styles.chip,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                        selected && styles.chipSelected,
+                        selected && { backgroundColor: isDark ? "#63370E" : "#B84400", borderColor: isDark ? "#FFB866" : "#B84400" },
+                      ]}
+                      onPress={() => toggleDiet(d)}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected }}
+                    >
+                      {selected && <Ionicons name="checkmark" size={14} color={isDark ? "#FFE3C2" : "#fff"} />}
+                      <Text style={[styles.chipText, { color: colors.textSecondary }, selected && styles.chipTextSelected, selected && { color: isDark ? "#FFE3C2" : "#fff" }]}>{getDietLabel(d)}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
           </>
         )}
       </ScrollView>
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TouchableOpacity
-          style={[
-            styles.button,
-            step === "about" && name.trim().length === 0 && styles.buttonDisabled,
-          ]}
           onPress={handleNext}
           disabled={step === "about" && name.trim().length === 0}
+          style={[
+            styles.button,
+            { backgroundColor: isDark ? "#B95D00" : "#C2410C" },
+            step === "about" && name.trim().length === 0 && styles.buttonDisabled,
+          ]}
         >
-          <Text style={styles.buttonText}>{i18n.t("continue")}</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
+          <Text style={[styles.buttonText, step === "about" && name.trim().length === 0 && styles.buttonTextDisabled]}>{i18n.t("continue")}</Text>
+          <Ionicons name="arrow-forward" size={20} color={step === "about" && name.trim().length === 0 ? "#4A4540" : "#fff"} />
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -326,7 +380,9 @@ export default function UserInfoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
@@ -334,15 +390,41 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   header: {
-    marginTop: 12,
-    marginBottom: 32,
+    marginTop: 10,
+    marginBottom: 24,
+  },
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    marginBottom: 18,
+  },
+  progressTrack: {
+    flex: 1,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: "#E9DED4",
+    overflow: "hidden",
+  },
+  stepBack: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 1,
+    minHeight: 32,
+    paddingRight: 4,
+  },
+  progressFill: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 3,
+    backgroundColor: "#E65100",
   },
   stepLabel: {
     color: "#E65100",
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1.4,
-    marginBottom: 10,
+    marginBottom: 0,
   },
   languageList: {
     gap: 12,
@@ -375,9 +457,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
   },
-  languageNameSelected: {
-    color: "#B84400",
-  },
   languageNativeName: {
     color: "#77716C",
     fontSize: 14,
@@ -401,11 +480,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#E65100",
   },
   title: {
-    fontSize: 30,
+    fontSize: 32,
     fontWeight: "bold",
     color: "#1a1a1a",
     marginBottom: 8,
     flexShrink: 1,
+    lineHeight: 39,
   },
   subtitle: {
     fontSize: 16,
@@ -413,19 +493,28 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   section: {
-    marginBottom: 32,
+    marginBottom: 24,
   },
   label: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: "#333",
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  nameField: {
+    minHeight: 58,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
   },
   input: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#E0E0E0",
-    fontSize: 20,
-    paddingVertical: 8,
+    flex: 1,
+    minWidth: 0,
+    fontSize: 17,
+    paddingVertical: 12,
     color: "#1a1a1a",
   },
   optionsRow: {
@@ -435,23 +524,37 @@ const styles = StyleSheet.create({
   },
   optionCard: {
     flex: 1,
-    minWidth: 88,
+    minWidth: 76,
+    minHeight: 82,
     paddingVertical: 12,
-    borderRadius: 12,
+    paddingHorizontal: 6,
+    borderRadius: 17,
     borderWidth: 1,
     borderColor: "#E0E0E0",
     alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   },
   optionSelected: {
-    backgroundColor: "#FFF3E0",
+    backgroundColor: "#FFF4EA",
     borderColor: "#E65100",
+    borderWidth: 1.5,
+  },
+  experienceIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
   },
   optionText: {
     color: "#757575",
     fontWeight: "500",
+    textAlign: "center",
+    fontSize: 13,
+    flexShrink: 1,
   },
   optionTextSelected: {
-    color: "#E65100",
     fontWeight: "bold",
   },
   chipsContainer: {
@@ -461,9 +564,15 @@ const styles = StyleSheet.create({
   },
   chip: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    minHeight: 42,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E5E0DC",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
   },
   chipSelected: {
     backgroundColor: "#E65100",
@@ -476,30 +585,35 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   footer: {
-    padding: 24,
+    paddingHorizontal: 24,
+    paddingTop: 14,
+    paddingBottom: 12,
     borderTopWidth: 1,
     borderTopColor: "#F0F0F0",
   },
-  centerSection: {
-    alignItems: "center",
-    marginBottom: 32,
-  },
   avatarContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 12,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     position: "relative",
+    borderWidth: 3,
+    borderColor: "#fff",
+    backgroundColor: "#fff",
+    shadowColor: "#8C4A22",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.16,
+    shadowRadius: 10,
+    elevation: 4,
   },
   avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: "100%",
+    height: "100%",
+    borderRadius: 44,
   },
   avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: "100%",
+    height: "100%",
+    borderRadius: 44,
     backgroundColor: "#FFF3E0",
     justifyContent: "center",
     alignItems: "center",
@@ -512,22 +626,42 @@ const styles = StyleSheet.create({
     bottom: 0,
     right: 0,
     backgroundColor: "#E65100",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 29,
+    height: 29,
+    borderRadius: 15,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
     borderColor: "#fff",
   },
-  uploadText: {
-    color: "#E65100",
-    fontWeight: "600",
-    fontSize: 16,
+  avatarCard: {
+    padding: 16,
+    marginBottom: 26,
+    borderRadius: 24,
+    borderWidth: 1,
+  },
+  avatarCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  avatarCopy: {
+    flex: 1,
+    gap: 5,
+  },
+  avatarTitle: {
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  avatarHint: {
+    fontSize: 13,
+    lineHeight: 19,
   },
   avatarChoiceLabel: {
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 18,
+    marginBottom: 6,
+    fontSize: 13,
+    lineHeight: 19,
   },
   avatarChoices: {
     gap: 12,
@@ -535,9 +669,9 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   avatarChoice: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     padding: 3,
     backgroundColor: "#F5F5F5",
     borderWidth: 2,
@@ -550,7 +684,20 @@ const styles = StyleSheet.create({
   avatarChoiceImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 28,
+    borderRadius: 26,
+  },
+  avatarCheck: {
+    position: "absolute",
+    right: -2,
+    top: -2,
+    width: 19,
+    height: 19,
+    borderRadius: 10,
+    backgroundColor: "#E65100",
+    borderWidth: 2,
+    borderColor: "#FFF3E9",
+    alignItems: "center",
+    justifyContent: "center",
   },
   button: {
     backgroundColor: "#E65100",
@@ -567,7 +714,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   buttonDisabled: {
-    backgroundColor: "#FFCCBC",
+    backgroundColor: "#D8D2CC",
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -575,5 +722,8 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  buttonTextDisabled: {
+    color: "#49433D",
   },
 });

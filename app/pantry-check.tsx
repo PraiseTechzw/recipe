@@ -1,87 +1,211 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import i18n from "../i18n";
 import { useStore } from "../store/useStore";
+import { useTheme } from "../theme/useTheme";
+
+const GRID_GAP = 12;
+const GRID_PADDING = 20;
+const MAX_GRID_WIDTH = 600;
 
 export default function PantryCheckScreen() {
   const router = useRouter();
-  const { setPantry, setHasOnboarded, commonIngredients } = useStore();
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const { setPantry, setHasOnboarded, commonIngredients, pantry } = useStore();
+  const { colors, isDark } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const columns = width >= 640 ? 4 : 3;
+  const gridWidth = Math.min(width, MAX_GRID_WIDTH);
+  const cardWidth = useMemo(
+    () =>
+      (gridWidth - GRID_PADDING * 2 - GRID_GAP * (columns - 1)) / columns,
+    [columns, gridWidth],
+  );
+  const [selected, setSelected] = useState<Set<string>>(() => new Set(pantry));
+  const selectedColor = isDark ? colors.primary : "#B84400";
 
   const toggleIngredient = (id: string) => {
-    const newSet = new Set(selected);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-    } else {
-      newSet.add(id);
-    }
-    setSelected(newSet);
+    setSelected((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
-  const handleContinue = () => {
+  const finishOnboarding = () => {
     setPantry(Array.from(selected));
     setHasOnboarded(true);
     router.replace("/(tabs)");
   };
 
   const handleSkip = () => {
+    setPantry([]);
     setHasOnboarded(true);
     router.replace("/(tabs)");
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>{i18n.t("pantryCheck")}</Text>
-        <Text style={styles.subtitle}>{i18n.t("pantrySubtitle")}</Text>
+    <SafeAreaView
+      edges={["top", "left", "right"]}
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      <View style={[styles.header, { width: gridWidth }]}>
+        <View style={styles.headerTop}>
+          <View
+            style={[
+              styles.headerIcon,
+              { backgroundColor: isDark ? "#3A2A20" : "#FFF0E4" },
+            ]}
+          >
+            <Ionicons name="basket-outline" size={25} color={colors.primary} />
+          </View>
+          <View style={styles.headingCopy}>
+            <Text style={[styles.title, { color: colors.text }]}>
+              {i18n.t("pantryCheck")}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {i18n.t("pantrySubtitle")}
+            </Text>
+          </View>
+        </View>
+
+        <View
+          style={[
+            styles.selectionSummary,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.border,
+            },
+          ]}
+          accessibilityLiveRegion="polite"
+        >
+          <Ionicons
+            name="checkmark-circle"
+            size={17}
+            color={selected.size > 0 ? selectedColor : colors.textSecondary}
+          />
+          <Text style={[styles.selectionText, { color: colors.textSecondary }]}>
+            {i18n.t("ingredients")}: {selected.size}
+          </Text>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.grid}>
-        {commonIngredients.map((item) => (
-          <TouchableOpacity
-            key={item.id}
-            style={[styles.card, selected.has(item.id) && styles.cardSelected]}
-            onPress={() => toggleIngredient(item.id)}
-          >
-            <Text style={styles.icon}>{item.icon}</Text>
-            <Text
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.grid, { width: gridWidth }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {commonIngredients.map((item) => {
+          const isSelected = selected.has(item.id);
+          return (
+            <TouchableOpacity
+              key={item.id}
               style={[
-                styles.name,
-                selected.has(item.id) && styles.nameSelected,
+                styles.card,
+                {
+                  width: cardWidth,
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                },
+                isSelected && styles.cardSelected,
+                isSelected && {
+                  backgroundColor: isDark ? "#30251E" : "#FFF4EA",
+                  borderColor: isDark ? colors.primary : "#B84400",
+                },
               ]}
+              onPress={() => toggleIngredient(item.id)}
+              activeOpacity={0.76}
+              accessibilityRole="checkbox"
+              accessibilityLabel={i18n.t(item.key)}
+              accessibilityState={{ checked: isSelected }}
             >
-              {i18n.t(item.key)}
-            </Text>
-            {selected.has(item.id) && (
-              <View style={styles.checkIcon}>
-                <Ionicons name="checkmark-circle" size={20} color="#E65100" />
+              <View
+                style={[
+                  styles.ingredientIconWrap,
+                  {
+                    backgroundColor: isSelected
+                      ? isDark
+                        ? "#49351F"
+                        : "#FFE4CC"
+                      : colors.surfaceVariant,
+                  },
+                ]}
+              >
+                <Text style={styles.icon}>{item.icon}</Text>
               </View>
-            )}
-          </TouchableOpacity>
-        ))}
+              <Text
+                style={[
+                  styles.name,
+                  { color: isSelected ? selectedColor : colors.text },
+                ]}
+                numberOfLines={2}
+                adjustsFontSizeToFit
+                minimumFontScale={0.85}
+              >
+                {i18n.t(item.key)}
+              </Text>
+              {isSelected && (
+                <View
+                  style={[
+                    styles.checkIcon,
+                    { backgroundColor: selectedColor },
+                  ]}
+                >
+                  <Ionicons
+                    name="checkmark"
+                    size={12}
+                    color={isDark ? "#21170F" : "#FFFFFF"}
+                  />
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
 
-      <View style={styles.footer}>
-        <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
-          <Text style={styles.skipText}>{i18n.t("skip")}</Text>
+      <View
+        style={[
+          styles.footer,
+          {
+            backgroundColor: colors.surface,
+            borderTopColor: colors.border,
+            width: gridWidth,
+            paddingBottom: Math.max(10, insets.bottom),
+          },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={handleSkip}
+          style={styles.skipButton}
+          accessibilityRole="button"
+        >
+          <Text style={[styles.skipText, { color: colors.textSecondary }]}>
+            {i18n.t("skip")}
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={handleContinue}
-          style={styles.continueButton}
+          onPress={finishOnboarding}
+          style={[
+            styles.continueButton,
+            { backgroundColor: isDark ? "#B95D00" : "#C2410C" },
+          ]}
+          accessibilityRole="button"
         >
-          <Text style={styles.continueText}>
+          <Text style={styles.continueText} numberOfLines={1}>
             {i18n.t("showRecipes")} ({selected.size})
           </Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
+          <Ionicons name="arrow-forward" size={19} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -91,101 +215,154 @@ export default function PantryCheckScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    alignItems: "center",
   },
   header: {
-    padding: 24,
-    paddingTop: 40,
+    paddingHorizontal: GRID_PADDING,
+    paddingTop: 18,
+    paddingBottom: 16,
+    gap: 16,
+    alignSelf: "center",
+  },
+  headerTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 14,
+  },
+  headerIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headingCopy: {
+    flex: 1,
+    minWidth: 0,
+    paddingTop: 1,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: 12,
+    fontSize: 25,
+    lineHeight: 31,
+    fontWeight: "800",
+    marginBottom: 5,
+    flexShrink: 1,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#757575",
-    lineHeight: 24,
+    fontSize: 14,
+    lineHeight: 21,
+  },
+  selectionSummary: {
+    alignSelf: "flex-start",
+    minHeight: 34,
+    paddingHorizontal: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  selectionText: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  scroll: {
+    flex: 1,
+    width: "100%",
   },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    padding: 16,
-    gap: 12,
-    paddingBottom: 100,
+    alignSelf: "center",
+    justifyContent: "flex-start",
+    gap: GRID_GAP,
+    paddingHorizontal: GRID_PADDING,
+    paddingTop: 4,
+    paddingBottom: 20,
   },
   card: {
-    width: "30%", // roughly 3 columns
     aspectRatio: 1,
-    backgroundColor: "#FAFAFA",
-    borderRadius: 16,
-    justifyContent: "center",
+    minHeight: 88,
+    position: "relative",
+    borderRadius: 20,
+    borderWidth: 1,
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "transparent",
-    padding: 8,
+    justifyContent: "center",
+    paddingHorizontal: 5,
+    paddingVertical: 8,
+    gap: 5,
   },
   cardSelected: {
-    backgroundColor: "#FFF3E0",
-    borderColor: "#E65100",
+    borderWidth: 1.5,
+  },
+  ingredientIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
   },
   icon: {
-    fontSize: 32,
-    marginBottom: 8,
+    fontSize: 25,
   },
   name: {
+    maxWidth: "100%",
     fontSize: 12,
-    fontWeight: "600",
-    color: "#333",
+    lineHeight: 16,
+    fontWeight: "700",
     textAlign: "center",
-  },
-  nameSelected: {
-    color: "#E65100",
   },
   checkIcon: {
     position: "absolute",
     top: 6,
     right: 6,
+    width: 19,
+    height: 19,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    backgroundColor: "#fff",
+    alignSelf: "center",
+    paddingHorizontal: 16,
+    paddingTop: 13,
+    paddingBottom: 10,
     borderTopWidth: 1,
-    borderTopColor: "#F0F0F0",
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
+    gap: 12,
   },
   skipButton: {
-    padding: 12,
+    minHeight: 50,
+    minWidth: 72,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   skipText: {
-    color: "#757575",
-    fontSize: 16,
-    fontWeight: "500",
+    fontSize: 14,
+    fontWeight: "700",
   },
   continueButton: {
-    backgroundColor: "#E65100",
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 30,
+    minHeight: 52,
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 16,
+    borderRadius: 26,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
-    elevation: 4,
-    shadowColor: "#E65100",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    elevation: 3,
+    shadowColor: "#8C3A13",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   continueText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "800",
+    flexShrink: 1,
   },
 });

@@ -108,7 +108,7 @@ export default function RootLayout() {
             />
           </Stack>
         </View>
-        <StatusBar style="auto" />
+        <StatusBar style={isDarkMode ? "light" : "dark"} />
         <LoadingOverlay />
         <Toast config={toastConfig} />
       </ThemeProvider>
