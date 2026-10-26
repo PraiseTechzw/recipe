@@ -4,6 +4,7 @@ const TIMEOUT_MS = 45_000;
 
 type OpenRouterResponse = {
   choices?: Array<{
+    finish_reason?: string | null;
     message?: {
       role?: "assistant";
       content?: string | Array<{ type?: string; text?: string }> | null;
@@ -141,7 +142,7 @@ export class OpenRouterClient {
               ? { tools, tool_choice: toolRounds === 0 ? "required" : "auto" }
               : { response_format: { type: "json_object" } }),
             temperature: 0.35,
-            max_tokens: 1800,
+            max_tokens: toolsAvailable ? 900 : 3200,
           }),
           signal: controller.signal,
         });
@@ -184,6 +185,9 @@ export class OpenRouterClient {
         ? content.map((part) => part.text ?? "").join("\n").trim()
         : content?.trim();
       if (!text) throw new Error("The AI returned an empty response. Please try again.");
+      if (payload.choices?.[0]?.finish_reason === "length") {
+        throw new Error("The free model stopped before finishing the recipe. Please try once more.");
+      }
       return text;
     }
   }
