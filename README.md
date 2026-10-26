@@ -47,6 +47,7 @@ The app uses OpenRouter through a Supabase Edge Function. Its provider/model ava
 | State | Zustand and AsyncStorage |
 | Backend | Supabase Auth, Postgres, Storage, Realtime, Edge Functions |
 | AI | OpenRouter `openrouter/free`, accessed server-side |
+| Monitoring | EAS Observe startup/navigation/error metrics and EAS Insights app usage |
 | Languages | English, ChiShona, isiNdebele |
 
 ## Run locally

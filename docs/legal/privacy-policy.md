@@ -5,4 +5,4 @@ The in-app Privacy Policy is maintained as structured sections in [data/legalDoc
 **Last updated:** 26 October 2026  
 **Operator/contact:** Praise Masunga, Zimbabwe Traditional Recipes (`praisetechzw`), praisetechzw@gmail.com.
 
-The policy describes local and synced app data, account and community information, AI image and prompt processing, notifications, service providers, retention, and user requests. The in-app structured copy is canonical; update the public page whenever it changes, and check both against actual provider configuration before release.
+The policy describes local and synced app data, account and community information, AI image and prompt processing, notifications, EAS Observe performance/error telemetry, EAS Insights app-usage reporting, service providers, retention, and user requests. The in-app structured copy is canonical; update the public page whenever it changes, and check both against actual provider configuration before release.

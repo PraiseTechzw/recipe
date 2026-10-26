@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useObserve } from "expo-observe";
 import * as StoreReview from "expo-store-review";
 import { useEffect, useState } from "react";
 import { Share, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -52,6 +53,7 @@ const getAdjustedQuantity = (qty: string, mult: number) => {
 };
 
 export default function RecipeDetailScreen() {
+  const { markInteractive } = useObserve();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -153,6 +155,10 @@ export default function RecipeDetailScreen() {
 
     loadRecipe();
   }, [id, recipes, myRecipes]);
+
+  useEffect(() => {
+    if (!loading && recipe) markInteractive();
+  }, [loading, markInteractive, recipe]);
 
   const favorite = recipe ? isFavorite(recipe.id) : false;
 

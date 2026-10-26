@@ -37,6 +37,7 @@ Use this checklist before each public release. Repository checks cannot confirm 
 - [ ] Add and operate user-content reporting/moderation workflows before treating public recipe sharing as a production community feature.
 - [ ] Confirm age eligibility, legal operator/contact details, retention periods and the approved Terms/Privacy wording with qualified counsel.
 - [ ] Verify in-app Privacy and Terms match the hosted policies and live processing.
+- [ ] Review Google Play Data safety disclosures for EAS Observe performance/error metrics and EAS Insights cold-start/app-usage telemetry before releasing the build that contains those SDKs.
 - [ ] Configure GitHub Pages (**Settings → Pages → GitHub Actions**) and ensure `https://praisetechzw.github.io/recipe/` is live.
 - [ ] After the Play rollout, publish a matching GitHub Release to update `update.json` and trigger update prompts in supported app builds.
 - [ ] Check crash-free installs, support inbox and store feedback after staged rollout; pause rollout if critical issues appear.

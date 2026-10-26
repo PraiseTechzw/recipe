@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
+import { useObserve } from "expo-observe";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   Animated,
@@ -31,6 +32,7 @@ import { useStore } from "../../store/useStore";
 import { useTheme } from "../../theme/useTheme";
 
 export default function HomeScreen() {
+  const { markInteractive } = useObserve();
   const router = useRouter();
   const { colors, shadows, isDark } = useTheme();
   const {
@@ -124,6 +126,10 @@ export default function HomeScreen() {
       isActive = false;
     };
   }, [loadData, fadeAnim]);
+
+  useEffect(() => {
+    if (hasOnboarded && !isLoading) markInteractive();
+  }, [hasOnboarded, isLoading, markInteractive]);
 
   const onRefresh = async () => {
     HapticService.selection();

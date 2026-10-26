@@ -2,7 +2,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useObserve } from "expo-observe";
 import {
     KeyboardAvoidingView,
     Platform,
@@ -40,6 +41,7 @@ const LANGUAGES = [
 ] as const;
 
 export default function UserInfoScreen() {
+  const { markInteractive } = useObserve();
   const router = useRouter();
   const { setUserProfile, setLocale, locale, dietaryOptions, experienceLevels } = useStore();
   const { colors, isDark } = useTheme();
@@ -55,6 +57,10 @@ export default function UserInfoScreen() {
   );
   const [diet, setDiet] = useState<string[]>([]);
   const [avatar, setAvatar] = useState<string | null>(CHEF_AVATARS[0].uri);
+
+  useEffect(() => {
+    markInteractive();
+  }, [markInteractive]);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({

@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useObserve } from "expo-observe";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -22,6 +23,7 @@ import { useTheme } from "../theme/useTheme";
 type AuthMode = "signup" | "login";
 
 export default function AccountAccessScreen() {
+  const { markInteractive } = useObserve();
   const router = useRouter();
   const params = useLocalSearchParams<{ mode?: string }>();
   const { colors, isDark } = useTheme();
@@ -32,6 +34,10 @@ export default function AccountAccessScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+
+  useEffect(() => {
+    markInteractive();
+  }, [markInteractive]);
 
   const submit = async () => {
     const cleanEmail = email.trim().toLowerCase();

@@ -1,5 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useObserve } from "expo-observe";
+import { useEffect } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
@@ -12,8 +14,13 @@ const BENEFITS = [
 ] as const;
 
 export default function AccountChoiceScreen() {
+  const { markInteractive } = useObserve();
   const router = useRouter();
   const { colors, isDark } = useTheme();
+
+  useEffect(() => {
+    markInteractive();
+  }, [markInteractive]);
 
   const openAccount = (mode: "signup" | "login") => {
     router.push({ pathname: "/account-access", params: { mode } });

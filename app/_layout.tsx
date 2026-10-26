@@ -4,6 +4,7 @@ import {
     ThemeProvider,
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
+import { Observe, ObserveRoot } from "expo-observe";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { AppState, View } from "react-native";
@@ -21,11 +22,29 @@ import { useStore } from "../store/useStore";
 
 import { toastConfig } from "../components/feedback/ToastConfig";
 
+Observe.configure({
+  integrations: {
+    "expo-router": {
+      filteredParams: [
+        "id",
+        "email",
+        "password",
+        "token",
+        "access_token",
+        "refresh_token",
+        "code",
+        "prompt",
+        "query",
+      ],
+    },
+  },
+});
+
 export const unstable_settings = {
   anchor: "(tabs)",
 };
 
-export default function RootLayout() {
+function RootLayout() {
   const { isDarkMode, locale, setUserProfile, fetchRecipes, notificationPreferences } = useStore();
   const { isOffline } = useOfflineStatus();
 
@@ -142,3 +161,5 @@ export default function RootLayout() {
     </GlobalErrorBoundary>
   );
 }
+
+export default ObserveRoot.wrap(RootLayout);

@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import * as Updates from 'expo-updates';
+import { Observe } from 'expo-observe';
 import { Button } from '../ui/Button'; // Assuming we have this from previous steps
 
 interface Props {
@@ -24,6 +25,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    Observe.reportError(error);
   }
 
   handleRestart = async () => {
