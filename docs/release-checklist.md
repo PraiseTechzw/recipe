@@ -6,6 +6,7 @@ Use this checklist before each public release. Repository checks cannot confirm 
 
 - [ ] CI passes on the release commit; review the diff and database migrations.
 - [ ] Set matching `expo.version` and `package.json` version; confirm Android `versionCode` / EAS remote app versioning.
+- [ ] Confirm `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` exist in EAS **production** environment; these are public client configuration, not secret credentials. Keep `OPENROUTER_API_KEY` only in Supabase Function secrets.
 - [ ] Build a signed production Android artifact with the intended EAS production profile.
 - [ ] Validate on a physical Android device, including fresh install, upgrade, offline, account, guest, recipe, pantry, saved, AI and notification flows.
 - [ ] Confirm app icon, splash screen, adaptive icon, permissions, deep links, accessibility, and target SDK on the submitted build.

@@ -70,7 +70,7 @@ Set the public Supabase values in `.env`:
 
 ```dotenv
 EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_KEY
 ```
 
 Start the app:
@@ -96,11 +96,14 @@ supabase secrets set OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
 
 Never put the OpenRouter key in an `EXPO_PUBLIC_*` variable or commit secrets. For account seeding and hosted auth setup, see [Supabase setup](supabase/README.md).
 
+For EAS builds, set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in the EAS **production** environment. The legacy `EXPO_PUBLIC_SUPABASE_ANON_KEY` name remains supported. Increment both app/package versions with `npm run bump-version`, then run `npm run eas-build:local` for a local Android production App Bundle or `npm run eas-build` for an EAS cloud build. See [EAS environment setup](docs/eas-build.md).
+
 ## Project documentation
 
 - [Production release checklist](docs/release-checklist.md)
 - [Store listing review and suggested copy](docs/store-listing.md)
 - [Update prompt and release process](docs/updates.md)
+- [EAS Android build and environment setup](docs/eas-build.md)
 - [Architecture and backend setup](supabase/README.md)
 - [Privacy policy](docs/legal/privacy-policy.md) · [Terms of Service](docs/legal/terms-of-service.md)
 - [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)

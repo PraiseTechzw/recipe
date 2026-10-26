@@ -2,7 +2,7 @@
   "expo": {
     "name": "Zimbabwe Traditional Recipes",
     "slug": "tasteofzimbabwe",
-    "version": "2.0.2",
+    "version": "2.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tasteofzimbabwe",
@@ -10,7 +10,8 @@
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.appixiasoftwares.tasteofzimbabwe"
+      "bundleIdentifier": "com.appixiasoftwares.tasteofzimbabwe",
+      "infoPlist": {}
     },
     "android": {
       "package": "com.appixiasoftwares.tasteofzimbabwe",
@@ -19,7 +20,10 @@
         "backgroundColor": "#F5EBD8",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -51,7 +55,8 @@
       "expo-localization",
       "expo-sharing",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -1,7 +1,7 @@
 {
   "name": "recipe",
   "main": "expo-router/entry",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -12,7 +12,8 @@
     "test": "jest",
     "bump-version": "node ./scripts/bump-version.js",
     "seed:official-account": "node --env-file=.env.local scripts/seed-official-account.mjs",
-    "eas-build": "npm run bump-version && eas build"
+    "eas-build": "eas build --platform android --profile production",
+    "eas-build:local": "eas build --platform android --profile production --local"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -23,7 +24,7 @@
     "@react-navigation/native": "^7.1.8",
     "@rneui/base": "^5.0.0",
     "@rneui/themed": "^5.0.0",
-    "@supabase/supabase-js": "^2.91.1",
+    "@supabase/supabase-js": "^2.118.0",
     "clsx": "^2.1.1",
     "expo": "^58.0.19",
     "expo-camera": "~58.0.12",
@@ -45,6 +46,7 @@
     "expo-router": "~58.0.26",
     "expo-sharing": "~58.0.20",
     "expo-splash-screen": "~58.0.11",
+    "expo-sqlite": "~58.0.14",
     "expo-status-bar": "~58.0.4",
     "expo-store-review": "~58.0.2",
     "expo-symbols": "~58.0.4",

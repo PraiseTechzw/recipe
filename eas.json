@@ -5,16 +5,22 @@
   },
   "build": {
     "development": {
+      "environment": "development",
       "developmentClient": true,
       "distribution": "internal",
       "autoIncrement": true
     },
     "preview": {
+      "environment": "preview",
       "distribution": "internal",
       "autoIncrement": true
     },
     "production": {
-      "autoIncrement": true
+      "environment": "production",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
     }
   },
   "submit": {
