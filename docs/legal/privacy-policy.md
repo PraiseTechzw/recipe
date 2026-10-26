@@ -1,8 +1,8 @@
 # Privacy Policy
 
-The in-app Privacy Policy is the canonical version and is maintained as structured sections in [data/legalDocuments.ts](../../data/legalDocuments.ts). The app renders it from Settings → Privacy Policy.
+The in-app Privacy Policy is maintained as structured sections in [data/legalDocuments.ts](../../data/legalDocuments.ts) and rendered from Settings → Privacy Policy. The public, readable page is [Zimbabwe Traditional Recipes Privacy Policy](https://praisetechzw.github.io/recipe/privacy/).
 
 **Last updated:** 26 October 2026  
 **Operator/contact:** Praise Masunga, Zimbabwe Traditional Recipes (`praisetechzw`), praisetechzw@gmail.com.
 
-The policy describes local and synced app data, account and community information, AI image and prompt processing, notifications, service providers, retention, and user requests. Keep this document aligned with the in-app content and actual provider configuration when updating the policy.
+The policy describes local and synced app data, account and community information, AI image and prompt processing, notifications, service providers, retention, and user requests. The in-app structured copy is canonical; update the public page whenever it changes, and check both against actual provider configuration before release.
