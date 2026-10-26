@@ -4,6 +4,7 @@ import { useStore } from '../store/useStore';
 
 let stateSyncStarted = false;
 let stateSyncTimer: ReturnType<typeof setTimeout> | undefined;
+let lastLeaderboardSyncSignature: string | null = null;
 
 function getSyncableAppState() {
   const state = useStore.getState();
@@ -114,9 +115,25 @@ async function writeAppState() {
       state: getSyncableAppState(),
     }, { onConflict: 'auth_user_id' });
     if (error) throw error;
+
+    const profile = getSyncableAppState().userProfile;
+    const leaderboardSignature = JSON.stringify({
+      authUserId: session.user.id,
+      chefId: profile.id,
+      name: profile.name,
+      xp: profile.xp,
+      weeklyXp: profile.weeklyXp ?? 0,
+      weeklyXpWeek: profile.weeklyXpWeek ?? null,
+      badges: profile.badges,
+    });
+    if (leaderboardSignature !== lastLeaderboardSyncSignature) {
+      const { error: leaderboardError } = await supabase.functions.invoke('sync-leaderboard');
+      if (leaderboardError) throw leaderboardError;
+      lastLeaderboardSyncSignature = leaderboardSignature;
+    }
   } catch (error) {
-    // Local state remains available when anonymous auth or the migration is not configured.
-    console.warn('App state sync unavailable; keeping changes on this device:', error);
+    // Local progress remains available when Supabase migrations/functions are not deployed.
+    console.warn('App state or leaderboard sync unavailable; keeping progress on this device:', error);
   }
 }
 

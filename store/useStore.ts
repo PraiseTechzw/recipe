@@ -13,6 +13,18 @@ import {
     Step,
 } from "../models/recipe";
 
+function getCurrentWeekKey() {
+  const date = new Date();
+  const day = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() - day + 1);
+  date.setUTCHours(0, 0, 0, 0);
+  return date.toISOString().slice(0, 10);
+}
+
+function getLocalDayKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export interface Category {
   id: string;
   name: string;
@@ -40,7 +52,14 @@ export interface UserStats {
   sharedRecipes: number;
   daysStreak: number;
   lastCookDate?: string;
+  cookedCategories?: string[];
+  healthyRecipesCooked?: number;
+  dessertRecipesCooked?: number;
+  earlyBirdCooks?: number;
+  nightOwlCooks?: number;
 }
+
+type NumericUserStat = "recipesCooked" | "savedRecipes" | "sharedRecipes" | "daysStreak";
 
 interface SupabaseRecipe {
   id: string;
@@ -118,6 +137,8 @@ interface AppState {
     name: string;
     chefLevel: string;
     xp: number;
+    weeklyXp: number;
+    weeklyXpWeek: string;
     badges: string[];
     dietaryPreferences: string[];
     pushToken?: string;
@@ -130,9 +151,10 @@ interface AppState {
   checkBadges: () => void;
   unlockBadge: (badgeId: string) => void;
   incrementStat: (
-    stat: Exclude<keyof UserStats, "lastCookDate">,
+    stat: NumericUserStat,
     amount?: number,
   ) => void;
+  recordCookedRecipe: (recipe: Pick<Recipe, "category" | "tags">) => void;
 
   // Intelligence & Analytics
   viewHistory: string[]; // List of recipe IDs viewed
@@ -203,6 +225,8 @@ export const useStore = create<AppState>()(
 
           awardedXP = 5;
           const xp = state.userProfile.xp + awardedXP;
+          const week = getCurrentWeekKey();
+          const weeklyXp = (state.userProfile.weeklyXpWeek === week ? state.userProfile.weeklyXp ?? 0 : 0) + awardedXP;
           const stats = state.userProfile.stats ?? { recipesCooked: 0, savedRecipes: 0, sharedRecipes: 0, daysStreak: 0 };
           return {
             favorites: [...state.favorites, id],
@@ -210,6 +234,8 @@ export const useStore = create<AppState>()(
             userProfile: {
               ...state.userProfile,
               xp,
+              weeklyXp,
+              weeklyXpWeek: week,
               chefLevel: getLevel(xp).title,
               stats: { ...stats, savedRecipes: (stats.savedRecipes ?? 0) + 1 },
             },
@@ -395,6 +421,8 @@ export const useStore = create<AppState>()(
           name: "Guest",
           chefLevel: "Beginner",
           xp: 0,
+          weeklyXp: 0,
+          weeklyXpWeek: getCurrentWeekKey(),
           badges: [],
           dietaryPreferences: [],
           stats: { recipesCooked: 0, savedRecipes: 0, sharedRecipes: 0, daysStreak: 0 },
@@ -415,6 +443,8 @@ export const useStore = create<AppState>()(
         name: "Guest",
         chefLevel: "Beginner",
         xp: 0,
+        weeklyXp: 0,
+        weeklyXpWeek: getCurrentWeekKey(),
         badges: [],
         dietaryPreferences: [],
         stats: {
@@ -428,18 +458,25 @@ export const useStore = create<AppState>()(
         set((state) => ({
           userProfile: { ...state.userProfile, ...profile },
         })),
-      addXP: (amount) =>
+      addXP: (amount) => {
+        if (!Number.isFinite(amount) || amount <= 0) return;
         set((state) => {
           const newXP = state.userProfile.xp + amount;
           const newLevel = getLevel(newXP);
+          const week = getCurrentWeekKey();
+          const weeklyXp = (state.userProfile.weeklyXpWeek === week ? state.userProfile.weeklyXp ?? 0 : 0) + amount;
           return {
             userProfile: {
               ...state.userProfile,
               xp: newXP,
+              weeklyXp,
+              weeklyXpWeek: week,
               chefLevel: newLevel.title,
             },
           };
-        }),
+        });
+        get().checkBadges();
+      },
       incrementStat: (stat, amount = 1) => {
         set((state) => {
           const currentStats = state.userProfile.stats || {
@@ -452,13 +489,14 @@ export const useStore = create<AppState>()(
           let newStats = { ...currentStats };
 
           if (stat === "recipesCooked") {
-            const today = new Date().toISOString().split("T")[0];
+            const now = new Date();
+            const today = getLocalDayKey(now);
             const lastDate = currentStats.lastCookDate;
 
             if (lastDate !== today) {
-              const yesterday = new Date();
+              const yesterday = new Date(now);
               yesterday.setDate(yesterday.getDate() - 1);
-              const yesterdayStr = yesterday.toISOString().split("T")[0];
+              const yesterdayStr = getLocalDayKey(yesterday);
 
               if (lastDate === yesterdayStr) {
                 newStats.daysStreak = (currentStats.daysStreak || 0) + 1;
@@ -474,16 +512,46 @@ export const useStore = create<AppState>()(
         });
         get().checkBadges();
       },
+      recordCookedRecipe: (recipe) => {
+        get().incrementStat("recipesCooked");
+        const now = new Date();
+        const tags = (recipe.tags ?? []).map((tag) => tag.trim().toLowerCase());
+        set((state) => {
+          const stats = state.userProfile.stats;
+          const cookedCategories = stats.cookedCategories ?? [];
+          const category = recipe.category?.trim();
+          return {
+            userProfile: {
+              ...state.userProfile,
+              stats: {
+                ...stats,
+                cookedCategories: category && !cookedCategories.includes(category)
+                  ? [...cookedCategories, category]
+                  : cookedCategories,
+                healthyRecipesCooked: (stats.healthyRecipesCooked ?? 0) + (tags.includes("healthy") ? 1 : 0),
+                dessertRecipesCooked: (stats.dessertRecipesCooked ?? 0) + (tags.includes("dessert") || category?.toLowerCase().includes("dessert") ? 1 : 0),
+                earlyBirdCooks: (stats.earlyBirdCooks ?? 0) + (category?.toLowerCase() === "breakfast" && now.getHours() < 9 ? 1 : 0),
+                nightOwlCooks: (stats.nightOwlCooks ?? 0) + (now.getHours() >= 22 ? 1 : 0),
+              },
+            },
+          };
+        });
+        get().checkBadges();
+      },
       unlockBadge: (badgeId) => {
         if (get().userProfile.badges.includes(badgeId)) return;
         const badge = BADGES.find((item) => item.id === badgeId);
         set((state) => {
-          const newXP = state.userProfile.xp + (badge?.xpReward ?? 0);
+          const reward = badge?.xpReward ?? 0;
+          const newXP = state.userProfile.xp + reward;
+          const week = getCurrentWeekKey();
           return {
             userProfile: {
               ...state.userProfile,
               badges: [...state.userProfile.badges, badgeId],
               xp: newXP,
+              weeklyXp: (state.userProfile.weeklyXpWeek === week ? state.userProfile.weeklyXp ?? 0 : 0) + reward,
+              weeklyXpWeek: week,
               chefLevel: getLevel(newXP).title,
             },
           };
@@ -520,6 +588,24 @@ export const useStore = create<AppState>()(
               break;
             case "master_chef":
               if (getLevel(xp).level >= 10) unlocked = true;
+              break;
+            case "flavor_explorer":
+              if ((currentStats.cookedCategories?.length ?? 0) >= 3) unlocked = true;
+              break;
+            case "early_bird":
+              if ((currentStats.earlyBirdCooks ?? 0) >= 1) unlocked = true;
+              break;
+            case "night_owl":
+              if ((currentStats.nightOwlCooks ?? 0) >= 1) unlocked = true;
+              break;
+            case "healthy_habit":
+              if ((currentStats.healthyRecipesCooked ?? 0) >= 5) unlocked = true;
+              break;
+            case "sweet_tooth":
+              if ((currentStats.dessertRecipesCooked ?? 0) >= 3) unlocked = true;
+              break;
+            case "sharer":
+              if ((currentStats.sharedRecipes ?? 0) >= 1) unlocked = true;
               break;
           }
 

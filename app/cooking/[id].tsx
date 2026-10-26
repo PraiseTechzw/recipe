@@ -118,13 +118,14 @@ export default function CookingModeScreen() {
     id: string;
     recipeParams: string;
   }>();
-  const { addXP, incrementStat, recipes, myRecipes } = useStore();
+  const { addXP, recordCookedRecipe, recipes, myRecipes } = useStore();
 
   // State
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
+  const completionAwardedForId = useRef<string | null>(null);
   const [, setError] = useState<string | null>(null);
 
   // Timer State
@@ -268,10 +269,11 @@ export default function CookingModeScreen() {
   const XP_REWARD_PER_RECIPE = 50;
 
   const finishRecipe = () => {
+    if (!id || completionAwardedForId.current === id) return;
+    completionAwardedForId.current = id;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     addXP(XP_REWARD_PER_RECIPE);
-    incrementStat("recipesCooked");
-    incrementStat("daysStreak"); // Simple logic, assumes daily use
+    recordCookedRecipe(recipe);
     setIsCompleted(true);
 
     const appState = useStore.getState();

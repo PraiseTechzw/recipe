@@ -4,6 +4,7 @@
   "version": "2.0.3",
   "scripts": {
     "start": "expo start",
+    "eas-build-pre-install": "node scripts/eas-build-pre-install.mjs",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",

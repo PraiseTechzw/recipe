@@ -10,6 +10,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { leaderboardService } from "@/services/leaderboardRealtime";
+import { supabase } from "@/lib/supabase";
 import { useStore } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 
@@ -30,6 +31,7 @@ export default function LeaderboardScreen() {
 
   // Local State
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
+  const [currentChefId, setCurrentChefId] = useState<string | null>(null);
   // const [refreshing, setRefreshing] = useState(false);
 
   // Store Selectors
@@ -39,7 +41,6 @@ export default function LeaderboardScreen() {
   const userRank = useStore((state) => state.userRank);
   const isLoading = useStore((state) => state.isLeaderboardLoading);
   const error = useStore((state) => state.leaderboardError);
-  const userProfile = useStore((state) => state.userProfile);
   const isLive = useStore((state) => state.isLeaderboardLive);
 
   // Derived Data
@@ -49,17 +50,20 @@ export default function LeaderboardScreen() {
 
   // Visibility Check for Sticky Footer
   const amIVisibleInList = fullData.some(
-    (item) => item.chef_id === userProfile.id,
+    (item) => item.chef_id === currentChefId,
   );
-  const myEntry = neighbors.find((item) => item.chef_id === userProfile.id);
+  const myEntry = neighbors.find((item) => item.chef_id === currentChefId);
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback(async () => {
     leaderboardService.fetchGlobalLeaderboards();
-    if (userProfile.id) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const chefId = session?.user.id ?? null;
+    setCurrentChefId(chefId);
+    if (chefId) {
       const sortBy = activeTab === "weekly" ? "weekly_xp" : "total_xp";
-      leaderboardService.fetchAroundMe(userProfile.id, sortBy);
+      leaderboardService.fetchAroundMe(chefId, sortBy);
     }
-  }, [userProfile.id, activeTab]);
+  }, [activeTab]);
 
   // Lifecycle
   useEffect(() => {
@@ -199,7 +203,7 @@ export default function LeaderboardScreen() {
           <LeaderboardRow
             item={item}
             rank={index + 4} // +1 for 0-index, +3 for top 3
-            isMe={item.chef_id === userProfile.id}
+            isMe={item.chef_id === currentChefId}
             mode={activeTab}
           />
         )}

@@ -1,43 +1,30 @@
 # Cooking progress and achievements
 
-This document describes the current implementation, not a guarantee that every scoring path is enabled in every app flow. Source of truth: `engines/gamificationEngine.ts`, `stores/gamificationStore.ts`, and `types/gamification.ts`.
+## Active implementation
 
-## Persistence and identity
+The app has one active gamification store: `store/useStore.ts`, persisted under `recipe-app-storage`. It awards 50 XP for creating a recipe and completing a cook, 5 XP the first time a recipe is favorited, and the configured XP reward when a badge unlocks. XP, level, cooking statistics, badges, and weekly XP are included in the user's private `chef_app_state` sync.
 
-Gamification state is persisted locally in AsyncStorage under `gamification-storage`. It includes a generated chef ID, display name, avatar seed, XP, level, unlocked achievement IDs, weekly XP and cooking statistics. This local state is not authoritative server state. Public leaderboard rows are readable, but the latest security migration removes direct client writes; a trusted leaderboard writer is not currently included in the repository.
+Cooking streaks use the device's local calendar day. The first completed cook on a day increments the streak once; additional cooks that day do not. Cooking progress is guarded against repeat completion callbacks. Weekly XP uses a Monday-start UTC week key so it matches the server leaderboard sync.
 
-## XP rules in the engine
+## Achievements
 
-| Event | Current award |
-|---|---:|
-| Complete a recipe | 50 XP |
-| Step streak | 2 XP per reported step |
-| Pantry match recipe | 20 XP |
-| First recipe in a category | 30 XP |
-| Recipe completion streak bonus | 50 + 10 × current streak days, capped at 150 XP |
-| Completion within 10% of estimated time | 25 XP |
-| Add a review | 15 XP |
-| Unlock an achievement | Achievement-specific award |
+Every badge in `constants/gamification.ts` is connected to an event:
 
-Streak and bonus calculation are client-side. The current logic can award the completion streak bonus for each completion event; it does not enforce once-per-calendar-day bonus eligibility. Treat XP as a motivational display, not as a secure reward or financial value.
+- First Cook: complete a recipe.
+- Week Streak: cook on seven consecutive local calendar days.
+- Flavor Explorer: cook in three different recipe categories.
+- Early Bird: complete a breakfast recipe before 09:00 local time.
+- Night Owl: complete a recipe from 22:00 local time onward.
+- Healthy Habit: complete five recipes tagged Healthy.
+- Sweet Tooth: complete three recipes tagged Dessert or categorized as dessert.
+- Master Chef: reach level 10.
+- Collector: save 20 recipes.
+- Sharer: share a recipe through the native share sheet.
 
-## Levels
+Badge unlocks are idempotent and grant their configured XP reward.
 
-The engine uses fixed XP thresholds from level 1 through 20: `0, 100, 250, 500, 850, 1300, 1900, 2650, 3550, 4650, 6000, 7600, 9500, 11700, 14250, 17200, 20600, 24500, 28950, 34000`. Above level 20, it estimates levels using `floor((XP / 100)^(1 / 1.5)) + 1`.
+## Leaderboard synchronization
 
-## Achievement catalogue
+Client writes to public leaderboard tables remain disabled. After private app state syncs, the authenticated `sync-leaderboard` Edge Function reads only that caller's saved state using the service role and updates the corresponding chef and leaderboard rows. The function derives level from XP and validates score fields. Deploy it with `supabase functions deploy sync-leaderboard --project-ref <project-ref>` after applying the ordered migrations.
 
-The engine defines achievements for first recipe, 7/30-day streaks, ten pantry matches, five reviews, five cuisine categories, speed, no-pause completion, sharing, healthy and dessert recipes, saving 20 favourites, and 100 completed recipes. Each definition and award is maintained in `engines/gamificationEngine.ts`.
-
-Some counters or events may not be connected to a user-facing action in every current route. Check event dispatch call sites before presenting a particular achievement as obtainable in a release.
-
-## Weekly score
-
-The store calculates a Monday-start week in local device time and resets local weekly XP when the stored week changes. This is a device-local display and is not a trusted global competition score.
-
-## Production constraints
-
-- State is stored on-device and may not follow a guest to another device.
-- Client-side score updates can be altered and must not be used for prizes or other valuable rewards.
-- Do not restore public client writes to leaderboard tables. Add an authenticated, validated server-side scoring flow before enabling synced competition.
-- Update this specification after the code and event dispatch have changed; do not use it as a roadmap or claim for unimplemented behavior.
+This protects other users' rows and prevents direct public table writes. App progress is still generated on the device, so leaderboard scores are motivational and must not be used for prizes or other valuable rewards.

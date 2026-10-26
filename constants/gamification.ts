@@ -27,7 +27,7 @@ export const BADGES: Badge[] = [
   {
     id: 'flavor_explorer',
     name: 'Flavor Explorer',
-    description: 'Try recipes from 3 different cuisines.',
+    description: 'Cook recipes from 3 different categories.',
     icon: '🌍',
     xpReward: 100,
     category: 'collection'

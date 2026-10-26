@@ -73,6 +73,7 @@ export default function RecipeDetailScreen() {
     isFavorite,
     toggleFavorite,
     logRecipeView,
+    incrementStat,
     addToShoppingList,
     recipes,
     myRecipes,
@@ -185,6 +186,17 @@ export default function RecipeDetailScreen() {
         i18n.t("removed"),
         i18n.t("removedFrom") + " " + i18n.t("favorites"),
       );
+    }
+  };
+
+  const handleShareRecipe = async () => {
+    if (!recipe) return;
+    const result = await Share.share({
+      message: `${recipe.title} • ${recipe.description || ""}`,
+    });
+    if (result.action === Share.sharedAction) {
+      incrementStat("sharedRecipes");
+      ToastService.success(i18n.t("success"), i18n.t("shared"));
     }
   };
 
@@ -407,12 +419,7 @@ export default function RecipeDetailScreen() {
             <Ionicons name="cart-outline" size={20} color={colors.text} />
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={async () => {
-                await Share.share({
-                  message: recipe.title + " • " + (recipe.description || ""),
-                });
-                ToastService.success(i18n.t("success"), i18n.t("shared"));
-              }}
+              onPress={handleShareRecipe}
                 style={[styles.stickyIconButton, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}
             >
             <Ionicons name="share-social-outline" size={20} color={colors.text} />
@@ -437,12 +444,7 @@ export default function RecipeDetailScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionItem, { backgroundColor: isDark ? "#3B2A1F" : "#FFF0E4" }]}
-            onPress={async () => {
-              await Share.share({
-                message: recipe.title + " • " + (recipe.description || ""),
-              });
-              ToastService.success(i18n.t("success"), i18n.t("shared"));
-            }}
+            onPress={handleShareRecipe}
           >
             <Ionicons name="share-social-outline" size={20} color={colors.primary} />
             <Text style={[styles.actionText, { color: colors.primary }]}>{i18n.t("share")}</Text>
