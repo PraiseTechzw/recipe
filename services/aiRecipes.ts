@@ -154,7 +154,7 @@ export class AIRecipeService {
         },
       },
     ];
-    const prompt = `Use these inputs to create one Zimbabwean or African-inspired recipe.\n\nMAIN INGREDIENTS: ${ingredients.join(", ")}\n${pantryString}\n\nPREFERENCES:\n${prefsString}\n\nFirst search the cookbook for a related recipe. If one matches, adapt it to the selected ingredients and mood; otherwise create a new dish. Use the main ingredients where practical, clearly include pantry ingredients, and do not claim the user has ingredients outside these lists. Make quantities and cooking steps useful and realistic. Return only a JSON object with title, description, time_minutes, servings, category, ingredients [{name, quantity}], steps [{text, timer_minutes, tip}], optional nutrition {calories, protein_g, carbs_g, fat_g}, and optional safety_warnings. No markdown.`;
+    const prompt = `Use these inputs to create one Zimbabwean or African-inspired recipe.\n\nMAIN INGREDIENTS: ${ingredients.join(", ")}\n${pantryString}\n\nPREFERENCES:\n${prefsString}\n\nIf the cookbook search returns a suitable recipe, adapt that recipe to these ingredients and preferences; otherwise create a new dish. Use the main ingredients where practical, clearly include pantry ingredients, and do not claim the user has ingredients outside these lists. Make quantities and cooking steps useful and realistic. Return only a JSON object with title, description, time_minutes, servings, category, ingredients [{name, quantity}], steps [{text, timer_minutes, tip}], optional nutrition {calories, protein_g, carbs_g, fat_g}, and optional safety_warnings. No markdown.`;
 
     try {
       const rawText = await openRouterClient.runToolAgent(
@@ -185,8 +185,22 @@ export class AIRecipeService {
         1,
       );
       const cleanedJson = this.cleanJson(rawText);
-      const parsed = JSON.parse(cleanedJson);
-      return GenerateRecipeResponseSchema.parse(parsed);
+      try {
+        return GenerateRecipeResponseSchema.parse(JSON.parse(cleanedJson));
+      } catch {
+        // Free models can occasionally stop mid-object. Retry once with stricter
+        // JSON output and a larger completion budget before surfacing an error.
+        const retryText = await openRouterClient.generateContent(
+          `${prompt}\n\nThe previous attempt was incomplete or invalid JSON. Regenerate a compact but complete recipe now. Limit it to 6 ingredients and 5 concise steps. Return one valid JSON object with every opening brace, bracket, and quote closed. Do not include markdown or commentary.`,
+          undefined,
+          3200,
+        );
+        try {
+          return GenerateRecipeResponseSchema.parse(JSON.parse(this.cleanJson(retryText)));
+        } catch {
+          throw new Error("The free AI model returned an incomplete recipe twice. Please try again in a moment.");
+        }
+      }
     } catch (error) {
       // Propagate error for UI handling
       throw error;

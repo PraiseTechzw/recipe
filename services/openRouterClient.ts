@@ -38,7 +38,7 @@ type AgentMessage = {
 export class OpenRouterClient {
   private readonly apiKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY?.trim() ?? "";
 
-  async generateContent(prompt: string, imageBase64?: string): Promise<string> {
+  async generateContent(prompt: string, imageBase64?: string, maxTokens = 1800): Promise<string> {
     if (!this.apiKey) {
       throw new Error(
         "OpenRouter is not configured. Add EXPO_PUBLIC_OPENROUTER_API_KEY to your local .env file and restart Expo.",
@@ -71,7 +71,7 @@ export class OpenRouterClient {
           messages: [{ role: "user", content }],
           response_format: { type: "json_object" },
           temperature: 0.4,
-          max_tokens: 1800,
+          max_tokens: maxTokens,
         }),
         signal: controller.signal,
       });
@@ -185,9 +185,6 @@ export class OpenRouterClient {
         ? content.map((part) => part.text ?? "").join("\n").trim()
         : content?.trim();
       if (!text) throw new Error("The AI returned an empty response. Please try again.");
-      if (payload.choices?.[0]?.finish_reason === "length") {
-        throw new Error("The free model stopped before finishing the recipe. Please try once more.");
-      }
       return text;
     }
   }
