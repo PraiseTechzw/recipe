@@ -1,6 +1,13 @@
 -- Keep community content readable while tying every client write to its
 -- authenticated Supabase user. Public/anonymous writes are never permitted.
 
+-- Hosted projects may already have a legacy profiles table and may not have
+-- applied the core schema migration in this repository. Ensure the column
+-- exists before creating owner-only policies or the auth-link trigger.
+alter table public.profiles
+  add column if not exists auth_user_id uuid unique
+  references auth.users(id) on delete set null;
+
 -- Remove legacy or manually-created permissive policies first, since
 -- PostgreSQL combines permissive policies with OR semantics.
 do $$
