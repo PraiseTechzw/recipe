@@ -20,7 +20,6 @@ import { Skeleton } from "@/components/feedback/Skeleton";
 import { LeaderboardRow } from "@/components/leaderboard/LeaderboardRow";
 import { MyRankCard } from "@/components/leaderboard/MyRankCard";
 import { Podium } from "@/components/leaderboard/Podium";
-import { Chip } from "@/components/ui/Chip";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 type LeaderboardTab = "weekly" | "allTime";
@@ -28,11 +27,10 @@ type LeaderboardTab = "weekly" | "allTime";
 export default function LeaderboardScreen() {
   const insets = useSafeAreaInsets();
   // const router = useRouter();
-  const { colors, typography } = useTheme();
+  const { colors, typography, shadows } = useTheme();
 
   // Local State
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
-  const [filterMode, setFilterMode] = useState<"global" | "friends">("global");
   // const [refreshing, setRefreshing] = useState(false);
 
   // Store Selectors
@@ -56,6 +54,14 @@ export default function LeaderboardScreen() {
   );
   const myEntry = neighbors.find((item) => item.chef_id === userProfile.id);
 
+  const fetchData = useCallback(() => {
+    leaderboardService.fetchGlobalLeaderboards();
+    if (userProfile.id) {
+      const sortBy = activeTab === "weekly" ? "weekly_xp" : "total_xp";
+      leaderboardService.fetchAroundMe(userProfile.id, sortBy);
+    }
+  }, [userProfile.id, activeTab]);
+
   // Lifecycle
   useEffect(() => {
     fetchData();
@@ -64,14 +70,6 @@ export default function LeaderboardScreen() {
       leaderboardService.unsubscribe();
     };
   }, [fetchData]);
-
-  const fetchData = useCallback(() => {
-    leaderboardService.fetchGlobalLeaderboards();
-    if (userProfile.id) {
-      const sortBy = activeTab === "weekly" ? "weekly_xp" : "total_xp";
-      leaderboardService.fetchAroundMe(userProfile.id, sortBy);
-    }
-  }, [userProfile.id, activeTab]);
 
   const onRefresh = useCallback(() => {
     fetchData();
@@ -83,7 +81,7 @@ export default function LeaderboardScreen() {
   };
 
   const renderHeader = () => (
-    <View style={styles.headerContainer}>
+    <View style={[styles.headerContainer, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.small]}>
       {/* 1) Header Title & Status */}
       <View style={styles.titleRow}>
         <View>
@@ -116,15 +114,9 @@ export default function LeaderboardScreen() {
             )}
           </View>
         </View>
-        {/* Optional Search Icon */}
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={() => {
-            /* Placeholder for future search */
-          }}
-        >
-          <Ionicons name="search" size={24} color={colors.text} />
-        </TouchableOpacity>
+        <View style={[styles.headerTrophy, { backgroundColor: colors.primary + "16" }]}>
+          <Ionicons name="trophy" size={21} color={colors.primary} />
+        </View>
       </View>
 
       {/* 2) Controls */}
@@ -136,19 +128,11 @@ export default function LeaderboardScreen() {
           style={styles.segmentedControl}
         />
 
-        <View style={styles.filterChips}>
-          <Chip
-            label="Global"
-            selected={filterMode === "global"}
-            onPress={() => setFilterMode("global")}
-            style={{ marginRight: 8 }}
-          />
-          <Chip
-            label="Friends"
-            selected={filterMode === "friends"}
-            // onPress={() => setFilterMode("friends")} // Disabled for now
-            style={{ opacity: 0.5 }}
-          />
+        <View style={styles.globalLabel}>
+          <Ionicons name="globe-outline" size={15} color={colors.textSecondary} />
+          <Text style={[typography.caption, { color: colors.textSecondary, fontWeight: "700" }]}>
+            Global kitchen leaderboard
+          </Text>
         </View>
       </View>
 

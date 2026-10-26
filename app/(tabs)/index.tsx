@@ -31,7 +31,7 @@ import { useTheme } from "../../theme/useTheme";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { colors, shadows } = useTheme();
+  const { colors, shadows, isDark } = useTheme();
   const {
     viewHistory,
     categoryScores,
@@ -39,16 +39,42 @@ export default function HomeScreen() {
     shoppingList,
     userProfile,
     pantry,
+    commonIngredients,
     recipes,
   } = useStore();
+  const selectedPantryItems = commonIngredients.filter((item) =>
+    pantry.includes(item.id),
+  );
 
   const [featuredRecipes, setFeaturedRecipes] = useState(recipes.slice(0, 3));
-  const [dailyPick, setDailyPick] = useState(recipes[1] || recipes[0]);
+  const [dailyPick, setDailyPick] = useState<(typeof recipes)[number] | undefined>(
+    recipes[1] || recipes[0],
+  );
   const [pantryRecipes, setPantryRecipes] = useState<typeof recipes>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  const dailyFloat = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const dailyMotion = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dailyFloat, {
+          toValue: -4,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(dailyFloat, {
+          toValue: 0,
+          duration: 1500,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    dailyMotion.start();
+    return () => dailyMotion.stop();
+  }, [dailyFloat]);
 
   // Onboarding Check
   useEffect(() => {
@@ -70,9 +96,9 @@ export default function HomeScreen() {
       categoryScores,
       recipes,
     );
-    if (smartRecs.length > 0) {
-      setFeaturedRecipes(smartRecs.slice(0, 5));
-    }
+    setFeaturedRecipes(
+      (smartRecs.length > 0 ? smartRecs : recipes).slice(0, 5),
+    );
 
     // 3. Pantry Matches
     const matched = getPantryMatches(pantry, recipes);
@@ -80,45 +106,39 @@ export default function HomeScreen() {
   }, [recipes, viewHistory, categoryScores, pantry]);
 
   useEffect(() => {
+    let isActive = true;
     const init = async () => {
       await loadData();
-      // Simulate network delay for skeletons
-      setTimeout(() => {
+      if (isActive) {
         setIsLoading(false);
         Animated.timing(fadeAnim, {
           toValue: 1,
           duration: 500,
           useNativeDriver: true,
         }).start();
-      }, 1000);
+      }
     };
-    init();
+    void init();
+    return () => {
+      isActive = false;
+    };
   }, [loadData, fadeAnim]);
 
   const onRefresh = async () => {
     HapticService.selection();
     setRefreshing(true);
     await loadData();
-    // Simulate refresh delay
-    setTimeout(() => {
-      setRefreshing(false);
-      ToastService.success(
-        i18n.t("refreshed") || "Refreshed",
-        "Latest recipes loaded",
-      );
-      HapticService.success();
-    }, 1000);
+    setRefreshing(false);
+    ToastService.success(
+      i18n.t("refreshed") || "Refreshed",
+      "Latest recipes loaded",
+    );
+    HapticService.success();
   };
 
   const handleRecipePress = (id: string) => {
     HapticService.light();
     router.push(`/recipe/${id}`);
-  };
-
-  const getDifficulty = (stepsCount: number): string => {
-    if (stepsCount <= 5) return "Easy";
-    if (stepsCount <= 10) return "Medium";
-    return "Hard";
   };
 
   const renderFeaturedSkeleton = () => (
@@ -241,75 +261,207 @@ export default function HomeScreen() {
             />
           }
         >
-          {/* Greeting & Search */}
+          {/* Welcome, search and quick actions */}
           <Animated.View
             style={[styles.greetingSection, { opacity: fadeAnim }]}
           >
-            <Text style={[styles.mainGreeting, { color: colors.text }]}>
-              {i18n.t("greeting")}, {userProfile.name}!
+            <Text style={[styles.welcomeEyebrow, { color: colors.primary }]}>
+              {i18n.t("greeting")}
+            </Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              style={[styles.mainGreeting, { color: colors.text }]}
+            >
+              {userProfile.name}
             </Text>
             <Text style={[styles.subGreeting, { color: colors.textSecondary }]}>
               {i18n.t("subGreeting")}
             </Text>
 
-            <View style={{ flexDirection: "row", gap: 12 }}>
-              <Link
-                href={{
-                  pathname: "/(tabs)/explore",
-                  params: { autoFocus: "true" },
-                }}
-                asChild
+            <Link
+              href={{
+                pathname: "/(tabs)/explore",
+                params: { autoFocus: "true" },
+              }}
+              asChild
+            >
+              <TouchableOpacity
+                style={StyleSheet.flatten([
+                  styles.searchBar,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                  },
+                ])}
+                accessibilityRole="button"
+                accessibilityLabel={i18n.t("searchPlaceholderHome")}
               >
-                <TouchableOpacity
-                  style={StyleSheet.flatten([
-                    styles.searchBar,
-                    {
-                      backgroundColor: colors.surface,
-                      borderColor: colors.border,
-                      flex: 1,
-                    },
-                  ])}
+                <View
+                  style={[
+                    styles.searchIconWrap,
+                    { backgroundColor: isDark ? "#30251E" : "#FFF0E4" },
+                  ]}
                 >
-                  <Ionicons
-                    name="search"
-                    size={24}
-                    color={colors.primary}
-                    style={{ marginRight: 12 }}
-                  />
-                  <Text
-                    style={[
-                      styles.placeholderText,
-                      {
-                        color: colors.textSecondary,
-                        textAlignVertical: "center", // Android fix
-                        includeFontPadding: false, // Android fix
-                      },
-                    ]}
-                  >
-                    {i18n.t("searchPlaceholderHome")}
-                  </Text>
-                </TouchableOpacity>
-              </Link>
+                  <Ionicons name="search" size={18} color={colors.primary} />
+                </View>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.placeholderText, { color: colors.textSecondary }]}
+                >
+                  {i18n.t("searchPlaceholderHome")}
+                </Text>
+                <Ionicons name="arrow-forward" size={17} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </Link>
 
+            <View style={styles.quickActions}>
               <Link href="/(ai-chef)" asChild>
                 <TouchableOpacity
-                  activeOpacity={0.8}
+                  style={styles.quickActionTouch}
+                  activeOpacity={0.86}
                   accessibilityRole="button"
                   accessibilityLabel={i18n.t("aiGenerate")}
                 >
                   <LinearGradient
-                    colors={[colors.primary, colors.secondary]}
-                    style={styles.aiButtonHome}
+                    colors={isDark ? ["#BA5A08", "#5E7743"] : ["#C34813", "#8B6D2E"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.aiAction}
                   >
-                  <Ionicons name="sparkles" size={21} color="#fff" />
+                    <View style={styles.quickActionIcon}>
+                      <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+                    </View>
+                    <Text style={styles.quickActionText} numberOfLines={1}>
+                      {i18n.t("aiGenerate")}
+                    </Text>
+                    <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
                   </LinearGradient>
                 </TouchableOpacity>
               </Link>
+              <TouchableOpacity
+                style={[
+                  styles.pantryAction,
+                  { backgroundColor: colors.surface, borderColor: colors.border },
+                ]}
+                onPress={() => router.push("/pantry-check")}
+                activeOpacity={0.82}
+                accessibilityRole="button"
+                accessibilityLabel={`${i18n.t("myPantry")}, ${pantry.length} ingredients`}
+              >
+                <Ionicons name="basket-outline" size={18} color={colors.primary} />
+                <Text style={[styles.pantryActionText, { color: colors.text }]} numberOfLines={1}>
+                  {i18n.t("myPantry")}
+                </Text>
+                <Text style={[styles.pantryCount, { color: colors.textSecondary }]}>
+                  {pantry.length}
+                </Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
 
+          {/* Pantry recipes, with today's pick first */}
+          <Animated.View style={{ opacity: fadeAnim, marginTop: 4 }}>
+            <SectionHeader
+              title={i18n.t("myPantry")}
+              actionLabel={i18n.t("editPantry")}
+              onAction={() => router.push("/pantry-check")}
+              style={{ paddingHorizontal: 20 }}
+            />
+
+            <View style={styles.pantryIngredientsRow}>
+              <Text style={[styles.pantrySummary, { color: colors.textSecondary }]}>
+                {i18n.t("pantrySelectionSummary", { count: pantry.length })}
+              </Text>
+              {pantry.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.pantryChips}
+                >
+                  {selectedPantryItems.map((item) => (
+                    <View
+                      key={item.id}
+                      style={[
+                        styles.pantryChip,
+                        { backgroundColor: colors.surface, borderColor: colors.border },
+                      ]}
+                    >
+                      <Text style={styles.pantryChipIcon}>{item.icon}</Text>
+                      <Text numberOfLines={1} style={[styles.pantryChipText, { color: colors.text }]}>
+                        {i18n.t(item.key)}
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.homeFeatureScroller}
+              contentContainerStyle={styles.pantryRecipeList}
+              decelerationRate="fast"
+              snapToInterval={298}
+              snapToAlignment="start"
+            >
+              {isLoading ? (
+                <Skeleton height={270} width={286} borderRadius={24} />
+              ) : dailyPick ? (
+                <Animated.View style={{ transform: [{ translateY: dailyFloat }] }}>
+                  <RecipeCardUI
+                    title={dailyPick.title}
+                    imageUrl={dailyPick.image}
+                    duration={parseInt(dailyPick.time) || 30}
+                    difficulty={dailyPick.steps.length <= 5 ? "Easy" : dailyPick.steps.length <= 10 ? "Medium" : "Hard"}
+                    category={dailyPick.category}
+                    badgeLabel={i18n.t("todaysPick")}
+                    rating={dailyPick.rating}
+                    cardWidth={286}
+                    onPress={() => handleRecipePress(dailyPick.id)}
+                  />
+                </Animated.View>
+              ) : null}
+
+              {!isLoading && pantryRecipes.map((recipe) => (
+                <RecipeCardUI
+                  key={recipe.id}
+                  title={recipe.title}
+                  imageUrl={recipe.image}
+                  duration={parseInt(recipe.time) || 30}
+                  difficulty={recipe.steps.length <= 5 ? "Easy" : recipe.steps.length <= 10 ? "Medium" : "Hard"}
+                  rating={recipe.rating}
+                  cardWidth={286}
+                  onPress={() => handleRecipePress(recipe.id)}
+                />
+              ))}
+            </ScrollView>
+
+            {!isLoading && pantry.length === 0 && (
+              <EmptyState
+                title="Your pantry is empty"
+                description="Add ingredients to get personalized recommendations."
+                icon="basket-outline"
+                actionLabel="Check Pantry"
+                onAction={() => router.push("/pantry-check")}
+                style={{ marginHorizontal: 20, marginTop: 8, backgroundColor: colors.surfaceVariant, borderRadius: 16 }}
+              />
+            )}
+            {!isLoading && pantry.length > 0 && pantryRecipes.length === 0 && (
+              <EmptyState
+                title="No pantry matches yet"
+                description="Add a few more ingredients to find recipes you can make."
+                icon="nutrition-outline"
+                actionLabel="Update Pantry"
+                onAction={() => router.push("/pantry-check")}
+                style={{ marginHorizontal: 20, marginTop: 8, backgroundColor: colors.surfaceVariant, borderRadius: 16 }}
+              />
+            )}
+          </Animated.View>
+
           {/* Featured Section */}
-          <Animated.View style={{ opacity: fadeAnim }}>
+          <Animated.View style={{ opacity: fadeAnim, marginTop: 30 }}>
             <SectionHeader
               title={i18n.t("featured")}
               actionLabel={i18n.t("seeAll")}
@@ -340,15 +492,40 @@ export default function HomeScreen() {
                     activeOpacity={0.9}
                   >
                     <View style={styles.imageContainer}>
-                      <Image
-                        source={{ uri: recipe.image }}
-                        style={styles.featuredImage}
-                        contentFit="cover"
-                      />
+                      {recipe.image ? (
+                        <Image
+                          source={
+                            typeof recipe.image === "string"
+                              ? { uri: recipe.image }
+                              : recipe.image
+                          }
+                          style={styles.featuredImage}
+                          contentFit="cover"
+                          transition={180}
+                        />
+                      ) : (
+                        <View
+                          style={[
+                            styles.featuredFallback,
+                            { backgroundColor: colors.surfaceVariant },
+                          ]}
+                        >
+                          <Ionicons
+                            name="restaurant-outline"
+                            size={30}
+                            color={colors.textSecondary}
+                          />
+                        </View>
+                      )}
                       <View style={styles.ratingBadge}>
                         <Ionicons name="star" size={12} color="#E65100" />
                         <Text style={styles.ratingText}>
                           {recipe.rating ? recipe.rating.toFixed(1) : "New"}
+                        </Text>
+                      </View>
+                      <View style={styles.categoryBadge}>
+                        <Text style={styles.categoryBadgeText} numberOfLines={1}>
+                          {recipe.category}
                         </Text>
                       </View>
                     </View>
@@ -360,10 +537,27 @@ export default function HomeScreen() {
                     </Text>
                     <View style={styles.metaRow}>
                       <View style={styles.authorRow}>
-                        <Image
-                          source={{ uri: recipe.author?.avatar }}
-                          style={styles.smallAvatar}
-                        />
+                        {recipe.author?.avatar ? (
+                          <Image
+                            source={{ uri: recipe.author.avatar }}
+                            style={styles.smallAvatar}
+                            contentFit="cover"
+                          />
+                        ) : (
+                          <View
+                            style={[
+                              styles.smallAvatar,
+                              styles.authorFallback,
+                              { backgroundColor: colors.surfaceVariant },
+                            ]}
+                          >
+                            <Ionicons
+                              name="person"
+                              size={12}
+                              color={colors.textSecondary}
+                            />
+                          </View>
+                        )}
                         <Text
                           style={[
                             styles.authorName,
@@ -402,126 +596,7 @@ export default function HomeScreen() {
             )}
           </Animated.View>
 
-          {/* Recipe of the Day */}
-          <Animated.View style={{ opacity: fadeAnim, marginTop: 24 }}>
-            <SectionHeader
-              title={i18n.t("recipeOfTheDay")}
-              style={{ paddingHorizontal: 20 }}
-            />
 
-            <View style={{ paddingHorizontal: 20 }}>
-              {isLoading ? (
-                <View>
-                  <Skeleton height={250} borderRadius={16} />
-                </View>
-              ) : dailyPick ? (
-                <TouchableOpacity
-                  style={styles.dailyCard}
-                  onPress={() => handleRecipePress(dailyPick.id)}
-                  activeOpacity={0.95}
-                >
-                  <Image
-                    source={{ uri: dailyPick.image }}
-                    style={styles.dailyImage}
-                    contentFit="cover"
-                    transition={1000}
-                  />
-                  <LinearGradient
-                    colors={[
-                      "transparent",
-                      "rgba(0,0,0,0.6)",
-                      "rgba(0,0,0,0.9)",
-                    ]}
-                    style={styles.dailyOverlay}
-                  >
-                    <View style={styles.dailyHeader}>
-                      <View style={[styles.dailyBadge, { backgroundColor: colors.primary }]}>
-                        <Text style={styles.dailyBadgeText}>DAILY PICK</Text>
-                      </View>
-                      <View style={styles.authorContainer}>
-                        <Image
-                          source={{ uri: dailyPick.author?.avatar }}
-                          style={styles.mediumAvatar}
-                        />
-                        <Text style={styles.authorNameLight}>
-                          {dailyPick.author?.name}
-                        </Text>
-                      </View>
-                    </View>
-                    <Text style={styles.dailyTitle}>{dailyPick.title}</Text>
-                    <Text style={styles.dailyDesc} numberOfLines={1}>
-                      {dailyPick.description}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              ) : (
-                <EmptyState
-                  title="No Daily Pick"
-                  description="Check back later for today's featured recipe."
-                  icon="calendar-outline"
-                  style={{ height: 250, borderRadius: 24 }}
-                />
-              )}
-            </View>
-          </Animated.View>
-
-          {/* Cook with your Pantry */}
-          <Animated.View style={{ opacity: fadeAnim, marginTop: 32 }}>
-            <SectionHeader
-              title="Cook with your Pantry"
-              style={{ paddingHorizontal: 20 }}
-            />
-
-            <View style={{ paddingHorizontal: 20 }}>
-              {pantry.length === 0 ? (
-                <EmptyState
-                  title="Your pantry is empty"
-                  description="Add ingredients to get personalized recommendations."
-                  icon="basket-outline"
-                  actionLabel="Check Pantry"
-                  onAction={() => {
-                    HapticService.selection();
-                    router.push("/pantry-check");
-                  }}
-                  style={{
-                    backgroundColor: colors.surfaceVariant,
-                    borderRadius: 12,
-                    padding: 24,
-                  }}
-                />
-              ) : pantryRecipes.length > 0 ? (
-                <View style={{ gap: 16 }}>
-                  {pantryRecipes.map((recipe) => (
-                    <RecipeCardUI
-                      key={recipe.id}
-                      title={recipe.title}
-                      imageUrl={recipe.image}
-                      duration={parseInt(recipe.time) || 30}
-                      difficulty={getDifficulty(recipe.steps.length)}
-                      rating={recipe.rating}
-                      onPress={() => handleRecipePress(recipe.id)}
-                    />
-                  ))}
-                </View>
-              ) : (
-                <EmptyState
-                  title="No matches found"
-                  description="Try adding more ingredients to your pantry."
-                  icon="nutrition-outline"
-                  actionLabel="Update Pantry"
-                  onAction={() => {
-                    HapticService.selection();
-                    router.push("/pantry-check");
-                  }}
-                  style={{
-                    backgroundColor: colors.surfaceVariant,
-                    borderRadius: 12,
-                    padding: 24,
-                  }}
-                />
-              )}
-            </View>
-          </Animated.View>
         </ScrollView>
       </View>
     </SafeAreaView>
@@ -539,8 +614,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 10,
-    marginBottom: 16,
+    marginTop: 6,
+    marginBottom: 22,
     paddingHorizontal: 20,
   },
   headerLeft: {
@@ -554,9 +629,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 15,
     borderWidth: StyleSheet.hairlineWidth,
     justifyContent: "center",
     alignItems: "center",
@@ -611,36 +686,275 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     paddingHorizontal: 20,
   },
-  mainGreeting: {
-    fontSize: 30,
-    lineHeight: 37,
+  welcomeEyebrow: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 1.2,
+    textTransform: "uppercase",
     fontWeight: "800",
-    letterSpacing: -0.6,
-    marginBottom: 5,
+    marginBottom: 2,
+  },
+  mainGreeting: {
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "900",
+    letterSpacing: -0.9,
+    marginBottom: 3,
   },
   subGreeting: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
     marginBottom: 18,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    height: 54,
-    borderRadius: 18,
+    paddingHorizontal: 10,
+    height: 58,
+    borderRadius: 19,
     borderWidth: 1,
+    gap: 11,
+    shadowColor: "#3D2918",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  searchIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
   },
   placeholderText: {
     flex: 1,
     fontSize: 14,
+    fontWeight: "600",
   },
-  aiButtonHome: {
-    width: 54,
-    height: 54,
-    borderRadius: 18,
+  quickActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 11,
+  },
+  quickActionTouch: {
+    flex: 1,
+  },
+  aiAction: {
+    minHeight: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingHorizontal: 10,
+    borderRadius: 17,
+  },
+  quickActionIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  quickActionText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+    flexShrink: 1,
+  },
+  pantryAction: {
+    flex: 1,
+    minHeight: 52,
+    borderWidth: 1,
+    borderRadius: 17,
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    gap: 7,
+    paddingHorizontal: 8,
+  },
+  pantryActionText: {
+    fontSize: 11,
+    fontWeight: "700",
+    flexShrink: 1,
+  },
+  pantryCount: {
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  pantryContents: {
+    gap: 8,
+    marginBottom: 14,
+  },
+  pantryHeaderRow: {
+    minHeight: 44,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  pantryHeading: {
+    fontSize: 22,
+    lineHeight: 28,
+    fontWeight: "800",
+    letterSpacing: -0.45,
+  },
+  dailyHeaderPill: {
+    minHeight: 34,
+    maxWidth: 172,
+    borderRadius: 17,
+    paddingHorizontal: 11,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+  },
+  dailyHeaderPillText: {
+    fontSize: 12,
+    fontWeight: "800",
+    flexShrink: 1,
+  },
+  pantrySummaryRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 10,
+  },
+  editPantryText: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  pantrySummary: {
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  pantryIngredientsRow: {
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    gap: 9,
+  },
+  pantryChips: {
+    gap: 8,
+    paddingRight: 20,
+  },
+  pantryChip: {
+    minHeight: 34,
+    maxWidth: 180,
+    borderWidth: 1,
+    borderRadius: 17,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  pantryChipIcon: {
+    fontSize: 14,
+  },
+  pantryChipText: {
+    flexShrink: 1,
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  pantryRecipeScroller: {
+    marginHorizontal: -20,
+  },
+  pantryRecipeList: {
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  homeFeatureScroller: {
+    marginHorizontal: -20,
+  },
+  homeFeatureList: {
+    paddingHorizontal: 20,
+    paddingBottom: 8,
+    gap: 12,
+  },
+  pantryFeatureCard: {
+    width: 292,
+    height: 236,
+    padding: 17,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 22,
+    overflow: "hidden",
+    justifyContent: "space-between",
+  },
+  pantryFeatureTop: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  pantryFeatureIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  pantryFeatureCountWrap: {
+    flex: 1,
+  },
+  pantryFeatureCount: {
+    fontSize: 23,
+    lineHeight: 27,
+    fontWeight: "900",
+  },
+  pantryFeatureCountLabel: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  pantryFeatureTitle: {
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: "800",
+    marginTop: 10,
+  },
+  pantryFeatureDescription: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 3,
+  },
+  pantryFeatureChips: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 8,
+  },
+  pantryFeatureChip: {
+    minHeight: 28,
+    maxWidth: 105,
+    borderRadius: 14,
+    paddingHorizontal: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  pantryMoreText: {
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  pantryFeatureAdd: {
+    minHeight: 38,
+    borderRadius: 13,
+    paddingHorizontal: 12,
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  pantryFeatureAddText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  pantryFeatureEdit: {
+    fontSize: 12,
+    fontWeight: "800",
+    marginTop: 8,
   },
   featuredList: {
     paddingLeft: 20,
@@ -661,7 +975,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: "100%",
-    height: 180,
+    height: 168,
     borderRadius: 16,
     overflow: "hidden",
     marginBottom: 12,
@@ -670,6 +984,12 @@ const styles = StyleSheet.create({
   featuredImage: {
     width: "100%",
     height: "100%",
+  },
+  featuredFallback: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   ratingBadge: {
     position: "absolute",
@@ -687,6 +1007,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "700",
     color: "#333",
+  },
+  categoryBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    maxWidth: "58%",
+    minHeight: 25,
+    justifyContent: "center",
+    paddingHorizontal: 9,
+    borderRadius: 9,
+    backgroundColor: "rgba(35,43,31,0.82)",
+  },
+  categoryBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "800",
   },
   featuredTitle: {
     fontSize: 18,
@@ -709,6 +1045,10 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
   },
+  authorFallback: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
   authorName: {
     fontSize: 14,
     fontWeight: "500",
@@ -723,7 +1063,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   dailyCard: {
-    height: 300,
+    height: 284,
     borderRadius: 24,
     overflow: "hidden",
     position: "relative",
@@ -731,6 +1071,11 @@ const styles = StyleSheet.create({
   dailyImage: {
     width: "100%",
     height: "100%",
+  },
+  dailyImageFallback: {
+    ...StyleSheet.absoluteFill,
+    alignItems: "center",
+    justifyContent: "center",
   },
   dailyOverlay: {
     position: "absolute",
@@ -789,5 +1134,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "rgba(255,255,255,0.9)",
     marginBottom: 8,
+  },
+  dailyCta: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 8,
+    marginTop: 4,
+  },
+  dailyCtaText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  dailyCtaIcon: {
+    width: 25,
+    height: 25,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
   },
 });

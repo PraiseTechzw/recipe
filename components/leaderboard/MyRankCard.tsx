@@ -54,7 +54,7 @@ export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
 
         {/* Score */}
         <View style={styles.score}>
-           <Text style={[typography.h4, { color: colors.primary }]}>
+          <Text style={[typography.h3, { color: colors.primary }]}>
             {score}
            </Text>
            <Text style={[typography.caption, { color: colors.textSecondary }]}>

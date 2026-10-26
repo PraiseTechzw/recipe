@@ -26,7 +26,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
     <View
       style={[
         styles.container,
-        isMe && { backgroundColor: colors.primary + "10" }, // 10% opacity primary
+        { backgroundColor: isMe ? colors.primary + "12" : colors.surface, borderColor: isMe ? colors.primary + "55" : colors.border },
       ]}
       accessible={true}
       accessibilityLabel={`Rank ${rank}, ${item.chefs?.chef_name || "Chef"}, Level ${item.level || 1}, ${score.toLocaleString()} XP`}
@@ -38,7 +38,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
           style={[
             typography.body,
             styles.rankText,
-            isMe && { color: colors.primary, fontWeight: "bold" },
+            isMe && { color: colors.primary, fontWeight: "800" },
           ]}
         >
           {rank}
@@ -60,7 +60,7 @@ export const LeaderboardRow = React.memo(function LeaderboardRow({
             style={[
               typography.body,
               styles.nameText,
-              isMe && { color: colors.primary, fontWeight: "700" },
+              isMe && { color: colors.primary, fontWeight: "800" },
             ]}
             numberOfLines={1}
           >
@@ -103,8 +103,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    minHeight: 82,
+    marginHorizontal: 20,
+    marginBottom: 9,
+    borderRadius: 20,
+    borderWidth: 1,
   },
   rankContainer: {
     width: 30,
@@ -120,7 +123,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#F3E9DE",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
     marginRight: 12,
   },
   infoContainer: {

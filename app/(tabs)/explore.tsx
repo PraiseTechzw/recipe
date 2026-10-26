@@ -29,7 +29,7 @@ import { searchRecipes } from "../../services/recommendations";
 const { width } = Dimensions.get("window");
 
 export default function ExploreScreen() {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const { autoFocus } = useLocalSearchParams<{
     autoFocus: string;
     openScan: string;
@@ -129,7 +129,7 @@ export default function ExploreScreen() {
                 ]}
               >
                 <Image
-                  source={{ uri: recipe.image }}
+                  source={typeof recipe.image === "string" ? { uri: recipe.image } : recipe.image}
                   style={styles.listImage}
                   contentFit="cover"
                   transition={200}
@@ -140,7 +140,7 @@ export default function ExploreScreen() {
                       {recipe.title}
                     </Text>
                     <TouchableOpacity
-                      style={styles.favoriteButtonSmall}
+                        style={[styles.favoriteButtonSmall, { backgroundColor: colors.surfaceVariant }]}
                       accessibilityRole="button"
                       accessibilityLabel={favorites.includes(recipe.id) ? "Remove from saved recipes" : "Save recipe"}
                       onPress={(event) => {
@@ -177,10 +177,7 @@ export default function ExploreScreen() {
                       style={[
                         styles.tagBadge,
                         {
-                          backgroundColor:
-                            recipe.category === "Vegetarian"
-                              ? "#E8F5E9"
-                              : "#FFF3E0",
+                          backgroundColor: isDark ? colors.surfaceVariant : "#FFF0DF",
                         },
                       ]}
                     >
@@ -188,10 +185,7 @@ export default function ExploreScreen() {
                         style={[
                           styles.tagText,
                           {
-                            color:
-                              recipe.category === "Vegetarian"
-                                ? "#2E7D32"
-                                : "#E65100",
+                            color: colors.primary,
                           },
                         ]}
                       >
@@ -406,9 +400,14 @@ export default function ExploreScreen() {
       edges={["top"]}
     >
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {i18n.t("explore")}
-        </Text>
+          <View>
+            <Text style={[styles.headerEyebrow, { color: colors.primary }]}>
+              {i18n.t("exploreSubtitle")}
+            </Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              {i18n.t("explore")}
+            </Text>
+          </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
           <TouchableOpacity
             onPress={toggleLanguage}
@@ -436,6 +435,7 @@ export default function ExploreScreen() {
         >
           <View style={{ flex: 1 }}>
             <SearchInput
+              ref={searchInputRef}
               value={searchQuery}
               onChangeText={setSearchQuery}
               onClear={() => setSearchQuery("")}

@@ -10,7 +10,8 @@ const getDailyHash = (str: string) => {
   return Math.abs(hash);
 };
 
-export const getRecipeOfTheDay = (sourceRecipes: Recipe[]): Recipe => {
+export const getRecipeOfTheDay = (sourceRecipes: Recipe[]): Recipe | undefined => {
+  if (sourceRecipes.length === 0) return undefined;
   const today = new Date().toDateString(); // Updates every 24 hours
   const index = getDailyHash(today) % sourceRecipes.length;
   return sourceRecipes[index];
@@ -80,25 +81,64 @@ const PANTRY_INGREDIENT_ALIASES: Record<string, string[]> = {
   cabbage: ["cabbage", "makabichi", "ikhaphetshu"],
 };
 
-const normalizeIngredient = (value: string) =>
-  value.toLowerCase().replace(/[^a-z0-9]/g, "");
+const ingredientWords = (value: string) =>
+  value
+    .toLocaleLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .match(/[a-z0-9]+/g) ?? [];
+
+const sameIngredientWord = (left: string, right: string) =>
+  left === right || left === `${right}s` || right === `${left}s`;
+
+const containsIngredientPhrase = (ingredient: string, phrase: string) => {
+  const ingredientParts = ingredientWords(ingredient);
+  const phraseParts = ingredientWords(phrase);
+  if (phraseParts.length === 0 || phraseParts.length > ingredientParts.length) {
+    return false;
+  }
+
+  return ingredientParts.some((_, start) =>
+    phraseParts.every(
+      (part, offset) =>
+        ingredientParts[start + offset] !== undefined &&
+        sameIngredientWord(ingredientParts[start + offset], part),
+    ),
+  );
+};
 
 export const getPantryMatches = (pantry: string[], sourceRecipes: Recipe[]): Recipe[] => {
-  if (!pantry || pantry.length === 0) return [];
+  if (!pantry?.length || !sourceRecipes.length) return [];
 
-  const pantryTerms = pantry.flatMap((item) =>
-    [item, ...(PANTRY_INGREDIENT_ALIASES[item] ?? [])].map(normalizeIngredient),
+  const pantryAliasGroups = pantry.map((item) =>
+    [item, ...(PANTRY_INGREDIENT_ALIASES[item] ?? [])].filter(Boolean),
   );
 
-  return sourceRecipes.filter((recipe) => {
-    const recipeIngredients = recipe.ingredients.flatMap((section) =>
-      section.data.map((ingredient) => normalizeIngredient(ingredient.name)),
-    );
+  return sourceRecipes
+    .map((recipe, sourceIndex) => {
+      const recipeIngredients = recipe.ingredients.flatMap((section) =>
+        section.data.map((ingredient) =>
+          [ingredient.name, ingredient.description].filter(Boolean).join(" "),
+        ),
+      );
+      const matchedIngredients = pantryAliasGroups.filter((aliases) =>
+        aliases.some((alias) =>
+          recipeIngredients.some((ingredient) =>
+            containsIngredientPhrase(ingredient, alias),
+          ),
+        ),
+      ).length;
 
-    return recipeIngredients.some((ingredient) =>
-      pantryTerms.some((term) => ingredient.includes(term) || term.includes(ingredient)),
-    );
-  }).slice(0, 5);
+      return { recipe, sourceIndex, matchedIngredients };
+    })
+    .filter((result) => result.matchedIngredients > 0)
+    .sort(
+      (left, right) =>
+        right.matchedIngredients - left.matchedIngredients ||
+        left.sourceIndex - right.sourceIndex,
+    )
+    .slice(0, 5)
+    .map((result) => result.recipe);
 };
 
 export const getRandomRecipe = (sourceRecipes: Recipe[]): Recipe => {

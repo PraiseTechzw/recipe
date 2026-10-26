@@ -20,7 +20,13 @@ const MAX_GRID_WIDTH = 600;
 
 export default function PantryCheckScreen() {
   const router = useRouter();
-  const { setPantry, setHasOnboarded, commonIngredients, pantry } = useStore();
+  const {
+    setPantry,
+    setHasOnboarded,
+    commonIngredients,
+    pantry,
+    hasOnboarded,
+  } = useStore();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
@@ -43,13 +49,21 @@ export default function PantryCheckScreen() {
     });
   };
 
-  const finishOnboarding = () => {
+  const savePantry = () => {
     setPantry(Array.from(selected));
+    if (hasOnboarded) {
+      router.back();
+      return;
+    }
     setHasOnboarded(true);
     router.replace("/account-choice");
   };
 
   const handleSkip = () => {
+    if (hasOnboarded) {
+      router.back();
+      return;
+    }
     setPantry([]);
     setHasOnboarded(true);
     router.replace("/account-choice");
@@ -202,11 +216,11 @@ export default function PantryCheckScreen() {
           accessibilityRole="button"
         >
           <Text style={[styles.skipText, { color: colors.textSecondary }]}>
-            {i18n.t("skip")}
+            {i18n.t(hasOnboarded ? "cancel" : "skip")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          onPress={finishOnboarding}
+          onPress={savePantry}
           style={[
             styles.continueButton,
             { backgroundColor: isDark ? "#B95D00" : "#C2410C" },
