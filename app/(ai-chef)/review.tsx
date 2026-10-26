@@ -109,7 +109,6 @@ export default function ReviewScreen() {
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>;
     if (isLoading) {
-      setLoadingStepIndex(0);
       interval = setInterval(() => {
         setLoadingStepIndex((prev) => (prev + 1) % LOADING_STEPS.length);
       }, 2000); // Change message every 2s
@@ -120,6 +119,8 @@ export default function ReviewScreen() {
   // Pulse Animation for CTA
   useEffect(() => {
     if (!isLoading && editedIngredients.length > 0) {
+      // Reanimated shared-value updates are intentionally performed from this effect.
+      // eslint-disable-next-line react-hooks/immutability
       pulseScale.value = withRepeat(
         withSequence(
           withTiming(1.02, { duration: 1000 }),

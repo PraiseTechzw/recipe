@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Animated, { FadeInUp, FadeOutUp } from "react-native-reanimated";
 import { SyncService } from "../../services/syncService";
@@ -15,16 +15,15 @@ export function OfflineBanner({
 }: OfflineBannerProps) {
   const [isOffline, setIsOffline] = useState(false);
 
-  useEffect(() => {
-    checkConnection();
-    // In a real app, we'd subscribe to NetInfo changes. 
-    // For now, we'll check on mount and allow manual retry.
-  }, []);
-
-  const checkConnection = async () => {
+  const checkConnection = useCallback(async () => {
     const online = await SyncService.checkConnectivity();
     setIsOffline(!online);
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => void checkConnection(), 0);
+    return () => clearTimeout(timer);
+  }, [checkConnection]);
 
   if (!isOffline) return null;
 

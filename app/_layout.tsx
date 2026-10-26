@@ -15,7 +15,6 @@ import { OfflineBanner } from "../components/feedback/OfflineBanner";
 import { useOfflineStatus } from "../hooks/useOfflineStatus";
 import i18n from "../i18n";
 import { NotificationService } from "../services/notificationService";
-import { SeedService } from "../services/seedService";
 import { SyncService } from "../services/syncService";
 import { useStore } from "../store/useStore";
 
@@ -33,7 +32,6 @@ export default function RootLayout() {
     // 1. Sync Data
     const initData = async () => {
       try {
-        await SeedService.seedInitialData();
         await fetchRecipes();
       } catch (e) {
         console.log("Initialization failed", e);
@@ -66,15 +64,21 @@ export default function RootLayout() {
   }, [notificationPreferences.dailyReminder]);
 
   useEffect(() => {
+    void NotificationService.scheduleWeeklyLeaderboardReminder(notificationPreferences.weeklyLeaderboard).catch((error) => {
+      console.warn("Weekly reminder update unavailable", error);
+    });
+  }, [notificationPreferences.weeklyLeaderboard]);
+
+  useEffect(() => {
     if (!isOffline) {
       void SyncService.initializeAppStateSync();
       void SyncService.syncRecipes();
     }
   }, [isOffline]);
 
-  if (locale) {
-    i18n.locale = locale;
-  }
+  useEffect(() => {
+    if (locale) i18n.locale = locale;
+  }, [locale]);
 
   return (
     <GlobalErrorBoundary>

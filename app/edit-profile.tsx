@@ -16,9 +16,11 @@ import i18n from "../i18n";
 import { SyncService } from "../services/syncService";
 import { ToastService } from "../services/toast";
 import { useStore } from "../store/useStore";
+import { useTheme } from "../theme/useTheme";
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const { userProfile, setUserProfile } = useStore();
 
   const [name, setName] = useState(userProfile.name);
@@ -64,17 +66,17 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Text style={styles.cancelText}>{i18n.t("cancel")}</Text>
+          <Text style={[styles.cancelText, { color: colors.textSecondary }]}>{i18n.t("cancel")}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{i18n.t("editProfile")}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{i18n.t("editProfile")}</Text>
         <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-          <Text style={styles.saveText}>{i18n.t("save")}</Text>
+          <Text style={[styles.saveText, { color: colors.primary }]}>{i18n.t("save")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -102,34 +104,36 @@ export default function EditProfileScreen() {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>{i18n.t("fullName")}</Text>
+          <Text style={[styles.label, { color: colors.text }]}>{i18n.t("fullName")}</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: colors.surfaceVariant, borderColor: colors.border, color: colors.text }]}
             value={name}
             onChangeText={setName}
             placeholder={i18n.t("namePlaceholder")}
+            placeholderTextColor={colors.textSecondary}
           />
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>{i18n.t("level") || "Chef Level"}</Text>
+          <Text style={[styles.label, { color: colors.text }]}>{i18n.t("level") || "Chef Level"}</Text>
           <View style={styles.levelContainer}>
-            <View style={[styles.levelChip, styles.levelChipActive]}>
-              <Text style={[styles.levelText, styles.levelTextActive]}>
+            <View style={[styles.levelChip, { backgroundColor: colors.primary + "18" }]}>
+              <Text style={[styles.levelText, { color: colors.primary }]}>
                 {chefLevel}
               </Text>
             </View>
           </View>
-          <Text style={styles.helperText}>
+          <Text style={[styles.helperText, { color: colors.textSecondary }]}>
             Level up by cooking more recipes and earning XP!
           </Text>
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>{i18n.t("bioLabel")}</Text>
+          <Text style={[styles.label, { color: colors.text }]}>{i18n.t("bioLabel")}</Text>
           <TextInput
-            style={[styles.input, styles.textArea]}
+            style={[styles.input, styles.textArea, { backgroundColor: colors.surfaceVariant, borderColor: colors.border, color: colors.text }]}
             placeholder={i18n.t("bioPlaceholder")}
+            placeholderTextColor={colors.textSecondary}
             value={bio}
             onChangeText={setBio}
             multiline
@@ -145,7 +149,6 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
@@ -153,19 +156,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   backButton: {
     padding: 4,
   },
   cancelText: {
     fontSize: 16,
-    color: "#666",
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
   },
   saveButton: {
     padding: 4,
@@ -173,7 +173,6 @@ const styles = StyleSheet.create({
   saveText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#E65100",
   },
   content: {
     padding: 20,
@@ -192,7 +191,6 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   changePhotoText: {
-    color: "#E65100",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -202,17 +200,13 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#333",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#FAFAFA",
     borderWidth: 1,
-    borderColor: "#eee",
     borderRadius: 12,
     padding: 12,
     fontSize: 16,
-    color: "#333",
   },
   textArea: {
     height: 80,

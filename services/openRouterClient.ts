@@ -1,13 +1,14 @@
-const API_URL = "https://openrouter.ai/api/v1/chat/completions";
+import { supabase } from "../lib/supabase";
+
 const MODEL = "openrouter/free";
 const TIMEOUT_MS = 45_000;
 
-type OpenRouterContent = string | Array<{ type?: string; text?: string }> | null;
+type OpenRouterContent = string | { type?: string; text?: string }[] | null;
 
 type OpenRouterResponse = {
   id?: string;
   model?: string;
-  choices?: Array<{
+  choices?: {
     finish_reason?: string | null;
     message?: {
       role?: "assistant";
@@ -15,7 +16,7 @@ type OpenRouterResponse = {
       tool_calls?: OpenRouterToolCall[];
       refusal?: string | null;
     };
-  }>;
+  }[];
   error?: { message?: string; code?: number | string };
 };
 
@@ -79,15 +80,45 @@ function logOpenRouterResponse(
     messageKeys: message ? Object.keys(message) : [],
     contentType: Array.isArray(message?.content) ? "parts" : typeof message?.content,
     contentLength: text.length,
-    contentPreview: text ? text.slice(0, 240) : null,
     toolCallCount: message?.tool_calls?.length ?? 0,
-    refusal: message?.refusal ?? null,
-    providerError: payload.error?.message ?? null,
+    hasRefusal: Boolean(message?.refusal),
+    hasProviderError: Boolean(payload.error?.message),
   });
 }
 
 export class OpenRouterClient {
-  private readonly apiKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY?.trim() ?? "";
+  private async requestCompletion(completion: Record<string, unknown>) {
+    const { data: current } = await supabase.auth.getSession();
+    if (!current.session) {
+      const { error: authError } = await supabase.auth.signInAnonymously();
+      if (authError) throw new Error("AI Chef needs a secure app session. Please try again.");
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      const { data, error } = await supabase.functions.invoke("openrouter-completion", {
+        body: { completion },
+        signal: controller.signal,
+      });
+      if (error) {
+        const status = (error as { context?: Response }).context?.status;
+        if (status === 401 || status === 403) throw new Error("Your secure AI session expired. Please try again.");
+        if (status === 429) throw new Error("AI Chef is receiving many requests. Please try again shortly.");
+        throw new Error("AI Chef is temporarily unavailable. Please try again shortly.");
+      }
+      return data as OpenRouterResponse;
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("The AI request took too long. Check your connection and try again.");
+      }
+      if (error instanceof TypeError) {
+        throw new Error("Could not reach AI Chef. Check your internet connection and try again.");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
 
   async generateContent(
     prompt: string,
@@ -95,12 +126,6 @@ export class OpenRouterClient {
     maxTokens = 1800,
     retryEmptyResponse = true,
   ): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error(
-        "OpenRouter is not configured. Add EXPO_PUBLIC_OPENROUTER_API_KEY to your local .env file and restart Expo.",
-      );
-    }
-
     const content = imageBase64
       ? [
           { type: "text", text: prompt },
@@ -111,32 +136,15 @@ export class OpenRouterClient {
         ]
       : prompt;
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-          "X-Title": "Zimbabwe Traditional Recipes",
-        },
-        body: JSON.stringify({
+      const payload = await this.requestCompletion({
           model: MODEL,
           messages: [{ role: "user", content }],
           response_format: { type: "json_object" },
           temperature: 0.4,
           max_tokens: maxTokens,
-        }),
-        signal: controller.signal,
       });
-
-      const payload = (await response.json().catch(() => ({}))) as OpenRouterResponse;
-      logOpenRouterResponse(imageBase64 ? "vision" : "completion", response.status, payload, response.headers.get("x-request-id"));
-      if (!response.ok) {
-        throw this.toFriendlyError(response.status, payload.error?.message);
-      }
+      logOpenRouterResponse(imageBase64 ? "vision" : "completion", 200, payload);
 
       const choice = payload.choices?.[0];
       if (choice?.finish_reason === "length") {
@@ -165,8 +173,6 @@ export class OpenRouterClient {
         throw new Error("Could not reach OpenRouter. Check your internet connection and try again.");
       }
       throw error;
-    } finally {
-      clearTimeout(timeout);
     }
   }
 
@@ -179,10 +185,6 @@ export class OpenRouterClient {
     maxToolRounds = 2,
     onStage?: (stage: OpenRouterAgentStage) => void,
   ): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error("OpenRouter is not configured. Add EXPO_PUBLIC_OPENROUTER_API_KEY to your local .env file and restart Expo.");
-    }
-
     const messages: AgentMessage[] = [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -202,21 +204,12 @@ export class OpenRouterClient {
     };
 
     while (true) {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-      let response: Response;
       const toolsAvailable = toolRounds < maxToolRounds && tools.length > 0;
       const stage = toolsAvailable ? "agent-tool-step" : "agent-final";
       console.log("[OpenRouter] request", { stage, model: MODEL, toolRound: toolRounds, messages: messages.length, toolsAvailable });
+      let payload: OpenRouterResponse;
       try {
-        response = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-            "Content-Type": "application/json",
-            "X-Title": "Zimbabwe Traditional Recipes",
-          },
-          body: JSON.stringify({
+        payload = await this.requestCompletion({
             model: MODEL,
             messages,
             ...(toolsAvailable
@@ -224,9 +217,8 @@ export class OpenRouterClient {
               : { response_format: { type: "json_object" } }),
             temperature: 0.35,
             max_tokens: toolsAvailable ? 700 : 1800,
-          }),
-          signal: controller.signal,
         });
+        logOpenRouterResponse(stage, 200, payload);
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           throw new Error("The AI request took too long. Check your connection and try again.");
@@ -235,13 +227,7 @@ export class OpenRouterClient {
           throw new Error("Could not reach OpenRouter. Check your internet connection and try again.");
         }
         throw error;
-      } finally {
-        clearTimeout(timeout);
       }
-
-      const payload = (await response.json().catch(() => ({}))) as OpenRouterResponse;
-      logOpenRouterResponse(stage, response.status, payload, response.headers.get("x-request-id"));
-      if (!response.ok) throw this.toFriendlyError(response.status, payload.error?.message);
 
       const choice = payload.choices?.[0];
       const message = choice?.message;
@@ -299,21 +285,6 @@ export class OpenRouterClient {
     }
   }
 
-  private toFriendlyError(status: number, message?: string) {
-    if (status === 401 || status === 403) {
-      return new Error("OpenRouter rejected the API key. Check EXPO_PUBLIC_OPENROUTER_API_KEY in .env.");
-    }
-    if (status === 429) {
-      return new Error("AI Chef is taking a little longer than usual. Please wait a moment and try again.");
-    }
-    if (status === 402) {
-      return new Error("AI Chef is temporarily unavailable. Please try again shortly.");
-    }
-    if (status >= 500) {
-      return new Error("OpenRouter is temporarily unavailable. Please try again shortly.");
-    }
-    return new Error(message || `OpenRouter request failed (${status}).`);
-  }
 }
 
 export const openRouterClient = new OpenRouterClient();

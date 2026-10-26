@@ -15,8 +15,8 @@ ON CONFLICT (id) DO UPDATE SET
   bio = excluded.bio;
 
 -- 2. Insert Top Recipes (Examples)
--- Note: The app's SeedService automatically syncs all recipes from data/recipes.ts to Supabase on startup.
--- Below are manual SQL statements for the same data if needed.
+-- These SQL inserts are the hosted seed set. The app also carries a local
+-- recipe catalog so browsing remains available if the database is empty/offline.
 
 -- Recipe 1: Sadza & Beef Stew
 INSERT INTO public.recipes (author_id, original_id, title, description, image_url, category, tags, time, servings, calories, ingredients, steps, is_traditional, rating)

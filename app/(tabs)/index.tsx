@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Animated,
   RefreshControl,
@@ -55,8 +55,8 @@ export default function HomeScreen() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const dailyFloat = useRef(new Animated.Value(0)).current;
+  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [dailyFloat] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     const dailyMotion = Animated.loop(

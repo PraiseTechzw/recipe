@@ -40,7 +40,7 @@ export default function ExploreScreen() {
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  const isSearching = searchQuery !== debouncedQuery;
   const [activeCategory, setActiveCategory] = useState("All");
 
   // Sort State
@@ -60,10 +60,8 @@ export default function ExploreScreen() {
   // Debounce Effect
   useEffect(() => {
     if (searchQuery !== debouncedQuery) {
-      setIsSearching(true);
       const timer = setTimeout(() => {
         setDebouncedQuery(searchQuery);
-        setIsSearching(false);
       }, 500);
       return () => clearTimeout(timer);
     }

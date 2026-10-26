@@ -16,7 +16,7 @@ export async function getDeviceId(): Promise<string> {
       await AsyncStorage.setItem(DEVICE_ID_KEY, uuid);
     }
     return uuid;
-  } catch (e) {
+  } catch {
     // Fallback if storage fails, though this implies bigger issues
     return "temp-device-" + Date.now();
   }

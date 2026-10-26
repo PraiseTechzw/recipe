@@ -109,7 +109,7 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
       } else {
         set({ status: "idle" }); // User cancelled
       }
-    } catch (e: any) {
+    } catch {
       set({
         status: "error",
         error: { type: "camera", message: "Failed to pick image" },

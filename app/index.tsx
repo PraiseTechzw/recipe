@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "../store/useStore";
@@ -11,8 +11,8 @@ export default function AnimatedSplashScreen() {
   const { hasOnboarded } = useStore();
 
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const [fadeAnim] = useState(() => new Animated.Value(0));
+  const [scaleAnim] = useState(() => new Animated.Value(0.8));
 
   useEffect(() => {
     // Start Animation

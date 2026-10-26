@@ -61,3 +61,4 @@ jest.mock('@supabase/supabase-js', () => ({
 
 // Mock global useStore to avoid persistent state issues if needed
 // But usually we mock it per test file if we want to isolate
+/* global jest */

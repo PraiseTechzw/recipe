@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { BADGES, LEVELS } from '@/constants/gamification';
+import { LEVELS } from '@/constants/gamification';
 
 export interface UserStats {
   recipesCooked: number;
@@ -39,7 +39,7 @@ interface UserState {
   // Gamification
   addXP: (amount: number) => void;
   unlockBadge: (badgeId: string) => void;
-  incrementStat: (stat: keyof UserStats, amount?: number) => void;
+  incrementStat: (stat: Exclude<keyof UserStats, "lastCookDate">, amount?: number) => void;
   
   // Analytics/History
   viewHistory: string[];
@@ -112,7 +112,7 @@ export const useUserStore = create<UserState>()(
           ...state.userProfile,
           stats: {
             ...state.userProfile.stats,
-            [stat]: state.userProfile.stats[stat] + amount
+            [stat]: (state.userProfile.stats[stat] ?? 0) + amount
           }
         }
       })),

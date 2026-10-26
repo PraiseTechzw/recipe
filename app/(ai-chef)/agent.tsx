@@ -91,9 +91,9 @@ export default function CookingAgentScreen() {
         </View>
 
         <Animated.View entering={FadeInDown.duration(420)} style={styles.intro}>
-          <Text style={[styles.kicker, { color: colors.primary }]}>LET'S COOK</Text>
+          <Text style={[styles.kicker, { color: colors.primary }]}>LET&apos;S COOK</Text>
           <Text style={[styles.headline, { color: colors.text }]}>What sounds good today?</Text>
-          <Text style={[styles.subhead, { color: colors.textSecondary }]}>Tell me what you're craving. I'll start with what you already have.</Text>
+          <Text style={[styles.subhead, { color: colors.textSecondary }]}>Tell me what you&apos;re craving. I&apos;ll start with what you already have.</Text>
         </Animated.View>
 
         <View style={[styles.promptCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>

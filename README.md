@@ -1,6 +1,6 @@
 # Zimbabwe Traditional Recipes
 
-![Project Banner](https://via.placeholder.com/1200x300?text=Zimbabwe+Traditional+Recipes)
+![Zimbabwe Traditional Recipes](assets/images/brand-mark.png)
 
 Welcome to **Zimbabwe Traditional Recipes**, a culinary application dedicated to preserving and sharing the rich heritage of Zimbabwean cuisine. It connects users with traditional recipes through AI ingredient scanning, community sharing, and multi-language support.
 
@@ -29,11 +29,6 @@ Welcome to **Zimbabwe Traditional Recipes**, a culinary application dedicated to
 - **Community Sharing**: Users can create and upload their own recipes to the cloud.
 - **Live Updates**: Instant updates across devices.
 
-### 💰 Monetization
-
-- **AdMob Integration**: Seamlessly integrated banner ads for sustainable monetization.
-- **Safety First**: Crash-proof implementation for Expo Go (development) with full native ad support in production builds.
-
 ---
 
 ## 📱 User Interface (UI/UX)
@@ -54,7 +49,6 @@ The application boasts a modern, clean, and culturally inspired interface:
 - **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
 - **Backend**: [Supabase](https://supabase.com/)
 - **AI**: [OpenRouter](https://openrouter.ai/) using the `openrouter/free` model router
-- **Ads**: [React Native Google Mobile Ads](https://github.com/invertase/react-native-google-mobile-ads)
 - **Localization**: `i18n-js` & `expo-localization`
 - **UI Components**: `react-native-reanimated`, `@expo/vector-icons`
 
@@ -89,9 +83,9 @@ Follow these steps to get the project running on your local machine.
     Create a `.env` file in the root directory and add your API keys:
 
     ```bash
-    EXPO_PUBLIC_OPENROUTER_API_KEY=your_openrouter_api_key
     EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
     EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+    OPENROUTER_API_KEY=your_openrouter_api_key
     ```
 
 4.  **Set up Supabase locally (optional)**
@@ -103,9 +97,22 @@ Follow these steps to get the project running on your local machine.
     supabase db reset
     ```
 
+    For local AI testing, serve the function with the private environment file:
+
+    ```bash
+    supabase functions serve openrouter-completion --env-file .env
+    ```
+
+    For a hosted project, deploy AI Chef through the authenticated Supabase Function and set its server-side key:
+
+    ```bash
+    supabase functions deploy openrouter-completion
+    supabase secrets set OPENROUTER_API_KEY=your_openrouter_api_key
+    ```
+
     The schema is in `supabase/migrations/` with timestamped migrations; `supabase/seed.sql` adds the sample profile and recipes. For a linked hosted project, inspect the pending changes with `supabase db push --dry-run` before applying them with `supabase db push`.
 
-    The app persists its full local Zustand state in AsyncStorage. With a configured Supabase project, it also signs in anonymously and syncs private onboarding/profile preferences, favorites, pantry and shopping lists, notification preferences, and recipe-view learning signals to `chef_app_state`. Enable **Allow anonymous sign-ins** in the hosted project's Auth settings before using this sync; it is enabled in the local Supabase config. Anonymous sessions persist on the same installation, but Supabase cannot recover them after sign-out, reinstall, or on another device unless an account-linking/sign-in flow is added.
+    The app persists its full local Zustand state in AsyncStorage. With a configured Supabase project, it also signs in anonymously and syncs private onboarding/profile preferences, favorites, pantry and shopping lists, notification preferences, and recipe-view learning signals to `chef_app_state`. Enable **Allow anonymous sign-ins** in the hosted project's Auth settings before using this sync; it is enabled in the local Supabase config. Guests can create an account or sign in to restore state on another device; an unlinked anonymous session itself cannot be recovered after reinstall or sign-out.
 
     The seed creates the public chef profile for Praise Masunga (`praisetechzw`) first, then links the initial recipes to that ID. To also create and link his Supabase Auth account, put `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a private `PRAISE_MASUNGA_PASSWORD` in an ignored `.env.local` file, then run:
 
@@ -115,7 +122,7 @@ Follow these steps to get the project running on your local machine.
 
     On a hosted project, first apply the migrations, run `supabase/seed.sql` in the SQL Editor, and then run this account script. It stores the email in Supabase Auth and links the Auth user ID to the public chef profile; it does not put the email in the public profile table.
 
-    Recipe/profile and leaderboard APIs still include public write policies to support the current publishing workflow. Treat those public records as untrusted. Private user state has separate row-level policies tied to the authenticated Supabase user ID.
+    Apply the full ordered migrations before deploying. Public recipe and display-profile reads are available, while profile/recipe writes and storage uploads are restricted to the authenticated owner. Private app state and AI request limits are tied to the authenticated Supabase user ID. AI requests require the `openrouter-completion` function and its server-side secret; do not put that key in an Expo public variable.
 
 5.  **Run the App**
     ```bash

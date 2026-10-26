@@ -13,10 +13,8 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
-import {
-    GestureHandlerRootView,
-    Swipeable,
-} from "react-native-gesture-handler";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 

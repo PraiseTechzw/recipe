@@ -37,3 +37,4 @@ function bumpVersion() {
 }
 
 bumpVersion();
+/* global __dirname */

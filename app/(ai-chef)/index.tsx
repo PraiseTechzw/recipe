@@ -62,7 +62,8 @@ export default function CaptureScreen() {
 
   useEffect(() => {
     // Check permission on mount
-    void checkPermissions();
+    const timer = setTimeout(() => void checkPermissions(), 0);
+    return () => clearTimeout(timer);
   }, [checkPermissions]);
 
   const handleGalleryPick = async () => {
@@ -96,6 +97,8 @@ export default function CaptureScreen() {
     if (!cameraRef.current) return;
 
     // Animate Shutter
+    // Reanimated shared-value updates are intentionally performed from this event.
+    // eslint-disable-next-line react-hooks/immutability
     shutterScale.value = withSpring(0.8, {}, () => {
       shutterScale.value = withSpring(1);
     });

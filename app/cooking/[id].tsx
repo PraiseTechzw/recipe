@@ -4,7 +4,7 @@ import * as Haptics from "expo-haptics";
 import * as StoreReview from "expo-store-review";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
     Dimensions,
@@ -46,14 +46,17 @@ const CONFETTI_COLORS = [
   "#9C27B0",
 ];
 const CONFETTI_COUNT = 40;
+const seededRandom = (seed: number) => {
+  const value = Math.sin(seed * 127.1 + 311.7) * 43758.5453;
+  return value - Math.floor(value);
+};
 
 const ConfettiPiece = ({ index }: { index: number }) => {
-  const randomX = Math.random() * width;
-  const randomDelay = Math.random() * 1000;
-  const randomDuration = 2500 + Math.random() * 1500;
-  const randomColor =
-    CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
-  const randomRotate = Math.random() * 360;
+  const randomX = seededRandom(index + 1) * width;
+  const randomDelay = seededRandom(index + 41) * 1000;
+  const randomDuration = 2500 + seededRandom(index + 81) * 1500;
+  const randomColor = CONFETTI_COLORS[Math.floor(seededRandom(index + 121) * CONFETTI_COLORS.length)];
+  const randomRotate = seededRandom(index + 161) * 360;
 
   const translateY = useSharedValue(-50);
   const rotate = useSharedValue(0);
@@ -128,19 +131,13 @@ export default function CookingModeScreen() {
   const [timerSeconds, setTimerSeconds] = useState(15 * 60); // Default 15 mins
   const [timerActive, setTimerActive] = useState(false);
   const [showTimerControls, setShowTimerControls] = useState(false);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Tips State
   const [showTip, setShowTip] = useState(false);
 
   // Voice Tooltip
   const [showVoiceTooltip, setShowVoiceTooltip] = useState(false);
-
-  useEffect(() => {
-    if (id) {
-      fetchRecipe();
-    }
-  }, [id, fetchRecipe]);
 
   // Timer Effect
   useEffect(() => {
@@ -232,6 +229,12 @@ export default function CookingModeScreen() {
       setLoading(false);
     }
   }, [id, recipeParams, recipes, myRecipes]);
+
+  useEffect(() => {
+    if (!id) return;
+    const timer = setTimeout(() => void fetchRecipe(), 0);
+    return () => clearTimeout(timer);
+  }, [id, fetchRecipe]);
 
   const handleNext = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);

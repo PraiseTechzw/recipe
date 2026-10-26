@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { BADGES, getLevel, getNextLevel } from "../../constants/gamification";
 import i18n from "../../i18n";
 import { SyncService } from "../../services/syncService";
+import { supabase } from "../../lib/supabase";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
 import { useTheme } from "../../theme/useTheme";
@@ -34,6 +35,7 @@ export default function ProfileScreen() {
     favorites,
     notificationPreferences,
     setNotificationPreferences,
+    resetForLogout,
   } = useStore();
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
@@ -66,12 +68,20 @@ export default function ProfileScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert(i18n.t("logOut"), "Are you sure you want to log out?", [
+    Alert.alert(i18n.t("logOut"), "This ends your account session and clears its saved progress from this device.", [
       { text: i18n.t("cancel"), style: "cancel" },
       {
         text: i18n.t("logOut"),
         style: "destructive",
-        onPress: () => router.replace("/onboarding"),
+        onPress: async () => {
+          const { error } = await supabase.auth.signOut({ scope: "local" });
+          if (error) {
+            ToastService.error(i18n.t("logOut"), "Could not end this session. Please try again.");
+            return;
+          }
+          resetForLogout();
+          router.replace("/onboarding");
+        },
       },
     ]);
   };
@@ -99,10 +109,9 @@ export default function ProfileScreen() {
   };
 
   const handleHelpCenter = () => {
-    Alert.alert(
-      i18n.t("helpCenter"),
-      "Contact support at support@tasteofzimbabwe.com",
-    );
+    void Linking.openURL("mailto:praisetechzw@gmail.com?subject=Zimbabwe%20Traditional%20Recipes%20support").catch(() => {
+      Alert.alert(i18n.t("helpCenter"), "Email praisetechzw@gmail.com for support.");
+    });
   };
 
   return (

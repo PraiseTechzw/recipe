@@ -64,7 +64,6 @@ export const NotificationService = {
       }
 
       const token = (await getExpoPushTokenAsync({ projectId })).data;
-      console.log('Push Token:', token);
       return token;
     } catch (error) {
       console.error('Error getting push token:', error);
@@ -99,6 +98,28 @@ export const NotificationService = {
       content: {
         title: 'Time to cook! 🍳',
         body: 'Discover a new Zimbabwean recipe for dinner tonight.',
+        sound: true,
+      },
+      trigger,
+    });
+  },
+
+  async scheduleWeeklyLeaderboardReminder(enabled: boolean) {
+    const title = 'Your weekly kitchen check-in';
+    const scheduled = await getAllScheduledNotificationsAsync();
+    const reminders = scheduled.filter((notification) => notification.content.title === title);
+    if (!enabled) {
+      await Promise.all(reminders.map(({ identifier }) => cancelScheduledNotificationAsync(identifier)));
+      return;
+    }
+    if (reminders.length > 0) return;
+    const trigger: any = Platform.OS === 'android'
+      ? { type: 'weekly', weekday: 1, hour: 17, minute: 0, channelId: 'default' }
+      : { type: 'calendar', weekday: 1, hour: 17, minute: 0, repeats: true };
+    await scheduleNotificationAsync({
+      content: {
+        title,
+        body: 'Check your chef progress and see how you rank this week.',
         sound: true,
       },
       trigger,

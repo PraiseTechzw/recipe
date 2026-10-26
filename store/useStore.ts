@@ -2,6 +2,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { BADGES, getLevel } from "../constants/gamification";
+import { NotificationService } from "../services/notificationService";
+import { RECIPES } from "../data/recipes";
 import { supabase } from "../lib/supabase";
 import {
     IngredientItem,
@@ -107,6 +109,7 @@ interface AppState {
   setPantry: (ingredients: string[]) => void;
   hasOnboarded: boolean;
   setHasOnboarded: (val: boolean) => void;
+  resetForLogout: () => void;
   hasTriggeredReviewPrompt: boolean;
 
   // User Profile & Gamification
@@ -264,7 +267,7 @@ export const useStore = create<AppState>()(
       experienceLevels: ["Beginner", "Home Cook", "Pro"],
 
       // Global Recipes
-      recipes: [],
+      recipes: RECIPES,
       fetchRecipes: async () => {
         try {
           const { data, error } = await supabase.from("recipes").select(`
@@ -312,7 +315,22 @@ export const useStore = create<AppState>()(
             // We want to combine these with local recipes or just use these?
             // The prompt says "create... and sync them".
             // If we replace `recipes` with fetched data, we get the cloud version.
-            set({ recipes: mappedRecipes });
+            const previousRecipes = get().recipes;
+            const previousIds = new Set(previousRecipes.map((recipe) => recipe.id));
+            const mergedRecipes = new Map(previousRecipes.map((recipe) => [recipe.id, recipe]));
+            mappedRecipes.forEach((recipe) => mergedRecipes.set(recipe.id, recipe));
+            set({ recipes: Array.from(mergedRecipes.values()) });
+            const firstNewRecipe = previousRecipes.length > 0
+              ? mappedRecipes.find((recipe) => !previousIds.has(recipe.id))
+              : undefined;
+            if (firstNewRecipe) {
+              get().addNotification({
+                title: "New recipes added",
+                message: `${firstNewRecipe.title} is ready to explore.`,
+                type: "recipe",
+                data: { recipeId: firstNewRecipe.id },
+              });
+            }
           }
         } catch (e) {
           console.log("Error in fetchRecipes:", e);
@@ -365,6 +383,30 @@ export const useStore = create<AppState>()(
       setPantry: (ingredients: string[]) => set({ pantry: ingredients }),
       hasOnboarded: false,
       setHasOnboarded: (val: boolean) => set({ hasOnboarded: val }),
+      resetForLogout: () => set({
+        favorites: [],
+        xpRewardedFavoriteIds: [],
+        myRecipes: [],
+        shoppingList: [],
+        pantry: [],
+        hasOnboarded: false,
+        userProfile: {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          name: "Guest",
+          chefLevel: "Beginner",
+          xp: 0,
+          badges: [],
+          dietaryPreferences: [],
+          stats: { recipesCooked: 0, savedRecipes: 0, sharedRecipes: 0, daysStreak: 0 },
+        },
+        notifications: [],
+        viewHistory: [],
+        categoryScores: {},
+        neighbors: [],
+        userRank: null,
+        leaderboardError: null,
+        isLeaderboardLive: false,
+      }),
       hasTriggeredReviewPrompt: false,
 
       // User Profile & Gamification
@@ -432,35 +474,26 @@ export const useStore = create<AppState>()(
         });
         get().checkBadges();
       },
-      unlockBadge: (badgeId) =>
+      unlockBadge: (badgeId) => {
+        if (get().userProfile.badges.includes(badgeId)) return;
+        const badge = BADGES.find((item) => item.id === badgeId);
         set((state) => {
-          if (state.userProfile.badges.includes(badgeId)) return {};
-
-          // Add XP for badge
-          const badge = BADGES.find((b) => b.id === badgeId);
-          if (badge) {
-            // We can't call get().addXP here safely inside set if we want to avoid recursion issues or strict mode warnings,
-            // but we can just update XP manually here.
-            const newXP = state.userProfile.xp + badge.xpReward;
-            const newLevel = getLevel(newXP);
-
-            return {
-              userProfile: {
-                ...state.userProfile,
-                badges: [...state.userProfile.badges, badgeId],
-                xp: newXP,
-                chefLevel: newLevel.title,
-              },
-            };
-          }
-
+          const newXP = state.userProfile.xp + (badge?.xpReward ?? 0);
           return {
             userProfile: {
               ...state.userProfile,
               badges: [...state.userProfile.badges, badgeId],
+              xp: newXP,
+              chefLevel: getLevel(newXP).title,
             },
           };
-        }),
+        });
+        get().addNotification({
+          title: "Badge unlocked",
+          message: badge?.name ?? "You earned a new chef badge.",
+          type: "achievement",
+        });
+      },
       checkBadges: () => {
         const state = get();
         const { stats, xp, badges } = state.userProfile;
@@ -546,9 +579,7 @@ export const useStore = create<AppState>()(
           },
         })),
       notifications: [],
-      addNotification: (
-        notification: Omit<Notification, "id" | "read" | "time">,
-      ) =>
+      addNotification: (notification: Omit<Notification, "id" | "read" | "time">) => {
         set((state) => ({
           notifications: [
             {
@@ -559,7 +590,16 @@ export const useStore = create<AppState>()(
             },
             ...state.notifications,
           ],
-        })),
+        }));
+        const preferences = get().notificationPreferences;
+        const shouldSendLocal =
+          (notification.type === "achievement" && preferences.newBadges) ||
+          (notification.type === "recipe" && preferences.newRecipes);
+        if (shouldSendLocal) {
+          void NotificationService.sendLocalNotification(notification.title, notification.message)
+            .catch((error) => console.warn("Could not show local notification", error));
+        }
+      },
       markNotificationAsRead: (id: string) =>
         set((state) => ({
           notifications: state.notifications.map((n) =>

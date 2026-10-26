@@ -14,6 +14,7 @@ function getSyncableAppState() {
 
   return {
     favorites: state.favorites,
+    xpRewardedFavoriteIds: state.xpRewardedFavoriteIds,
     shoppingList: state.shoppingList,
     pantry: state.pantry,
     hasOnboarded: state.hasOnboarded,
@@ -53,6 +54,7 @@ function mergeSignedInState(remoteState: any) {
     ...local,
     ...remote,
     favorites: mergeUnique(remote.favorites, local.favorites),
+    xpRewardedFavoriteIds: mergeUnique(remote.xpRewardedFavoriteIds, local.xpRewardedFavoriteIds),
     pantry: mergeUnique(remote.pantry, local.pantry),
     shoppingList: mergeShoppingList(remote.shoppingList, local.shoppingList),
     hasOnboarded: true,
@@ -152,13 +154,16 @@ export const SyncService = {
     }
 
     const { myRecipes, updateRecipe, userProfile } = useStore.getState();
+    const session = await ensureSupabaseSession();
+    if (!session?.user.id) return;
+    const authUserId = session.user.id;
 
     // Ensure user profile exists in DB first
     if (userProfile.id) {
         try {
             let avatarUrl = userProfile.avatar;
             if (avatarUrl?.startsWith('file://')) {
-              const filename = `${userProfile.id}/avatar.jpg`;
+              const filename = `${authUserId}/avatar.jpg`;
               const formData = new FormData();
               formData.append('file', {
                 uri: avatarUrl,
@@ -178,15 +183,11 @@ export const SyncService = {
             const { error: profileError } = await supabase
                 .from('profiles')
                 .upsert({
-                    id: userProfile.id,
+                    id: authUserId,
+                    auth_user_id: authUserId,
                     name: userProfile.name,
                     avatar_url: avatarUrl,
                     bio: userProfile.bio,
-                    xp: userProfile.xp,
-                    chef_level: userProfile.chefLevel,
-                    badges: userProfile.badges,
-                    stats: userProfile.stats,
-                    dietary_preferences: userProfile.dietaryPreferences,
                 }, { onConflict: 'id' });
             
             if (profileError) console.warn('Profile sync error:', profileError);
@@ -211,7 +212,7 @@ export const SyncService = {
         // Try to upload image if it's a local URI
         if (imageUrl && imageUrl.startsWith('file://')) {
             try {
-                const filename = `${Date.now()}_${imageUrl.split('/').pop()}`;
+                const filename = `${authUserId}/${Date.now()}_${imageUrl.split('/').pop()}`;
                 const formData = new FormData();
                 formData.append('file', {
                     uri: imageUrl,
@@ -243,7 +244,7 @@ export const SyncService = {
               ...recipeData,
               is_traditional: isTraditional,
               reviews_count: reviews || 0,
-              author_id: userProfile.id, // Using the public ID
+              author_id: authUserId,
               original_id: id,
               image_url: imageUrl,
               ingredients: recipe.ingredients, // JSONB
@@ -294,19 +295,15 @@ export const SyncService = {
         .maybeSingle();
       if (error) throw error;
 
-      const localState = useStore.getState();
       const remoteState = data?.state;
-      const localIsNew = !localState.hasOnboarded && localState.userProfile.name === 'Guest';
-      if (remoteState && localIsNew) {
-        useStore.setState(remoteState);
-      } else {
-        await writeAppState();
-      }
+      if (remoteState) useStore.setState(mergeSignedInState(remoteState));
+      await writeAppState();
 
       stateSyncStarted = true;
       useStore.subscribe((state, previous) => {
         const previousSyncable = {
           favorites: previous.favorites,
+          xpRewardedFavoriteIds: previous.xpRewardedFavoriteIds,
           shoppingList: previous.shoppingList,
           pantry: previous.pantry,
           hasOnboarded: previous.hasOnboarded,

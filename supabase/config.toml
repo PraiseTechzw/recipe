@@ -28,3 +28,6 @@ enabled = false
 [db.seed]
 enabled = true
 sql_paths = ["./seed.sql"]
+
+[functions.openrouter-completion]
+verify_jwt = true

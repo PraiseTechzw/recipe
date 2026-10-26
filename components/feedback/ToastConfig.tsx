@@ -1,4 +1,4 @@
-import { BaseToast, ErrorToast, ToastProps } from 'react-native-toast-message';
+import { BaseToast, ErrorToast, ToastConfigParams, ToastProps } from 'react-native-toast-message';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 /*
@@ -45,7 +45,7 @@ export const toastConfig = {
     />
   ),
   // Custom type for actions (e.g. Undo)
-  action: ({ text1, text2, props }: ToastProps) => (
+  action: ({ text1, text2, props }: ToastConfigParams<{ action?: { label: string; onPress: () => void } }>) => (
     <View style={styles.actionContainer}>
       <View style={styles.textContainer}>
         <Text style={styles.actionTitle}>{text1}</Text>

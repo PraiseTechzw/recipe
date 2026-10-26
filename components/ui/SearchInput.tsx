@@ -12,7 +12,7 @@ interface SearchInputProps {
   autoFocus?: boolean;
 }
 
-export const SearchInput = forwardRef<TextInput, SearchInputProps>(
+export const SearchInput = forwardRef<React.ComponentRef<typeof TextInput>, SearchInputProps>(
   (
     {
       value,

@@ -1,5 +1,5 @@
 import { getLocales } from "expo-localization";
-import { I18n } from "i18n-js/src";
+import { I18n } from "i18n-js";
 
 const i18n = new I18n({
   en: {
@@ -18,7 +18,6 @@ const i18n = new I18n({
     meats: "Meats",
     drinks: "Drinks",
     quickMeals: "Quick Meals",
-    vegetarian: "Vegetarian",
     ceremonial: "Ceremonial",
     all: "All",
     healthy: "HEALTHY",
@@ -68,7 +67,6 @@ const i18n = new I18n({
     steps: "Steps",
     addToShoppingList: "Add to Shopping List",
     startCooking: "Start Cooking",
-    servings: "Servings",
     time: "Time",
     reviews: "Reviews",
     calories: "Calories",
@@ -229,7 +227,7 @@ const i18n = new I18n({
     dailyReminder: "Daily Reminder",
     dailyReminderDesc: "Get reminded to cook something new every day.",
     weeklyLeaderboard: "Weekly Leaderboard",
-    weeklyLeaderboardDesc: "Updates on the weekly chef leaderboard.",
+    weeklyLeaderboardDesc: "Get a weekly reminder to check your chef ranking.",
     newBadges: "New Badges",
     newBadgesDesc: "Get notified when you unlock a new badge.",
     newRecipes: "New Recipes",
@@ -352,6 +350,16 @@ const i18n = new I18n({
     halal: "Halal",
     none: "Hapana",
     settingsTitle: "Zvirongwa",
+    notificationSettings: "Zvirongwa zveZviziviso",
+    notificationSettingsDesc: "Sarudza zviziviso zvaunoda kugamuchira.",
+    dailyReminder: "Chiyeuchidzo cheZuva Nezuva",
+    dailyReminderDesc: "Yeuchidzwa kubika chimwe chinhu chitsva zuva rega rega.",
+    weeklyLeaderboard: "Chiyeuchidzo cheVabiki cheVhiki",
+    weeklyLeaderboardDesc: "Yeuchidzwa vhiki rega rega kutarisa nzvimbo yako yevabiki.",
+    newBadges: "Mibairo Mitsva",
+    newBadgesDesc: "Ziviswa paunowana mubairo mutsva wemubiki.",
+    newRecipes: "Maresipi Matsva",
+    newRecipesDesc: "Ziviswa panowedzerwa maresipi matsva munharaunda.",
     appPreferences: "Zvaunofarira",
     darkMode: "Modhi Yerima",
     notifications: "Zviziviso",
@@ -370,7 +378,6 @@ const i18n = new I18n({
     recipeNotFound: "Resipi haisi kuwanikwa",
     addedTo: "zvaiswa ku",
     createTitle: "Govera Resipi Yako",
-    nextStep: "Danho Rinotevera",
     addPhoto: "Isa Mufananidzo",
     recipeTitle: "Zita reResipi",
     recipeTitlePlaceholder: "sge. Sadza raGogo",
@@ -563,6 +570,16 @@ const i18n = new I18n({
     halal: "Halal",
     none: "Lutho",
     settingsTitle: "Izilungiselelo",
+    notificationSettings: "Izilungiselelo Zezaziso",
+    notificationSettingsDesc: "Khetha izaziso ofuna ukuzithola.",
+    dailyReminder: "Isikhumbuzo Sansuku Zonke",
+    dailyReminderDesc: "Khunjuzwa ukupheka okuthile okutsha nsuku zonke.",
+    weeklyLeaderboard: "Isikhumbuzo Seviki Sabapheki",
+    weeklyLeaderboardDesc: "Khunjuzwa masonto onke ukuhlola isikhundla sakho sabapheki.",
+    newBadges: "Imiklomelo Emitsha",
+    newBadgesDesc: "Thola isaziso nxa uvula umklomelo omutsha.",
+    newRecipes: "Amaresiphi Amatsha",
+    newRecipesDesc: "Thola isaziso nxa kufakwa amaresiphi amatsha emphakathini.",
     appPreferences: "Okuthandayo",
     darkMode: "Imodi Emnyama",
     notifications: "Izaziso",
@@ -574,7 +591,6 @@ const i18n = new I18n({
     terms: "Imigomo Yokusebenzisa",
     privacy: "Inqubomgomo Yobumfihlo",
     deleteAccount: "Susa I-akhawunti",
-    account: "I-akhawunti",
     support: "Usizo",
     personalInfo: "Imininingwane Yakho",
     helpCenter: "Isikhungo Sosizo",
@@ -585,8 +601,6 @@ const i18n = new I18n({
     explore: "Hlola",
     sortBy: "Hlela nga",
     cookingMode: "Imodi Yokupheka",
-    saved: "Okugciniweyo",
-    profile: "Iphrofayili",
     goBack: "Buyela Emuva",
     step: "Isinyathelo",
     of: "sama",
@@ -602,7 +616,6 @@ const i18n = new I18n({
     recipeTitlePlaceholder: "isib. Isitshwala sikaGogo",
     prepTime: "Isikhathi sokulungiselela",
     prepTimePlaceholder: "isib. Imizuzu engu-30",
-    servings: "Abantu",
     servingsPlaceholder: "isib. Abantu abangu-4",
     description: "Incazelo",
     descriptionPlaceholder: "Sitshele mayelana nokudla kwakho...",
@@ -668,7 +681,7 @@ i18n.defaultLocale = "en";
 
 // Monkey-patch i18n.t to log missing translations
 const originalT = i18n.t;
-i18n.t = function (scope, options) {
+const loggedTranslate = function (scope: Parameters<typeof i18n.t>[0], options?: Parameters<typeof i18n.t>[1]) {
   // Check if translation exists in current locale (if not default)
   if (i18n.locale !== i18n.defaultLocale) {
     const parts = typeof scope === "string" ? scope.split(".") : [];
@@ -699,5 +712,6 @@ i18n.t = function (scope, options) {
   }
   return result;
 };
+i18n.t = loggedTranslate as typeof i18n.t;
 
 export default i18n;

@@ -124,7 +124,7 @@ export default function NotificationsScreen() {
             <View style={styles.content}>
               <Text
                 style={[
-                  typography.h4,
+                  typography.h3,
                   { color: colors.text },
                   !item.read && { fontWeight: "bold" },
                 ]}
@@ -138,7 +138,7 @@ export default function NotificationsScreen() {
                 {item.message}
               </Text>
               <Text
-                style={[typography.caption, { color: colors.textTertiary }]}
+                style={[typography.caption, { color: colors.textSecondary }]}
               >
                 {formatTime(item.time)}
               </Text>

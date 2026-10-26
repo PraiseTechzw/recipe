@@ -23,7 +23,8 @@ export default function OfflineDataScreen() {
   }, []);
 
   useEffect(() => {
-    void refreshConnection();
+    const timer = setTimeout(() => void refreshConnection(), 0);
+    return () => clearTimeout(timer);
   }, [refreshConnection]);
 
   const syncNow = async () => {

@@ -62,7 +62,7 @@ export default function NotificationSettingsScreen() {
         <View style={[styles.section, { backgroundColor: colors.surface }]}>
           <View style={styles.item}>
             <View style={styles.itemInfo}>
-              <Text style={[typography.h4, { color: colors.text }]}>
+              <Text style={[typography.body, { color: colors.text, fontWeight: "700" }]}>
                 {i18n.t("dailyReminder") || "Daily Reminder"}
               </Text>
               <Text
@@ -84,7 +84,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.item}>
             <View style={styles.itemInfo}>
-              <Text style={[typography.h4, { color: colors.text }]}>
+              <Text style={[typography.body, { color: colors.text, fontWeight: "700" }]}>
                 {i18n.t("weeklyLeaderboard") || "Weekly Leaderboard"}
               </Text>
               <Text
@@ -106,7 +106,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.item}>
             <View style={styles.itemInfo}>
-              <Text style={[typography.h4, { color: colors.text }]}>
+              <Text style={[typography.body, { color: colors.text, fontWeight: "700" }]}>
                 {i18n.t("newBadges") || "New Badges"}
               </Text>
               <Text
@@ -128,7 +128,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.item}>
             <View style={styles.itemInfo}>
-              <Text style={[typography.h4, { color: colors.text }]}>
+              <Text style={[typography.body, { color: colors.text, fontWeight: "700" }]}>
                 {i18n.t("newRecipes") || "New Recipes"}
               </Text>
               <Text

@@ -1,16 +1,13 @@
 import { Tabs } from "expo-router";
-import React from "react";
+import React, { useMemo } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import i18n from "../../i18n";
 
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/theme/useTheme";
-import { useStore } from "@/store/useStore";
-import { useMemo } from "react";
 
 export default function TabLayout() {
   const { colors, isDark } = useTheme();
-  const locale = useStore((state) => state.locale);
   const tabPrimary = String(colors.primary);
   const titles = useMemo(
     () => ({
@@ -18,7 +15,7 @@ export default function TabLayout() {
       explore: i18n.t("explore"),
       profile: i18n.t("profile"),
     }),
-    [locale],
+    [],
   );
 
   return (
