@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
+    "@posthog/react-native-plugin": "^2.12.6",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/netinfo": "12.0.1",
     "@react-navigation/bottom-tabs": "^7.4.0",
@@ -27,6 +28,7 @@
     "@supabase/supabase-js": "^2.118.0",
     "clsx": "^2.1.1",
     "expo": "^58.0.19",
+    "expo-application": "~58.1.2",
     "expo-camera": "~58.0.12",
     "expo-constants": "~58.0.13",
     "expo-crypto": "~58.0.7",
@@ -56,6 +58,7 @@
     "expo-updates": "~58.0.18",
     "expo-web-browser": "~58.0.6",
     "i18n-js": "^4.5.1",
+    "posthog-react-native": "^4.83.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.0",
