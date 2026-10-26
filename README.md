@@ -1,162 +1,119 @@
+<div align="center">
+
+<img src="assets/images/brand-mark.png" alt="Zimbabwe Traditional Recipes mark" width="132" />
+
 # Zimbabwe Traditional Recipes
 
-![Zimbabwe Traditional Recipes](assets/images/brand-mark.png)
+**Discover Zimbabwean food. Cook with what you have. Keep the stories alive.**
 
-Welcome to **Zimbabwe Traditional Recipes**, a culinary application dedicated to preserving and sharing the rich heritage of Zimbabwean cuisine. It connects users with traditional recipes through AI ingredient scanning, community sharing, and multi-language support.
+[![CI](https://github.com/PraiseTechzw/recipe/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/PraiseTechzw/recipe/actions/workflows/ci.yml)
+[![GitHub Pages](https://github.com/PraiseTechzw/recipe/actions/workflows/pages.yml/badge.svg?branch=master)](https://github.com/PraiseTechzw/recipe/actions/workflows/pages.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2f6f4e.svg)](LICENSE)
+[![Expo SDK](https://img.shields.io/badge/Expo-SDK%2058-4630eb.svg)](https://expo.dev/)
+[![Google Play](https://img.shields.io/badge/Google%20Play-Get%20the%20app-414141?logo=googleplay)](https://play.google.com/store/apps/details?id=com.appixiasoftwares.tasteofzimbabwe)
 
-**Created by:** Praise Masunga (PraiseTechzw)
+[Website](https://praisetechzw.github.io/recipe/) · [Support](https://praisetechzw.github.io/recipe/support/) · [Privacy](https://praisetechzw.github.io/recipe/privacy/) · [Terms](https://praisetechzw.github.io/recipe/terms/)
 
----
+</div>
 
-## 🚀 Features
+Zimbabwe Traditional Recipes is an Android and iOS recipe app by Praise Masunga (PraiseTechzw). Browse Zimbabwean dishes, organize a pantry, save recipes, follow cooking steps, and ask the AI Chef for ingredient-based ideas. The app supports English, ChiShona, and isiNdebele.
 
-### 🌟 Core Functionality
+## A look inside
 
-- **Explore Traditional Recipes**: Browse a curated collection of authentic Zimbabwean dishes (Sadza, Dovi, Muriwo, etc.).
-- **Smart Search & Filters**: Filter recipes by category (Grains, Relishes, Meats, Drinks) or search by ingredients.
-- **Multi-Language Support**: Fully localized in **English**, **Shona**, and **Ndebele** to serve the local community.
-- **Fixed Header Navigation**: Smooth UI with a sticky header ensuring navigation is always accessible.
+Screenshots below were captured from the Android emulator running the app.
 
-### 🤖 AI-Powered Chef
+<div align="center">
+  <img src="docs/assets/screenshots/language-selection.png" alt="Choose English, ChiShona, or isiNdebele" width="190" />
+  <img src="docs/assets/screenshots/personalise-your-chef.png" alt="Choose a chef avatar and cooking preferences" width="190" />
+  <img src="docs/assets/screenshots/pantry-ingredients.png" alt="Select ingredients in the kitchen pantry" width="190" />
+  <img src="docs/assets/screenshots/guest-or-account.png" alt="Choose an account or continue as a guest" width="190" />
+</div>
 
-- **Ingredient Scanning**: Snap a photo of ingredients using the camera.
-- **OpenRouter AI Integration**: OpenRouter's free model router analyzes ingredient photos and generates complete recipes with ingredients, steps, and nutrition.
-- **Save AI Recipes**: Generated recipes can be saved directly to your personal collection.
+## What you can do
 
-### ☁️ Real-Time & Backend
+- Browse and search Zimbabwean recipes, save favourites, and follow guided cooking steps.
+- Select pantry ingredients to find dishes you can make with what is available.
+- Create a profile, choose a language, and track cooking progress and achievements.
+- Use AI Chef for recipe suggestions and ingredient-image assistance. AI results can be incomplete; review ingredients and food-safety details before cooking.
+- Continue as a guest with device-local progress or create an account to sync selected app data through Supabase.
 
-- **Supabase Integration**: Robust backend for real-time data synchronization.
-- **Community Sharing**: Users can create and upload their own recipes to the cloud.
-- **Live Updates**: Instant updates across devices.
+The app uses OpenRouter through a Supabase Edge Function. Its provider/model availability can change. The app does not sell subscriptions or in-app purchases at this time.
 
----
+## Technology
 
-## 📱 User Interface (UI/UX)
+| Area | Implementation |
+|---|---|
+| Mobile app | React Native, Expo SDK 58, TypeScript, Expo Router |
+| State | Zustand and AsyncStorage |
+| Backend | Supabase Auth, Postgres, Storage, Realtime, Edge Functions |
+| AI | OpenRouter `openrouter/free`, accessed server-side |
+| Languages | English, ChiShona, isiNdebele |
 
-The application boasts a modern, clean, and culturally inspired interface:
+## Run locally
 
-- **Explore Screen**: Features a fixed header with language toggle, trending recipes carousel, and category filters.
-- **Create Screen**: A user-friendly form for submitting recipes with image upload placeholders.
-- **AI Modal**: An elegant overlay that handles the AI generation process with loading states and structured result presentation.
-- **Native Feel**: Built with React Native and Expo for a buttery smooth experience on both Android and iOS.
+### Requirements
 
----
+- Node.js 20 or later and npm
+- Expo Go for a quick local preview, or Android Studio/Xcode for a native build
+- A Supabase project for account, cloud sync, and AI features
 
-## 🛠 Tech Stack
+### Setup
 
-- **Framework**: [React Native](https://reactnative.dev/) (via [Expo](https://expo.dev/))
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Navigation**: [Expo Router](https://docs.expo.dev/router/introduction/)
-- **Backend**: [Supabase](https://supabase.com/)
-- **AI**: [OpenRouter](https://openrouter.ai/) using the `openrouter/free` model router
-- **Localization**: `i18n-js` & `expo-localization`
-- **UI Components**: `react-native-reanimated`, `@expo/vector-icons`
+```bash
+git clone https://github.com/PraiseTechzw/recipe.git
+cd recipe
+npm ci
+cp .env.example .env
+```
 
----
+Set the public Supabase values in `.env`:
 
-## ⚙️ Installation & Setup
+```dotenv
+EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+EXPO_PUBLIC_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
+```
 
-Follow these steps to get the project running on your local machine.
+Start the app:
 
-### Prerequisites
+```bash
+npx expo start
+```
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Expo Go app on your mobile device (or Android Studio/Xcode for simulators)
+For a local Supabase stack, install the [Supabase CLI](https://supabase.com/docs/guides/cli) and Docker, then run:
 
-### Steps
+```bash
+supabase start
+supabase db reset
+supabase functions serve openrouter-completion --env-file .env.local
+```
 
-1.  **Clone the Repository**
+The timestamped migrations in `supabase/migrations/` define the database in order; `supabase/seed.sql` adds the initial public chef and recipe data. For a hosted project, review pending changes first with `supabase db push --dry-run`. Set the AI key only as a Supabase secret:
 
-    ```bash
-    git clone https://github.com/PraiseTechzw/taste-of-zimbabwe.git
-    cd taste-of-zimbabwe
-    ```
+```bash
+supabase functions deploy openrouter-completion
+supabase secrets set OPENROUTER_API_KEY=YOUR_OPENROUTER_API_KEY
+```
 
-2.  **Install Dependencies**
+Never put the OpenRouter key in an `EXPO_PUBLIC_*` variable or commit secrets. For account seeding and hosted auth setup, see [Supabase setup](supabase/README.md).
 
-    ```bash
-    npm install
-    ```
+## Project documentation
 
-3.  **Environment Configuration**
-    Create a `.env` file in the root directory and add your API keys:
+- [Production release checklist](docs/release-checklist.md)
+- [Store listing review and suggested copy](docs/store-listing.md)
+- [Update prompt and release process](docs/updates.md)
+- [Architecture and backend setup](supabase/README.md)
+- [Privacy policy](docs/legal/privacy-policy.md) · [Terms of Service](docs/legal/terms-of-service.md)
+- [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md)
 
-    ```bash
-    EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
-    EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-    OPENROUTER_API_KEY=your_openrouter_api_key
-    ```
+## Contributing
 
-4.  **Set up Supabase locally (optional)**
+Bug reports, documentation fixes, and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) before contributing.
 
-    Install and run the [Supabase CLI](https://supabase.com/docs/guides/cli) with Docker, then apply the ordered migrations and seed data:
+## License and attribution
 
-    ```bash
-    supabase start
-    supabase db reset
-    ```
+Source code is released under the [MIT License](LICENSE). The chef avatar artwork uses DiceBear Adventurer by Lisa Wischofsky under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Third-party recipe images and data retain their respective attribution and licensing terms.
 
-    For local AI testing, serve the function with the private environment file:
+## Contact
 
-    ```bash
-    supabase functions serve openrouter-completion --env-file .env
-    ```
-
-    For a hosted project, deploy AI Chef through the authenticated Supabase Function and set its server-side key:
-
-    ```bash
-    supabase functions deploy openrouter-completion
-    supabase secrets set OPENROUTER_API_KEY=your_openrouter_api_key
-    ```
-
-    The schema is in `supabase/migrations/` with timestamped migrations; `supabase/seed.sql` adds the sample profile and recipes. For a linked hosted project, inspect the pending changes with `supabase db push --dry-run` before applying them with `supabase db push`.
-
-    The app persists its full local Zustand state in AsyncStorage. With a configured Supabase project, it also signs in anonymously and syncs private onboarding/profile preferences, favorites, pantry and shopping lists, notification preferences, and recipe-view learning signals to `chef_app_state`. Enable **Allow anonymous sign-ins** in the hosted project's Auth settings before using this sync; it is enabled in the local Supabase config. Guests can create an account or sign in to restore state on another device; an unlinked anonymous session itself cannot be recovered after reinstall or sign-out.
-
-    The seed creates the public chef profile for Praise Masunga (`praisetechzw`) first, then links the initial recipes to that ID. To also create and link his Supabase Auth account, put `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and a private `PRAISE_MASUNGA_PASSWORD` in an ignored `.env.local` file, then run:
-
-    ```bash
-    npm run seed:official-account
-    ```
-
-    On a hosted project, first apply the migrations, run `supabase/seed.sql` in the SQL Editor, and then run this account script. It stores the email in Supabase Auth and links the Auth user ID to the public chef profile; it does not put the email in the public profile table.
-
-    Apply the full ordered migrations before deploying. Public recipe and display-profile reads are available, while profile/recipe writes and storage uploads are restricted to the authenticated owner. Private app state and AI request limits are tied to the authenticated Supabase user ID. AI requests require the `openrouter-completion` function and its server-side secret; do not put that key in an Expo public variable.
-
-5.  **Run the App**
-    ```bash
-    npx expo start
-    ```
-    Scan the QR code with your Expo Go app.
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to get started.
-
-Please adhere to our [Code of Conduct](CODE_OF_CONDUCT.md) in all interactions.
-
----
-
-## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**Praise Masunga (PraiseTechzw)**
-
-- **GitHub**: [@PraiseTechzw](https://github.com/PraiseTechzw)
-- **Role**: Lead Developer & Creator
-
-## Avatar Artwork
-
-The chef cartoon avatars use the Adventurer style by Lisa Wischofsky, served through [DiceBear](https://www.dicebear.com/styles/adventurer/). The style is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-
----
-
-_Built with ❤️ for Zimbabwe_
+**Praise Masunga · PraiseTechzw**  
+[praisetechzw@gmail.com](mailto:praisetechzw@gmail.com) · [GitHub](https://github.com/PraiseTechzw)

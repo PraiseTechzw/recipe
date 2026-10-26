@@ -1,0 +1,62 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Read latest published app release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl --fail --silent --show-error \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/PraiseTechzw/recipe/releases/latest \
+            -o /tmp/latest-release.json || echo '{}' > /tmp/latest-release.json
+          node <<'NODE'
+          const fs = require('node:fs');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8')).expo;
+          const release = JSON.parse(fs.readFileSync('/tmp/latest-release.json', 'utf8'));
+          const version = String(release.tag_name || app.version).replace(/^v/, '');
+          const payload = {
+            version,
+            storeUrl: 'https://play.google.com/store/apps/details?id=com.appixiasoftwares.tasteofzimbabwe',
+            releaseUrl: release.html_url || 'https://github.com/PraiseTechzw/recipe/releases',
+            releasedAt: release.published_at || null
+          };
+          fs.writeFileSync('docs/update.json', JSON.stringify(payload, null, 2) + '\n');
+          console.log(`Publishing update feed for ${version}`);
+          NODE
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

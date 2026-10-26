@@ -6,7 +6,7 @@ import {
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { AppState, View } from "react-native";
 import "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import { GlobalErrorBoundary } from "../components/feedback/GlobalErrorBoundary";
@@ -16,6 +16,7 @@ import { useOfflineStatus } from "../hooks/useOfflineStatus";
 import i18n from "../i18n";
 import { NotificationService } from "../services/notificationService";
 import { SyncService } from "../services/syncService";
+import { checkForStoreUpdate } from "../services/storeUpdateService";
 import { useStore } from "../store/useStore";
 
 import { toastConfig } from "../components/feedback/ToastConfig";
@@ -56,6 +57,15 @@ export default function RootLayout() {
 
     setupNotifications();
   }, [fetchRecipes, setUserProfile]);
+
+  useEffect(() => {
+    const check = () => void checkForStoreUpdate();
+    check();
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") check();
+    });
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     void NotificationService.scheduleDailyReminder(notificationPreferences.dailyReminder).catch((error) => {

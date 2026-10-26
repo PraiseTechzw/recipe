@@ -1,0 +1,42 @@
+name: Bug report
+description: Report a problem with the app or repository.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: "Please remove personal information, passwords, tokens, and private recipe data from your report."
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      placeholder: "2.0.2"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and operating system
+      placeholder: "Pixel 8, Android 16"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Tell us what you did and what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant redacted logs or screenshots
+      description: Remove access tokens, email addresses, and private content first.
+    validations:
+      required: false

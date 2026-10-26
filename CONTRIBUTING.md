@@ -1,58 +1,34 @@
-# Contributing to Zimbabwe Traditional Recipes
+# Contributing
 
-First off, thank you for considering contributing to Zimbabwe Traditional Recipes! It's people like you that make this community such a great place to learn, inspire, and create.
+Thank you for helping improve Zimbabwe Traditional Recipes. Contributions should be respectful, focused, and consistent with the app's goal of making Zimbabwean cooking accessible.
 
-## How Can I Contribute?
+## Before opening a pull request
 
-### Reporting Bugs
+1. Check existing issues and pull requests for related work.
+2. For larger changes, open an issue first to discuss the user need and approach.
+3. Create a focused branch from `master` and keep unrelated formatting or generated files out of the change.
+4. Run `npm run lint` and `npx tsc --noEmit`. Include or update tests when behavior changes.
+5. Update the relevant documentation, localization strings, privacy disclosures, and Supabase migration when the change affects them.
 
-This section guides you through submitting a bug report for Zimbabwe Traditional Recipes. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+## Pull request details
 
-- **Use a clear and descriptive title** for the issue to identify the problem.
-- **Describe the exact steps which reproduce the problem** in as many details as possible.
-- **Provide specific examples** to demonstrate the steps.
+Use a clear title and describe the user-facing behavior, implementation approach, and any migration or configuration steps. Include emulator screenshots for UI changes when practical. Call out known limitations and data-handling changes. Never include API keys, passwords, service-role tokens, signing files, or personal user data.
 
-### Suggesting Enhancements
+## Reporting a bug
 
-This section guides you through submitting an enhancement suggestion for Zimbabwe Traditional Recipes, including completely new features and minor improvements to existing functionality.
+Use the bug report form in GitHub Issues. Include reproducible steps, expected and actual behavior, app version, device/OS, and relevant redacted logs. Do not post account credentials, private recipe data, or screenshots containing personal information.
 
-- **Use a clear and descriptive title** for the issue to identify the suggestion.
-- **Provide a step-by-step description of the suggested enhancement** in as many details as possible.
-- **Explain why this enhancement would be useful** to most Zimbabwe Traditional Recipes users.
+## Code conventions
 
-### Pull Requests
+- Follow the existing TypeScript, React Native, Expo Router, localization, and theme patterns.
+- Keep secrets server-side. Values prefixed with `EXPO_PUBLIC_` are bundled into the client and must never contain private credentials.
+- Add database changes as ordered, timestamped Supabase migrations. Keep RLS policies explicit and avoid client-trusted writes for scores or protected data.
+- Keep user-visible copy clear and localized where the app supports translations.
 
-The process described here has several goals:
+## Community standards
 
-- Maintain Zimbabwe Traditional Recipes' quality
-- Fix problems that are important to users
-- Engage the community in working toward the best possible Zimbabwe Traditional Recipes
+By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Maintainers may close contributions that are unsafe, abusive, unrelated, or inconsistent with the project's privacy and security requirements.
 
-1.  Fork the repo and create your branch from `main`.
-2.  If you've added code that should be tested, add tests.
-3.  Ensure the test suite passes.
-4.  Make sure your code lints.
-5.  Issue that pull request!
+## License
 
-## Styleguides
-
-### Git Commit Messages
-
-- Use the present tense ("Add feature" not "Added feature")
-- Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
-- Limit the first line to 72 characters or less
-- Reference issues and pull requests liberally after the first line
-
-### JavaScript/TypeScript Styleguide
-
-- All JavaScript/TypeScript must adhere to the project's Prettier/ESLint configuration.
-
-## Additional Notes
-
-### Issue and Pull Request Labels
-
-This section lists the labels we use to help us track and manage issues and pull requests.
-
-*   `bug` - Issues that are bugs.
-*   `enhancement` - Issues that are feature requests.
-*   `documentation` - Issues or PRs related to documentation.
+By submitting a contribution, you agree that it may be distributed under the repository's [MIT License](LICENSE), unless the contribution clearly states otherwise and maintainers accept it.

@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest an improvement for cooks using the app.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What would you like to do?
+      description: Describe the cooking or app need.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would a good solution look like?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Extra context
+      description: Screenshots are welcome. Please avoid sharing personal information.
+    validations:
+      required: false
