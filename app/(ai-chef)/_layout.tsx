@@ -5,6 +5,7 @@ export default function AiChefLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="agent" />
+      <Stack.Screen name="processing" />
       <Stack.Screen name="review" />
       <Stack.Screen name="result" />
     </Stack>

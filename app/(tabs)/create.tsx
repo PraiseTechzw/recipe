@@ -1,5 +1,6 @@
 import { Input } from "@/components/ui/Input";
 import { Chip } from "@/components/ui/Chip";
+import { AIMascot } from "@/components/ai/AIMascot";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -259,7 +260,7 @@ export default function CreateScreen() {
               end={{ x: 1, y: 0 }}
               style={styles.aiButtonGradient}
             >
-              <View style={styles.aiButtonIcon}><Ionicons name="sparkles" size={19} color="#FFFFFF" /></View>
+              <View style={styles.aiButtonIcon}><AIMascot size={36} /></View>
               <View style={styles.aiButtonCopy}>
                 <Text style={styles.aiButtonText}>Create with AI</Text>
                 <Text style={styles.aiButtonSubtext}>Use a photo of your ingredients</Text>

@@ -26,6 +26,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Chip } from "../../components/ui/Chip";
+import { AIMascot } from "../../components/ai/AIMascot";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
@@ -40,7 +41,7 @@ const LOADING_STEPS = [
 
 export default function ReviewScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   // Store integration
   const {
@@ -185,7 +186,10 @@ export default function ReviewScreen() {
         >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Review Ingredients</Text>
+        <View style={styles.headerBrand}>
+          <AIMascot size={32} animated={false} />
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Review Ingredients</Text>
+        </View>
         <View style={{ width: 40 }} />
       </View>
 
@@ -195,7 +199,7 @@ export default function ReviewScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Captured Image */}
-          <View style={styles.imageContainer}>
+          <View style={[styles.imageContainer, { backgroundColor: colors.surfaceVariant }]}>
             {imageUri && (
               <Image
                 source={{ uri: imageUri }}
@@ -268,7 +272,7 @@ export default function ReviewScreen() {
               style={[styles.addButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
               disabled={isLoading}
             >
-              <Ionicons name="add" size={24} color="#fff" />
+              <Ionicons name="add" size={24} color={isDark ? "#121212" : "#FFFFFF"} />
             </TouchableOpacity>
           </View>
 
@@ -322,12 +326,12 @@ export default function ReviewScreen() {
           >
             {isLoading ? (
               <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <ActivityIndicator color="#fff" style={{ marginRight: 8 }} />
+                <AIMascot size={34} animated={false} />
                 <Animated.Text
                   key={loadingStepIndex} // Re-animate on text change
                   entering={FadeIn}
                   exiting={FadeOut}
-                  style={styles.generateButtonText}
+                  style={[styles.generateButtonText, { color: isDark ? "#121212" : "#FFFFFF" }]}
                 >
                   {isExtracting
                     ? "Analyzing..."
@@ -339,10 +343,10 @@ export default function ReviewScreen() {
                 <Ionicons
                   name="restaurant-outline"
                   size={20}
-                  color="#fff"
+                  color={isDark ? "#121212" : "#FFFFFF"}
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.generateButtonText}>Generate Recipe</Text>
+                <Text style={[styles.generateButtonText, { color: isDark ? "#121212" : "#FFFFFF" }]}>Generate Recipe</Text>
               </>
             )}
           </Animated.View>
@@ -355,7 +359,6 @@ export default function ReviewScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   header: {
     flexDirection: "row",
@@ -364,7 +367,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   backButton: {
     padding: 8,
@@ -374,6 +376,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
   },
+  headerBrand: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7 },
   scrollContent: {
     paddingBottom: 100,
   },
@@ -381,7 +384,6 @@ const styles = StyleSheet.create({
     height: 200,
     width: "100%",
     position: "relative",
-    backgroundColor: "#f5f5f5",
   },
   image: {
     width: "100%",
@@ -413,12 +415,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
     marginBottom: 4,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: "#666",
     marginBottom: 16,
   },
   chipContainer: {
@@ -430,7 +430,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   emptyText: {
-    color: "#999",
     fontStyle: "italic",
     marginTop: 8,
   },
@@ -443,7 +442,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 50,
-    backgroundColor: "#f5f5f5",
     borderRadius: 25,
     paddingHorizontal: 20,
     fontSize: 16,
@@ -454,7 +452,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "#E65100",
     justifyContent: "center",
     alignItems: "center",
     elevation: 2,
@@ -469,12 +466,9 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 20,
-    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
   },
   generateButton: {
-    backgroundColor: "#E65100",
     height: 56,
     borderRadius: 28,
     flexDirection: "row",
@@ -487,7 +481,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   disabledButton: {
-    backgroundColor: "#FFB74D",
+    opacity: 0.72,
     elevation: 0,
     shadowOpacity: 0,
   },

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AIMascot } from '../ai/AIMascot';
 import i18n from '../../i18n';
 
 interface AiRecipeModalProps {
@@ -30,6 +31,7 @@ export const AiRecipeModal = ({ visible, onClose, isGenerating, aiRecipe, onSave
 
           {isGenerating ? (
             <View style={styles.loadingContainer}>
+              <AIMascot size={92} />
               <ActivityIndicator size="large" color="#E65100" />
               <Text style={styles.loadingText}>{i18n.t("analyzing")}</Text>
               <Text style={styles.loadingSubText}>{i18n.t("poweredBy")}</Text>
@@ -37,6 +39,10 @@ export const AiRecipeModal = ({ visible, onClose, isGenerating, aiRecipe, onSave
           ) : aiRecipe ? (
             <>
               <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={styles.aiBrand}>
+                  <AIMascot size={38} animated={false} />
+                  <Text style={styles.aiBrandText}>MADE WITH AI CHEF</Text>
+                </View>
                 <Text style={styles.aiTitle}>{aiRecipe.title}</Text>
                 <Text style={styles.aiDescription}>{aiRecipe.description}</Text>
 
@@ -116,6 +122,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 40,
   },
+  aiBrand: { flexDirection: "row", alignItems: "center", gap: 7, marginBottom: 10 },
+  aiBrandText: { color: "#E65100", fontSize: 9, fontWeight: "900", letterSpacing: 1 },
   loadingText: {
     marginTop: 16,
     fontSize: 16,

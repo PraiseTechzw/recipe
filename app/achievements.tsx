@@ -96,7 +96,7 @@ export default function AchievementsScreen() {
       >
         {/* XP Card */}
         <LinearGradient
-          colors={["#FF9966", "#FF5E62"]}
+          colors={["#123B2C", "#1D6444", "#9B7024"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.xpCard}
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     margin: 20,
     borderRadius: 20,
     padding: 20,
-    shadowColor: "#FF5E62",
+    shadowColor: "#174A34",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -267,11 +267,11 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.14)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#FFF",
+    borderColor: "#F4CE67",
     marginRight: 20,
   },
   levelNum: {
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   },
   progressBarFill: {
     height: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor: "#F4CE67",
     borderRadius: 4,
   },
   progressText: {

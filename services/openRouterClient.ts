@@ -2,13 +2,18 @@ const API_URL = "https://openrouter.ai/api/v1/chat/completions";
 const MODEL = "openrouter/free";
 const TIMEOUT_MS = 45_000;
 
+type OpenRouterContent = string | Array<{ type?: string; text?: string }> | null;
+
 type OpenRouterResponse = {
+  id?: string;
+  model?: string;
   choices?: Array<{
     finish_reason?: string | null;
     message?: {
       role?: "assistant";
-      content?: string | Array<{ type?: string; text?: string }> | null;
+      content?: OpenRouterContent;
       tool_calls?: OpenRouterToolCall[];
+      refusal?: string | null;
     };
   }>;
   error?: { message?: string; code?: number | string };
@@ -28,6 +33,14 @@ export type OpenRouterAgentTool = {
   };
 };
 
+export type OpenRouterAgentStage =
+  | "preparing"
+  | "searching"
+  | "writing"
+  | "checking"
+  | "complete"
+  | "error";
+
 type AgentMessage = {
   role: "system" | "user" | "assistant" | "tool";
   content?: string;
@@ -35,10 +48,46 @@ type AgentMessage = {
   tool_calls?: OpenRouterToolCall[];
 };
 
+function getMessageText(content?: OpenRouterContent): string {
+  if (Array.isArray(content)) return content.map((part) => part.text ?? "").join("\n").trim();
+  return typeof content === "string" ? content.trim() : "";
+}
+
+function logOpenRouterResponse(
+  stage: string,
+  status: number,
+  payload: OpenRouterResponse,
+  requestId?: string | null,
+) {
+  const firstChoice = payload.choices?.[0];
+  const message = firstChoice?.message;
+  const text = getMessageText(message?.content);
+  console.log("[OpenRouter] response", {
+    stage,
+    status,
+    requestId: requestId ?? payload.id ?? null,
+    model: payload.model ?? null,
+    choiceCount: payload.choices?.length ?? 0,
+    finishReason: firstChoice?.finish_reason ?? null,
+    messageKeys: message ? Object.keys(message) : [],
+    contentType: Array.isArray(message?.content) ? "parts" : typeof message?.content,
+    contentLength: text.length,
+    contentPreview: text ? text.slice(0, 240) : null,
+    toolCallCount: message?.tool_calls?.length ?? 0,
+    refusal: message?.refusal ?? null,
+    providerError: payload.error?.message ?? null,
+  });
+}
+
 export class OpenRouterClient {
   private readonly apiKey = process.env.EXPO_PUBLIC_OPENROUTER_API_KEY?.trim() ?? "";
 
-  async generateContent(prompt: string, imageBase64?: string, maxTokens = 1800): Promise<string> {
+  async generateContent(
+    prompt: string,
+    imageBase64?: string,
+    maxTokens = 1800,
+    retryEmptyResponse = true,
+  ): Promise<string> {
     if (!this.apiKey) {
       throw new Error(
         "OpenRouter is not configured. Add EXPO_PUBLIC_OPENROUTER_API_KEY to your local .env file and restart Expo.",
@@ -77,17 +126,19 @@ export class OpenRouterClient {
       });
 
       const payload = (await response.json().catch(() => ({}))) as OpenRouterResponse;
+      logOpenRouterResponse(imageBase64 ? "vision" : "completion", response.status, payload, response.headers.get("x-request-id"));
       if (!response.ok) {
         throw this.toFriendlyError(response.status, payload.error?.message);
       }
 
-      const message = payload.choices?.[0]?.message?.content;
-      const text = Array.isArray(message)
-        ? message.map((part) => part.text ?? "").join("\n").trim()
-        : message?.trim();
+      const text = getMessageText(payload.choices?.[0]?.message?.content);
 
       if (!text) {
-        throw new Error("The AI returned an empty response. Please try again.");
+        if (retryEmptyResponse) {
+          console.warn("[OpenRouter] Empty completion; retrying once.");
+          return this.generateContent(prompt, imageBase64, maxTokens, false);
+        }
+        throw new Error("The AI provider returned no text after a retry. Please try again in a moment.");
       }
 
       return text;
@@ -111,6 +162,7 @@ export class OpenRouterClient {
     tools: OpenRouterAgentTool[],
     executeTool: (name: string, args: Record<string, unknown>) => Promise<unknown>,
     maxToolRounds = 2,
+    onStage?: (stage: OpenRouterAgentStage) => void,
   ): Promise<string> {
     if (!this.apiKey) {
       throw new Error("OpenRouter is not configured. Add EXPO_PUBLIC_OPENROUTER_API_KEY to your local .env file and restart Expo.");
@@ -121,12 +173,15 @@ export class OpenRouterClient {
       { role: "user", content: userPrompt },
     ];
     let toolRounds = 0;
+    let emptyResponseRetries = 0;
 
     while (true) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
       let response: Response;
       const toolsAvailable = toolRounds < maxToolRounds && tools.length > 0;
+      const stage = toolsAvailable ? "agent-tool-step" : "agent-final";
+      console.log("[OpenRouter] request", { stage, model: MODEL, toolRound: toolRounds, messages: messages.length, toolsAvailable });
       try {
         response = await fetch(API_URL, {
           method: "POST",
@@ -159,32 +214,59 @@ export class OpenRouterClient {
       }
 
       const payload = (await response.json().catch(() => ({}))) as OpenRouterResponse;
+      logOpenRouterResponse(stage, response.status, payload, response.headers.get("x-request-id"));
       if (!response.ok) throw this.toFriendlyError(response.status, payload.error?.message);
 
       const message = payload.choices?.[0]?.message;
-      if (!message) throw new Error("The AI returned an empty response. Please try again.");
+      if (!message) {
+        if (emptyResponseRetries < 1) {
+          emptyResponseRetries += 1;
+          console.warn("[OpenRouter] Successful response had no assistant message; retrying once.");
+          messages.push({ role: "user", content: "Please return the requested result as a complete response." });
+          if (toolRounds > 0) toolRounds = maxToolRounds;
+          continue;
+        }
+        throw new Error("The model returned no assistant message after a retry. Please try again in a moment.");
+      }
       const calls = message.tool_calls ?? [];
       if (calls.length > 0 && toolRounds < maxToolRounds) {
+        onStage?.("searching");
+        console.log("[OpenRouter] tool calls", { names: calls.map((call) => call.function.name), count: calls.length });
         messages.push({ role: "assistant", content: typeof message.content === "string" ? message.content : "", tool_calls: calls });
         for (const call of calls) {
           let output: unknown;
+          const toolStartedAt = Date.now();
           try {
             const args = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
             output = await executeTool(call.function.name, args);
           } catch (error) {
             output = { error: error instanceof Error ? error.message : "Tool could not complete." };
           }
+          console.log("[OpenRouter] tool completed", {
+            name: call.function.name,
+            elapsedMs: Date.now() - toolStartedAt,
+            resultCount: typeof output === "object" && output !== null && "count" in output ? (output as { count: unknown }).count : null,
+            failed: typeof output === "object" && output !== null && "error" in output,
+          });
           messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(output) });
         }
         toolRounds += 1;
+        onStage?.("writing");
         continue;
       }
+      onStage?.("writing");
 
-      const content = message.content;
-      const text = Array.isArray(content)
-        ? content.map((part) => part.text ?? "").join("\n").trim()
-        : content?.trim();
-      if (!text) throw new Error("The AI returned an empty response. Please try again.");
+      const text = getMessageText(message.content);
+      if (!text) {
+        if (emptyResponseRetries < 1) {
+          emptyResponseRetries += 1;
+          console.warn("[OpenRouter] Successful response had no assistant text; retrying once.");
+          messages.push({ role: "user", content: "The previous response had no text. Return the requested complete recipe JSON now." });
+          toolRounds = maxToolRounds;
+          continue;
+        }
+        throw new Error("The model returned no recipe text after a retry. Please try again in a moment.");
+      }
       return text;
     }
   }
@@ -194,10 +276,10 @@ export class OpenRouterClient {
       return new Error("OpenRouter rejected the API key. Check EXPO_PUBLIC_OPENROUTER_API_KEY in .env.");
     }
     if (status === 429) {
-      return new Error("The free AI models are busy or rate limited. Please wait a moment and try again.");
+      return new Error("AI Chef is taking a little longer than usual. Please wait a moment and try again.");
     }
     if (status === 402) {
-      return new Error("OpenRouter could not find an available free model for this request.");
+      return new Error("AI Chef is temporarily unavailable. Please try again shortly.");
     }
     if (status >= 500) {
       return new Error("OpenRouter is temporarily unavailable. Please try again shortly.");

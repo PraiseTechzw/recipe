@@ -26,11 +26,14 @@ import { HapticService } from "../../services/haptics";
 import { ImageCaptureService } from "../../services/imageCapture";
 import { SyncService } from "../../services/syncService";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
+import { useTheme } from "../../theme/useTheme";
+import { AIMascot } from "../../components/ai/AIMascot";
 
 const { width } = Dimensions.get("window");
 
 export default function CaptureScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   // Use Expo Router's current route segments here instead of React Navigation's
   // focus hook. This nested camera route can render before a navigator context
   // is attached in some Expo Router transitions.
@@ -143,11 +146,11 @@ export default function CaptureScreen() {
 
   if (!hasPermission) {
     return (
-      <View style={[styles.container, styles.permissionContainer]}>
-        <Ionicons name="camera-outline" size={64} color="#666" />
-        <Text style={styles.permissionText}>Camera permission is required</Text>
+      <View style={[styles.container, styles.permissionContainer, { backgroundColor: colors.background }]}>
+        <AIMascot size={104} />
+        <Text style={[styles.permissionText, { color: colors.text }]}>Camera permission is required</Text>
         <TouchableOpacity
-          style={styles.permissionButton}
+          style={[styles.permissionButton, { backgroundColor: colors.primary }]}
           onPress={async () => {
             const granted = await verifyCameraPermission();
             if (!granted) {
@@ -157,7 +160,7 @@ export default function CaptureScreen() {
             }
           }}
         >
-          <Text style={styles.permissionButtonText}>Open Settings</Text>
+          <Text style={[styles.permissionButtonText, { color: colors.background }]}>Open Settings</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.closeButtonAbsolute}
@@ -194,6 +197,11 @@ export default function CaptureScreen() {
             <Ionicons name="close" size={28} color="#fff" />
           </TouchableOpacity>
 
+          <View style={styles.cameraBrand}>
+            <AIMascot size={34} />
+            <Text style={styles.cameraBrandText}>AI CHEF</Text>
+          </View>
+
           <TouchableOpacity onPress={toggleFlash} style={styles.iconButton}>
             <Ionicons
               name={flash === "on" ? "flash" : "flash-off"}
@@ -216,7 +224,8 @@ export default function CaptureScreen() {
                 entering={FadeIn}
                 style={styles.processingContainer}
               >
-                <ActivityIndicator size="large" color="#E65100" />
+                <AIMascot size={54} />
+                <ActivityIndicator size="large" color={colors.primary} />
                 <Text style={styles.processingText}>Processing...</Text>
               </Animated.View>
             ) : (
@@ -276,18 +285,15 @@ const styles = StyleSheet.create({
   },
   permissionText: {
     fontSize: 18,
-    color: "#333",
     marginVertical: 20,
     textAlign: "center",
   },
   permissionButton: {
-    backgroundColor: "#E65100",
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
   },
   permissionButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
@@ -298,9 +304,12 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 10,
   },
+  cameraBrand: { flexDirection: "row", alignItems: "center", gap: 5 },
+  cameraBrandText: { color: "#fff", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 },
   iconButton: {
     padding: 10,
     backgroundColor: "rgba(0,0,0,0.3)",
@@ -334,7 +343,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderTopWidth: 4,
     borderLeftWidth: 4,
-    borderColor: "#E65100",
     borderTopLeftRadius: 16,
   },
   cornerTR: {
@@ -345,7 +353,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderTopWidth: 4,
     borderRightWidth: 4,
-    borderColor: "#E65100",
     borderTopRightRadius: 16,
   },
   cornerBL: {
@@ -356,7 +363,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderBottomWidth: 4,
     borderLeftWidth: 4,
-    borderColor: "#E65100",
     borderBottomLeftRadius: 16,
   },
   cornerBR: {
@@ -367,7 +373,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderBottomWidth: 4,
     borderRightWidth: 4,
-    borderColor: "#E65100",
     borderBottomRightRadius: 16,
   },
   processingContainer: {

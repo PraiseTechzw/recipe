@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { EmptyState } from "../../components/feedback/EmptyState";
 import { Skeleton } from "../../components/feedback/Skeleton";
+import { AIMascot } from "../../components/ai/AIMascot";
 import Logo from "../../components/Logo";
 import { RecipeCardUI } from "../../components/ui/RecipeCardUI";
 import { SectionHeader } from "../../components/ui/SectionHeader";
@@ -330,7 +331,7 @@ export default function HomeScreen() {
                     style={styles.aiAction}
                   >
                     <View style={styles.quickActionIcon}>
-                      <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+                      <AIMascot size={28} />
                     </View>
                     <Text style={styles.quickActionText} numberOfLines={1}>
                       {i18n.t("aiGenerate")}

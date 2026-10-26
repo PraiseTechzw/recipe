@@ -6,6 +6,7 @@ import {
     GeneratedRecipeResult,
     RecipePreferences,
 } from "../services/aiRecipes";
+import type { OpenRouterAgentStage } from "../services/openRouterClient";
 import { ImageCaptureService } from "../services/imageCapture";
 import { useStore } from "../store/useStore";
 
@@ -37,6 +38,8 @@ interface AICaptureState {
   extractionWarnings: string[];
   editedIngredients: string[]; // The list user modifies
   generatedRecipe: GeneratedRecipeResult | null;
+  agentStage: OpenRouterAgentStage;
+  generationPreferences: RecipePreferences | undefined;
   error: AICaptureError | null;
 
   // Actions
@@ -50,8 +53,13 @@ interface AICaptureState {
   addIngredient: (name: string) => void;
   removeIngredient: (name: string) => void;
   setIngredients: (list: string[]) => void;
+  setGenerationPreferences: (preferences: RecipePreferences) => void;
+  setAgentStage: (stage: OpenRouterAgentStage) => void;
 
-  generateRecipe: (preferences?: RecipePreferences) => Promise<void>;
+  generateRecipe: (
+    preferences?: RecipePreferences,
+    onAgentStage?: (stage: OpenRouterAgentStage) => void,
+  ) => Promise<void>;
   regenerate: (
     confirm: boolean,
     preferences?: RecipePreferences,
@@ -71,6 +79,8 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
   extractionWarnings: [],
   editedIngredients: [],
   generatedRecipe: null,
+  agentStage: "preparing",
+  generationPreferences: undefined,
   error: null,
 
   // Actions
@@ -170,7 +180,10 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
     set({ editedIngredients: list });
   },
 
-  generateRecipe: async (preferences?: RecipePreferences) => {
+  setGenerationPreferences: (generationPreferences) => set({ generationPreferences }),
+  setAgentStage: (agentStage) => set({ agentStage }),
+
+  generateRecipe: async (preferences?: RecipePreferences, onAgentStage?: (stage: OpenRouterAgentStage) => void) => {
     const ingredients = get().editedIngredients;
     if (ingredients.length === 0) {
       set({
@@ -180,7 +193,10 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
       return;
     }
 
-    set({ status: "generatingRecipe", error: null });
+    onAgentStage?.("preparing");
+    set({ agentStage: "preparing", generationPreferences: preferences });
+    // Clear any previous success so a failed retry cannot navigate to stale output.
+    set({ status: "generatingRecipe", error: null, generatedRecipe: null });
     try {
       // Get pantry items from global store
       const appState = useStore.getState();
@@ -192,12 +208,16 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
         pantryItems,
         preferences,
         recipeLibrary,
+        onAgentStage,
       );
       set({
         status: "showingResults",
         generatedRecipe: recipe,
+        agentStage: "complete",
       });
     } catch (e: any) {
+      onAgentStage?.("error");
+      set({ agentStage: "error" });
       const isValidation = e instanceof ZodError;
       set({
         status: "error",
@@ -273,6 +293,8 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
       extractionWarnings: [],
       editedIngredients: [],
       generatedRecipe: null,
+      agentStage: "preparing",
+      generationPreferences: undefined,
       error: null,
     });
   },

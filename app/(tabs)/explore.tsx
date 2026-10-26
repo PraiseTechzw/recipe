@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Skeleton } from "@/components/feedback/Skeleton";
 import { Chip } from "@/components/ui/Chip";
+import { AIMascot } from "@/components/ai/AIMascot";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { HapticService } from "@/services/haptics";
 import { useStore } from "@/store/useStore";
@@ -446,9 +447,9 @@ export default function ExploreScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.aiScanButton}
             >
-              <Ionicons name="scan-outline" size={20} color="#fff" />
-              <View style={styles.aiBadge}>
-                <Text style={styles.aiBadgeText}>AI</Text>
+              <AIMascot size={38} />
+                <View style={[styles.aiBadge, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
+                <Text style={[styles.aiBadgeText, { color: isDark ? "#121212" : "#FFFFFF" }]}>AI</Text>
               </View>
             </LinearGradient>
           </TouchableOpacity>

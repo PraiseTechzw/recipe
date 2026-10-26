@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { OpenRouterAgentTool, openRouterClient } from "./openRouterClient";
+import { openRouterClient } from "./openRouterClient";
+import type { OpenRouterAgentStage, OpenRouterAgentTool } from "./openRouterClient";
 import { getPantryMatches } from "./recommendations";
 import { Recipe } from "../models/recipe";
 
@@ -121,6 +122,7 @@ export class AIRecipeService {
     pantryItems: string[] = [],
     preferences?: RecipePreferences,
     recipeLibrary: Recipe[] = [],
+    onAgentStage?: (stage: OpenRouterAgentStage) => void,
   ): Promise<GeneratedRecipeResult> {
     const prefsString = preferences
       ? `
@@ -183,22 +185,30 @@ export class AIRecipeService {
           };
         },
         1,
+        onAgentStage,
       );
+      onAgentStage?.("checking");
       const cleanedJson = this.cleanJson(rawText);
       try {
-        return GenerateRecipeResponseSchema.parse(JSON.parse(cleanedJson));
+        const recipe = GenerateRecipeResponseSchema.parse(JSON.parse(cleanedJson));
+        onAgentStage?.("complete");
+        return recipe;
       } catch {
-        // Free models can occasionally stop mid-object. Retry once with stricter
+        // The model can occasionally stop mid-object. Retry once with stricter
         // JSON output and a larger completion budget before surfacing an error.
+        onAgentStage?.("writing");
         const retryText = await openRouterClient.generateContent(
           `${prompt}\n\nThe previous attempt was incomplete or invalid JSON. Regenerate a compact but complete recipe now. Limit it to 6 ingredients and 5 concise steps. Return one valid JSON object with every opening brace, bracket, and quote closed. Do not include markdown or commentary.`,
           undefined,
           3200,
         );
         try {
-          return GenerateRecipeResponseSchema.parse(JSON.parse(this.cleanJson(retryText)));
+          onAgentStage?.("checking");
+          const recipe = GenerateRecipeResponseSchema.parse(JSON.parse(this.cleanJson(retryText)));
+          onAgentStage?.("complete");
+          return recipe;
         } catch {
-          throw new Error("The free AI model returned an incomplete recipe twice. Please try again in a moment.");
+          throw new Error("AI Chef couldn’t finish the recipe this time. Please try again in a moment.");
         }
       }
     } catch (error) {

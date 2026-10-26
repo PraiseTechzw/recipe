@@ -20,6 +20,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HapticService } from "../../services/haptics";
+import { AIMascot } from "../../components/ai/AIMascot";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
@@ -27,7 +28,7 @@ import { useTheme } from "../../theme/useTheme";
 
 export default function ResultScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   // Store integration
   const {
@@ -53,7 +54,7 @@ export default function ResultScreen() {
         <View style={styles.centerContent}>
           <Text style={[styles.errorText, { color: colors.textSecondary }]}>No recipe generated.</Text>
           <TouchableOpacity onPress={() => router.back()} style={[styles.button, { backgroundColor: colors.primary }]}>
-            <Text style={styles.buttonText}>Go Back</Text>
+            <Text style={[styles.buttonText, { color: isDark ? "#121212" : "#FFFFFF" }]}>Go Back</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -218,7 +219,7 @@ export default function ResultScreen() {
           {/* Title & Info */}
           <View style={styles.infoSection}>
             <View style={[styles.aiBadge, { backgroundColor: `${colors.primary}18` }]}>
-              <Ionicons name="sparkles" size={13} color={colors.primary} />
+              <AIMascot size={30} animated={false} />
               <Text style={[styles.aiBadgeText, { color: colors.primary }]}>MADE FOR YOUR PANTRY</Text>
             </View>
             <Text style={[styles.title, { color: colors.text }]}>{recipe.title}</Text>
@@ -243,7 +244,7 @@ export default function ResultScreen() {
           </View>
 
           {/* Tabs */}
-          <View style={styles.tabContainer}>
+          <View style={[styles.tabContainer, { borderBottomColor: colors.border }]}>
             {["overview", "ingredients", "steps", "nutrition"].map((tab) => (
               <TouchableOpacity
                 key={tab}
@@ -310,12 +311,12 @@ export default function ResultScreen() {
                 {recipe.steps.map((step, i) => (
                   <View key={i} style={styles.stepRow}>
                     <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
-                      <Text style={styles.stepNumberText}>{i + 1}</Text>
+                      <Text style={[styles.stepNumberText, { color: isDark ? "#121212" : "#FFFFFF" }]}>{i + 1}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.stepText, { color: colors.text }]}>{step.text}</Text>
                       {step.timer_minutes && (
-                        <View style={styles.timerBadge}>
+                        <View style={[styles.timerBadge, { backgroundColor: colors.surfaceVariant }]}>
                           <Ionicons
                             name="timer-outline"
                             size={14}
@@ -388,10 +389,10 @@ export default function ResultScreen() {
           <Ionicons
             name="flame"
             size={20}
-            color="#fff"
+            color={isDark ? "#121212" : "#FFFFFF"}
             style={{ marginRight: 8 }}
           />
-          <Text style={styles.cookButtonText}>Cook Now</Text>
+          <Text style={[styles.cookButtonText, { color: isDark ? "#121212" : "#FFFFFF" }]}>Cook Now</Text>
         </TouchableOpacity>
       </View>
 
@@ -405,11 +406,11 @@ export default function ResultScreen() {
           <Animated.View
             entering={ZoomIn.springify()}
             exiting={ZoomOut}
-            style={styles.successCircle}
+            style={[styles.successCircle, { backgroundColor: colors.success }]}
           >
-            <Ionicons name="checkmark" size={50} color="#fff" />
+            <Ionicons name="checkmark" size={50} color={colors.background} />
           </Animated.View>
-          <Text style={styles.successText}>Recipe Saved!</Text>
+          <Text style={[styles.successText, { color: colors.background }]}>Recipe Saved!</Text>
         </Animated.View>
       )}
     </SafeAreaView>
@@ -419,7 +420,6 @@ export default function ResultScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   centerContent: {
     flex: 1,
@@ -429,17 +429,14 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 18,
-    color: "#666",
     marginBottom: 20,
   },
   button: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: "#E65100",
     borderRadius: 8,
   },
   buttonText: {
-    color: "#fff",
     fontWeight: "600",
   },
   header: {
@@ -449,8 +446,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-    backgroundColor: "#fff",
     zIndex: 10,
   },
   backButton: {
@@ -460,7 +455,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
   },
   content: {
     paddingBottom: 100,
@@ -490,12 +484,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 8,
   },
   description: {
     fontSize: 16,
-    color: "#666",
     lineHeight: 22,
     marginBottom: 16,
   },
@@ -505,7 +497,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: "#f0f0f0",
   },
   metaItem: {
     flexDirection: "row",
@@ -514,31 +505,25 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 14,
-    color: "#666",
     fontWeight: "500",
   },
   tabContainer: {
     flexDirection: "row",
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
   },
   tab: {
     paddingVertical: 12,
     marginRight: 24,
     borderBottomWidth: 2,
-    borderBottomColor: "transparent",
   },
   activeTab: {
-    borderBottomColor: "#E65100",
   },
   tabText: {
     fontSize: 15,
-    color: "#888",
     fontWeight: "500",
   },
   activeTabText: {
-    color: "#E65100",
     fontWeight: "600",
   },
   tabContent: {
@@ -547,23 +532,19 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
     marginBottom: 8,
   },
   bodyText: {
     fontSize: 16,
-    color: "#444",
     lineHeight: 24,
   },
   tag: {
-    backgroundColor: "#f0f0f0",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
   },
   tagText: {
     fontSize: 14,
-    color: "#666",
   },
   ingredientRow: {
     flexDirection: "row",
@@ -572,13 +553,11 @@ const styles = StyleSheet.create({
   },
   bullet: {
     fontSize: 16,
-    color: "#E65100",
     marginRight: 8,
     marginTop: 2,
   },
   ingredientText: {
     fontSize: 16,
-    color: "#333",
     lineHeight: 24,
     flex: 1,
   },
@@ -590,26 +569,22 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#E65100",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
     marginTop: 2,
   },
   stepNumberText: {
-    color: "#fff",
     fontSize: 14,
     fontWeight: "bold",
   },
   stepText: {
     fontSize: 16,
-    color: "#333",
     lineHeight: 24,
   },
   timerBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF3E0",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
@@ -619,12 +594,10 @@ const styles = StyleSheet.create({
   },
   timerText: {
     fontSize: 14,
-    color: "#E65100",
     fontWeight: "500",
   },
   tipBox: {
     flexDirection: "row",
-    backgroundColor: "#E3F2FD",
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
@@ -632,7 +605,6 @@ const styles = StyleSheet.create({
   },
   tipText: {
     fontSize: 14,
-    color: "#0277BD",
     flex: 1,
     lineHeight: 20,
   },
@@ -643,7 +615,6 @@ const styles = StyleSheet.create({
   },
   nutritionItem: {
     width: "45%",
-    backgroundColor: "#f9f9f9",
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
@@ -651,19 +622,15 @@ const styles = StyleSheet.create({
   nutritionValue: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 4,
   },
   nutritionLabel: {
     fontSize: 14,
-    color: "#666",
   },
   footer: {
     padding: 16,
     paddingBottom: 30, // Safe area
     borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    backgroundColor: "#fff",
     flexDirection: "row",
     gap: 12,
   },
@@ -672,20 +639,17 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E65100",
     justifyContent: "center",
     alignItems: "center",
   },
   saveButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#E65100",
   },
   cookButton: {
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: "#E65100",
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
@@ -693,7 +657,6 @@ const styles = StyleSheet.create({
   cookButtonText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#fff",
   },
   successOverlay: {
     ...StyleSheet.absoluteFill,
@@ -706,7 +669,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#4CAF50",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 20,
@@ -714,6 +676,5 @@ const styles = StyleSheet.create({
   successText: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#fff",
   },
 });
