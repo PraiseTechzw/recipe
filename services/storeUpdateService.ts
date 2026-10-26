@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 import { isRunningInExpoGo } from "expo";
-import { Alert, Linking } from "react-native";
+import { Alert, Linking, Platform } from "react-native";
 
 const UPDATE_FEED_URL = "https://praisetechzw.github.io/recipe/update.json";
 const PLAY_STORE_URL =
@@ -23,7 +23,7 @@ function compareVersions(left: string, right: string): number {
 }
 
 export async function checkForStoreUpdate(): Promise<void> {
-  if (isRunningInExpoGo()) return;
+  if (isRunningInExpoGo() || Platform.OS !== "android") return;
 
   const lastCheck = Number(await AsyncStorage.getItem(LAST_CHECK_KEY)) || 0;
   if (Date.now() - lastCheck < CHECK_INTERVAL_MS) return;
