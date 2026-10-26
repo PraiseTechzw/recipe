@@ -223,6 +223,24 @@ export const useStore = create<AppState>()(
         { id: "oil", key: "oil", icon: "🫗" },
         { id: "salt", key: "salt", icon: "🧂" },
         { id: "garlic", key: "garlic", icon: "🧄" },
+        { id: "rice", key: "rice", icon: "🍚" },
+        { id: "maize", key: "maize", icon: "🌽" },
+        { id: "sorghum", key: "sorghum", icon: "🌾" },
+        { id: "groundnuts", key: "groundnuts", icon: "🥜" },
+        { id: "sweet-potatoes", key: "sweetPotatoes", icon: "🍠" },
+        { id: "pumpkin", key: "pumpkin", icon: "🎃" },
+        { id: "potatoes", key: "potatoes", icon: "🥔" },
+        { id: "fish", key: "fish", icon: "🐟" },
+        { id: "mopane-worms", key: "mopaneWorms", icon: "🥘" },
+        { id: "eggs", key: "eggs", icon: "🥚" },
+        { id: "milk", key: "milk", icon: "🥛" },
+        { id: "flour", key: "flour", icon: "🌾" },
+        { id: "sugar", key: "sugar", icon: "🍬" },
+        { id: "ginger", key: "ginger", icon: "🫚" },
+        { id: "green-pepper", key: "greenPepper", icon: "🫑" },
+        { id: "carrots", key: "carrots", icon: "🥕" },
+        { id: "spinach", key: "spinach", icon: "🥬" },
+        { id: "cabbage", key: "cabbage", icon: "🥬" },
       ],
       dietaryOptions: ["Vegetarian", "Vegan", "Gluten-Free", "Halal", "None"],
       experienceLevels: ["Beginner", "Home Cook", "Pro"],
@@ -587,6 +605,19 @@ export const useStore = create<AppState>()(
     {
       name: "recipe-app-storage",
       storage: createJSONStorage(() => AsyncStorage),
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState ?? {}) as Partial<AppState>;
+        return {
+          ...currentState,
+          ...persisted,
+          // These are app configuration, not user data. Always use the latest
+          // shipped options so existing installs receive newly added choices.
+          categories: currentState.categories,
+          commonIngredients: currentState.commonIngredients,
+          dietaryOptions: currentState.dietaryOptions,
+          experienceLevels: currentState.experienceLevels,
+        };
+      },
     },
   ),
 );
