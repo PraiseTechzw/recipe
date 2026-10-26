@@ -6,6 +6,7 @@ import { getExpoPushTokenAsync } from 'expo-notifications/build/getExpoPushToken
 import { getPermissionsAsync, requestPermissionsAsync } from 'expo-notifications/build/NotificationPermissions';
 import { setNotificationHandler } from 'expo-notifications/build/NotificationsHandler';
 import { scheduleNotificationAsync } from 'expo-notifications/build/scheduleNotificationAsync';
+import { cancelScheduledNotificationAsync } from 'expo-notifications/build/cancelScheduledNotificationAsync';
 import { setNotificationChannelAsync } from 'expo-notifications/build/setNotificationChannelAsync';
 import { Platform } from 'react-native';
 
@@ -71,7 +72,7 @@ export const NotificationService = {
     }
   },
 
-  async scheduleDailyReminder() {
+  async scheduleDailyReminder(enabled: boolean) {
     if (Platform.OS === 'android' && !isRunningInExpoGo()) {
       await setNotificationChannelAsync('default', {
         name: 'default',
@@ -82,7 +83,12 @@ export const NotificationService = {
     }
 
     const scheduled = await getAllScheduledNotificationsAsync();
-    const hasDaily = scheduled.some((notification) => notification.content.title === 'Time to cook! 🍳');
+    const dailyReminders = scheduled.filter((notification) => notification.content.title === 'Time to cook! 🍳');
+    if (!enabled) {
+      await Promise.all(dailyReminders.map(({ identifier }) => cancelScheduledNotificationAsync(identifier)));
+      return;
+    }
+    const hasDaily = dailyReminders.length > 0;
     if (hasDaily) return;
 
     const trigger: any = Platform.OS === 'android'

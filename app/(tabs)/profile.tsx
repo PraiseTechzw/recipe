@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import * as StoreReview from "expo-store-review";
 import { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Switch,
@@ -31,8 +32,9 @@ export default function ProfileScreen() {
     setLocale,
     myRecipes,
     favorites,
+    notificationPreferences,
+    setNotificationPreferences,
   } = useStore();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
 
@@ -75,10 +77,15 @@ export default function ProfileScreen() {
   };
 
   const handleRateUs = async () => {
-    if (await StoreReview.hasAction()) {
-      await StoreReview.requestReview();
-    } else {
-      Alert.alert(i18n.t("rateUs"), "Please rate us in your app store.");
+    const storeUrl = Platform.select({
+      android: "https://play.google.com/store/apps/details?id=com.appixiasoftwares.tasteofzimbabwe",
+      ios: "https://apps.apple.com/search?term=Zimbabwe%20Traditional%20Recipes",
+      default: "https://play.google.com/store/apps/details?id=com.appixiasoftwares.tasteofzimbabwe",
+    });
+    try {
+      await Linking.openURL(storeUrl!);
+    } catch {
+      Alert.alert(i18n.t("rateUs"), "The app store could not be opened on this device.");
     }
   };
 
@@ -451,8 +458,8 @@ export default function ProfileScreen() {
                 {i18n.t("notifications")}
               </Text>
               <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
+                value={notificationPreferences.dailyReminder}
+                onValueChange={(dailyReminder) => setNotificationPreferences({ dailyReminder })}
                 trackColor={{ false: colors.border, true: colors.primary }}
                 thumbColor="#FFFFFF"
               />

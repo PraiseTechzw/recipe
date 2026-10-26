@@ -183,12 +183,15 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
     set({ status: "generatingRecipe", error: null });
     try {
       // Get pantry items from global store
-      const pantryItems = useStore.getState().pantry || [];
+      const appState = useStore.getState();
+      const pantryItems = appState.pantry || [];
+      const recipeLibrary = [...appState.myRecipes, ...appState.recipes];
 
       const recipe = await aiRecipeService.generateRecipe(
         ingredients,
         pantryItems,
         preferences,
+        recipeLibrary,
       );
       set({
         status: "showingResults",

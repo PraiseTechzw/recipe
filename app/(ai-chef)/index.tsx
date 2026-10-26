@@ -1,7 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native";
 import { CameraType, CameraView, FlashMode } from "expo-camera";
-import { useRouter } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
     ActivityIndicator,
@@ -32,7 +31,11 @@ const { width } = Dimensions.get("window");
 
 export default function CaptureScreen() {
   const router = useRouter();
-  const isFocused = useIsFocused();
+  // Use Expo Router's current route segments here instead of React Navigation's
+  // focus hook. This nested camera route can render before a navigator context
+  // is attached in some Expo Router transitions.
+  const segments = useSegments();
+  const isCaptureRoute = segments[0] === "(ai-chef)" && !segments[1];
   const cameraRef = useRef<CameraView>(null);
   const { verifyCameraPermission, verifyMediaLibraryPermission } =
     useAppPermissions();
@@ -169,7 +172,7 @@ export default function CaptureScreen() {
   return (
     <View style={styles.container}>
       {/* Camera View */}
-      {isFocused && (
+      {isCaptureRoute && (
         <CameraView
           ref={cameraRef}
           style={StyleSheet.absoluteFill}

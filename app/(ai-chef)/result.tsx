@@ -23,9 +23,11 @@ import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
+import { useTheme } from "../../theme/useTheme";
 
 export default function ResultScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   // Store integration
   const {
@@ -47,10 +49,10 @@ export default function ResultScreen() {
   // If no recipe in store, we shouldn't be here
   if (!recipe) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.centerContent}>
-          <Text style={styles.errorText}>No recipe generated.</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.button}>
+          <Text style={[styles.errorText, { color: colors.textSecondary }]}>No recipe generated.</Text>
+          <TouchableOpacity onPress={() => router.back()} style={[styles.button, { backgroundColor: colors.primary }]}>
             <Text style={styles.buttonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
@@ -181,13 +183,13 @@ export default function ResultScreen() {
   const isRegenerating = status === "generatingRecipe";
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={handleClose} style={styles.backButton}>
-          <Ionicons name="close" size={24} color="#333" />
+          <Ionicons name="close" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Your AI Recipe</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Your AI Recipe</Text>
         <View style={{ flexDirection: "row", gap: 16 }}>
           <TouchableOpacity
             onPress={handleRegenerate}
@@ -196,7 +198,7 @@ export default function ResultScreen() {
             <Ionicons
               name="refresh"
               size={24}
-              color={isRegenerating ? "#ccc" : "#E65100"}
+              color={isRegenerating ? colors.textSecondary : colors.primary}
             />
           </TouchableOpacity>
         </View>
@@ -215,23 +217,27 @@ export default function ResultScreen() {
 
           {/* Title & Info */}
           <View style={styles.infoSection}>
-            <Text style={styles.title}>{recipe.title}</Text>
-            <Text style={styles.description}>{recipe.description}</Text>
+            <View style={[styles.aiBadge, { backgroundColor: `${colors.primary}18` }]}>
+              <Ionicons name="sparkles" size={13} color={colors.primary} />
+              <Text style={[styles.aiBadgeText, { color: colors.primary }]}>MADE FOR YOUR PANTRY</Text>
+            </View>
+            <Text style={[styles.title, { color: colors.text }]}>{recipe.title}</Text>
+            <Text style={[styles.description, { color: colors.textSecondary }]}>{recipe.description}</Text>
 
-            <View style={styles.metaRow}>
+            <View style={[styles.metaRow, { borderColor: colors.border }]}>
               <View style={styles.metaItem}>
-                <Ionicons name="time-outline" size={16} color="#666" />
-                <Text style={styles.metaText}>{recipe.time_minutes} mins</Text>
+                <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>{recipe.time_minutes} mins</Text>
               </View>
               <View style={styles.metaItem}>
-                <Ionicons name="flame-outline" size={16} color="#666" />
-                <Text style={styles.metaText}>
+                <Ionicons name="flame-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>
                   {recipe.nutrition?.calories || "N/A"} kcal
                 </Text>
               </View>
               <View style={styles.metaItem}>
-                <Ionicons name="restaurant-outline" size={16} color="#666" />
-                <Text style={styles.metaText}>{recipe.servings} servings</Text>
+                <Ionicons name="restaurant-outline" size={16} color={colors.textSecondary} />
+                <Text style={[styles.metaText, { color: colors.textSecondary }]}>{recipe.servings} servings</Text>
               </View>
             </View>
           </View>
@@ -241,13 +247,13 @@ export default function ResultScreen() {
             {["overview", "ingredients", "steps", "nutrition"].map((tab) => (
               <TouchableOpacity
                 key={tab}
-                style={[styles.tab, activeTab === tab && styles.activeTab]}
+                style={[styles.tab, { borderBottomColor: activeTab === tab ? colors.primary : "transparent" }]}
                 onPress={() => setActiveTab(tab as any)}
               >
                 <Text
                   style={[
                     styles.tabText,
-                    activeTab === tab && styles.activeTabText,
+                    { color: activeTab === tab ? colors.primary : colors.textSecondary, fontWeight: activeTab === tab ? "700" : "500" },
                   ]}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -260,13 +266,13 @@ export default function ResultScreen() {
           <View style={styles.tabContent}>
             {activeTab === "overview" && (
               <Animated.View entering={FadeIn.duration(300)}>
-                <Text style={styles.sectionHeader}>Why this recipe?</Text>
-                <Text style={styles.bodyText}>
+                <Text style={[styles.sectionHeader, { color: colors.text }]}>Why this recipe?</Text>
+                <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
                   Based on your ingredients ({recipe.ingredients.length}), we
                   created this {recipe.category} dish.
                 </Text>
                 <View style={{ height: 10 }} />
-                <Text style={styles.sectionHeader}>Tags</Text>
+                <Text style={[styles.sectionHeader, { color: colors.text }]}>Tags</Text>
                 <View
                   style={{
                     flexDirection: "row",
@@ -275,11 +281,11 @@ export default function ResultScreen() {
                     marginTop: 8,
                   }}
                 >
-                  <View style={styles.tag}>
-                    <Text style={styles.tagText}>AI Generated</Text>
+                  <View style={[styles.tag, { backgroundColor: colors.surfaceVariant }]}>
+                    <Text style={[styles.tagText, { color: colors.textSecondary }]}>AI Generated</Text>
                   </View>
-                  <View style={styles.tag}>
-                    <Text style={styles.tagText}>{recipe.category}</Text>
+                  <View style={[styles.tag, { backgroundColor: colors.surfaceVariant }]}>
+                    <Text style={[styles.tagText, { color: colors.textSecondary }]}>{recipe.category}</Text>
                   </View>
                 </View>
               </Animated.View>
@@ -289,8 +295,8 @@ export default function ResultScreen() {
               <Animated.View entering={FadeIn.duration(300)}>
                 {recipe.ingredients.map((ing, i) => (
                   <View key={i} style={styles.ingredientRow}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.ingredientText}>
+                    <Text style={[styles.bullet, { color: colors.primary }]}>•</Text>
+                    <Text style={[styles.ingredientText, { color: colors.text }]}>
                       <Text style={{ fontWeight: "600" }}>{ing.quantity} </Text>
                       {ing.name}
                     </Text>
@@ -303,31 +309,31 @@ export default function ResultScreen() {
               <Animated.View entering={FadeIn.duration(300)}>
                 {recipe.steps.map((step, i) => (
                   <View key={i} style={styles.stepRow}>
-                    <View style={styles.stepNumber}>
+                    <View style={[styles.stepNumber, { backgroundColor: colors.primary }]}>
                       <Text style={styles.stepNumberText}>{i + 1}</Text>
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.stepText}>{step.text}</Text>
+                      <Text style={[styles.stepText, { color: colors.text }]}>{step.text}</Text>
                       {step.timer_minutes && (
                         <View style={styles.timerBadge}>
                           <Ionicons
                             name="timer-outline"
                             size={14}
-                            color="#E65100"
+                            color={colors.primary}
                           />
-                          <Text style={styles.timerText}>
+                          <Text style={[styles.timerText, { color: colors.primary }]}>
                             {step.timer_minutes}m timer
                           </Text>
                         </View>
                       )}
                       {step.tip && (
-                        <View style={styles.tipBox}>
+                        <View style={[styles.tipBox, { backgroundColor: colors.surfaceVariant }]}>
                           <Ionicons
                             name="bulb-outline"
                             size={16}
-                            color="#F57C00"
+                            color={colors.primary}
                           />
-                          <Text style={styles.tipText}>{step.tip}</Text>
+                          <Text style={[styles.tipText, { color: colors.text }]}>{step.tip}</Text>
                         </View>
                       )}
                     </View>
@@ -341,9 +347,9 @@ export default function ResultScreen() {
                 {recipe.nutrition && (
                   <View style={styles.nutritionGrid}>
                     {Object.entries(recipe.nutrition).map(([key, value]) => (
-                      <View key={key} style={styles.nutritionItem}>
-                        <Text style={styles.nutritionValue}>{value}</Text>
-                        <Text style={styles.nutritionLabel}>
+                      <View key={key} style={[styles.nutritionItem, { backgroundColor: colors.surfaceVariant }]}>
+                        <Text style={[styles.nutritionValue, { color: colors.text }]}>{value}</Text>
+                        <Text style={[styles.nutritionLabel, { color: colors.textSecondary }]}>
                           {key.charAt(0).toUpperCase() + key.slice(1)}
                         </Text>
                       </View>
@@ -357,28 +363,28 @@ export default function ResultScreen() {
       </ScrollView>
 
       {/* Footer */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: 30 }]}>
         <TouchableOpacity
-          style={styles.saveButton}
+          style={[styles.saveButton, { borderColor: colors.primary }]}
           onPress={handleSave}
           disabled={isSaving}
         >
           {isSaving ? (
-            <ActivityIndicator color="#E65100" />
+            <ActivityIndicator color={colors.primary} />
           ) : (
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Ionicons
                 name="bookmark-outline"
                 size={20}
-                color="#E65100"
+                color={colors.primary}
                 style={{ marginRight: 8 }}
               />
-              <Text style={styles.saveButtonText}>Save Recipe</Text>
+              <Text style={[styles.saveButtonText, { color: colors.primary }]}>Save Recipe</Text>
             </View>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.cookButton} onPress={handleCookNow}>
+        <TouchableOpacity style={[styles.cookButton, { backgroundColor: colors.primary }]} onPress={handleCookNow}>
           <Ionicons
             name="flame"
             size={20}
@@ -465,6 +471,21 @@ const styles = StyleSheet.create({
   },
   infoSection: {
     padding: 20,
+  },
+  aiBadge: {
+    alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginBottom: 12,
+  },
+  aiBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.7,
   },
   title: {
     fontSize: 24,

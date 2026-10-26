@@ -31,6 +31,7 @@ import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
 import { useStore } from "../../store/useStore";
+import { useTheme } from "../../theme/useTheme";
 const LOADING_STEPS = [
   "Analyzing image...",
   "Detecting ingredients...",
@@ -39,6 +40,7 @@ const LOADING_STEPS = [
 
 export default function ReviewScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
 
   // Store integration
   const {
@@ -174,16 +176,16 @@ export default function ReviewScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <OfflineBanner />
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Review Ingredients</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Review Ingredients</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -208,15 +210,15 @@ export default function ReviewScreen() {
           {/* Ingredients List */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>
                 We found these ingredients:
               </Text>
               {isExtracting && (
-                <ActivityIndicator size="small" color="#E65100" />
+                <ActivityIndicator size="small" color={colors.primary} />
               )}
             </View>
 
-            <Text style={styles.sectionSubtitle}>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
               Tap to remove, or add missing ones below.
             </Text>
 
@@ -238,13 +240,13 @@ export default function ReviewScreen() {
               ))}
 
               {!isExtracting && editedIngredients.length === 0 && (
-                <Text style={styles.emptyText}>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                   No ingredients found yet. Add some manually!
                 </Text>
               )}
 
               {isExtracting && editedIngredients.length === 0 && (
-                <Text style={styles.emptyText}>Analyzing image...</Text>
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Analyzing image...</Text>
               )}
             </View>
           </View>
@@ -252,7 +254,8 @@ export default function ReviewScreen() {
           {/* Add Manual */}
           <View style={styles.inputContainer}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: colors.surfaceVariant, borderColor: colors.border, color: colors.text }]}
+              placeholderTextColor={colors.textSecondary}
               placeholder="Add another ingredient..."
               value={newIngredient}
               onChangeText={setNewIngredient}
@@ -262,7 +265,7 @@ export default function ReviewScreen() {
             />
             <TouchableOpacity
               onPress={handleAddIngredient}
-              style={styles.addButton}
+              style={[styles.addButton, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
               disabled={isLoading}
             >
               <Ionicons name="add" size={24} color="#fff" />
@@ -276,7 +279,7 @@ export default function ReviewScreen() {
                 <Text
                   style={[
                     styles.sectionTitle,
-                    { marginTop: 16, marginBottom: 8 },
+                    { marginTop: 16, marginBottom: 8, color: colors.text },
                   ]}
                 >
                   From your pantry
@@ -303,7 +306,7 @@ export default function ReviewScreen() {
       </KeyboardAvoidingView>
 
       {/* Footer CTA */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
         <TouchableOpacity
           onPress={handleGenerate}
           disabled={isLoading}
@@ -312,6 +315,7 @@ export default function ReviewScreen() {
           <Animated.View
             style={[
               styles.generateButton,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
               isLoading && styles.disabledButton,
               !isLoading && pulseStyle,
             ]}
@@ -369,7 +373,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#333",
   },
   scrollContent: {
     paddingBottom: 100,
@@ -446,7 +449,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 12,
     borderWidth: 1,
-    borderColor: "#eee",
   },
   addButton: {
     width: 50,

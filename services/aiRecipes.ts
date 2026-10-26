@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { openRouterClient } from "./openRouterClient";
+import { OpenRouterAgentTool, openRouterClient } from "./openRouterClient";
+import { getPantryMatches } from "./recommendations";
+import { Recipe } from "../models/recipe";
 
 // --- Schemas ---
 
@@ -76,6 +78,7 @@ export interface RecipePreferences {
   allergies?: string[];
   timeLimit?: string; // e.g., "30 mins"
   servings?: number;
+  mood?: string;
 }
 
 // --- Service ---
@@ -117,6 +120,7 @@ export class AIRecipeService {
     ingredients: string[],
     pantryItems: string[] = [],
     preferences?: RecipePreferences,
+    recipeLibrary: Recipe[] = [],
   ): Promise<GeneratedRecipeResult> {
     const prefsString = preferences
       ? `
@@ -124,6 +128,7 @@ export class AIRecipeService {
       Allergies: ${preferences.allergies?.join(", ") || "None"}
       Time limit: ${preferences.timeLimit || "None"}
       Servings: ${preferences.servings || "2"}
+      What the cook is in the mood for: ${preferences.mood || "No additional preference"}
       `
       : "";
 
@@ -132,47 +137,53 @@ export class AIRecipeService {
         ? `Available Pantry Items (Use these if relevant): ${pantryItems.join(", ")}`
         : "No extra pantry items available.";
 
-    const prompt = `
-      You are an expert Zimbabwean chef.
-      Create an authentic Zimbabwean or African-inspired recipe using these MAIN ingredients: ${ingredients.join(", ")}.
-      ${pantryString}
-      
-      Instructions:
-      1. PRIORITIZE using the MAIN ingredients provided.
-      2. Suggest using available pantry items where they fit naturally.
-      3. List any missing ingredients needed to complete the dish.
-      
-      Preferences:
-      ${prefsString}
-
-      Return ONLY a valid JSON object with this structure:
+    const tools: OpenRouterAgentTool[] = [
       {
-        "title": "Recipe Name",
-        "description": "A brief, mouth-watering description.",
-        "time_minutes": 45,
-        "servings": 2,
-        "category": "Relishes|Meats|Grains|Drinks|Vegetarian",
-        "ingredients": [
-          {"name": "Ingredient 1", "quantity": "1 cup"},
-          {"name": "Ingredient 2", "quantity": "2 tbsp"}
-        ],
-        "steps": [
-          {"text": "Step 1 description", "timer_minutes": 0, "tip": "Optional tip"}
-        ],
-        "nutrition": {
-          "calories": 350,
-          "protein_g": 20,
-          "carbs_g": 45,
-          "fat_g": 10
+        type: "function",
+        function: {
+          name: "search_cookbook",
+          description: "Search the user's saved and published recipe collection for dishes related to their ingredients and craving. Call this before composing the recipe so the recommendation can reuse or improve a real matching idea.",
+          parameters: {
+            type: "object",
+            properties: {
+              query: { type: "string", description: "Short craving, cuisine, or ingredient phrase to match against cookbook recipes." },
+            },
+            required: ["query"],
+            additionalProperties: false,
+          },
         },
-        "safety_warnings": []
-      }
-      
-      Strictly JSON. No markdown formatting.
-    `;
+      },
+    ];
+    const prompt = `Use these inputs to create one Zimbabwean or African-inspired recipe.\n\nMAIN INGREDIENTS: ${ingredients.join(", ")}\n${pantryString}\n\nPREFERENCES:\n${prefsString}\n\nFirst search the cookbook for a related recipe. If one matches, adapt it to the selected ingredients and mood; otherwise create a new dish. Use the main ingredients where practical, clearly include pantry ingredients, and do not claim the user has ingredients outside these lists. Make quantities and cooking steps useful and realistic. Return only a JSON object with title, description, time_minutes, servings, category, ingredients [{name, quantity}], steps [{text, timer_minutes, tip}], optional nutrition {calories, protein_g, carbs_g, fat_g}, and optional safety_warnings. No markdown.`;
 
     try {
-      const rawText = await openRouterClient.generateContent(prompt);
+      const rawText = await openRouterClient.runToolAgent(
+        "You are a careful Zimbabwean cooking agent. Use the search_cookbook tool before drafting. Treat pantry and dietary preferences as the source of truth. Never alter saved data or claim that you saved anything. Final output must be the requested recipe JSON only.",
+        prompt,
+        tools,
+        async (name, args) => {
+          if (name !== "search_cookbook") return { error: "Unknown tool." };
+          const query = typeof args.query === "string" ? args.query.toLowerCase().trim() : "";
+          const pantryMatches = getPantryMatches(pantryItems, recipeLibrary);
+          const queryMatches = query
+            ? recipeLibrary.filter((recipe) => {
+                const searchable = [recipe.title, recipe.category, recipe.description, ...recipe.tags, ...recipe.ingredients.flatMap((section) => section.data.map((item) => item.name))].join(" ").toLowerCase();
+                return query.split(/\s+/).filter(Boolean).some((word) => searchable.includes(word));
+              }).slice(0, 4)
+            : [];
+          const matched = Array.from(new Map([...pantryMatches, ...queryMatches].map((recipe) => [recipe.id, recipe])).values()).slice(0, 5);
+          return {
+            count: matched.length,
+            recipes: matched.map((recipe) => ({
+              title: recipe.title,
+              category: recipe.category,
+              time: recipe.time,
+              ingredients: recipe.ingredients.flatMap((section) => section.data.map((item) => item.name)).slice(0, 12),
+            })),
+          };
+        },
+        1,
+      );
       const cleanedJson = this.cleanJson(rawText);
       const parsed = JSON.parse(cleanedJson);
       return GenerateRecipeResponseSchema.parse(parsed);

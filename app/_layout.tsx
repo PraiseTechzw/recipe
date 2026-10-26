@@ -26,7 +26,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const { isDarkMode, locale, setUserProfile, fetchRecipes } = useStore();
+  const { isDarkMode, locale, setUserProfile, fetchRecipes, notificationPreferences } = useStore();
   const { isOffline } = useOfflineStatus();
 
   useEffect(() => {
@@ -49,7 +49,6 @@ export default function RootLayout() {
         if (token) {
           setUserProfile({ pushToken: token });
         }
-        await NotificationService.scheduleDailyReminder();
       } catch (error) {
         // Notification support can vary between Expo Go and native builds.
         // Keep app startup available if the device cannot schedule reminders.
@@ -59,6 +58,12 @@ export default function RootLayout() {
 
     setupNotifications();
   }, [fetchRecipes, setUserProfile]);
+
+  useEffect(() => {
+    void NotificationService.scheduleDailyReminder(notificationPreferences.dailyReminder).catch((error) => {
+      console.warn("Daily reminder update unavailable", error);
+    });
+  }, [notificationPreferences.dailyReminder]);
 
   useEffect(() => {
     if (!isOffline) {

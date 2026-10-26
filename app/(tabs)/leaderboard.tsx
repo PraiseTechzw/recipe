@@ -137,7 +137,7 @@ export default function LeaderboardScreen() {
 
       {/* Offline Banner */}
       {error && (
-        <View style={styles.errorBanner}>
+        <View style={[styles.errorBanner, { backgroundColor: colors.error + "16" }]}>
           <Ionicons name="cloud-offline" size={16} color={colors.error} />
           <Text
             style={[typography.caption, { color: colors.error, marginLeft: 6 }]}
@@ -207,16 +207,18 @@ export default function LeaderboardScreen() {
         contentContainerStyle={{ paddingBottom: 100 }} // Space for sticky footer
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
-          !isLoading ? (
-            <EmptyState
-              title="No Chefs Yet"
-              description="Be the first to cook a recipe and climb the ranks!"
-              icon="trophy-outline"
-              actionLabel={error ? "Retry Connection" : undefined}
-              onAction={error ? fetchData : undefined}
-              style={{ marginTop: 40 }}
-            />
-          ) : null
+          !isLoading
+            ? () => (
+                <EmptyState
+                  title="No Chefs Yet"
+                  description="Be the first to cook a recipe and climb the ranks!"
+                  icon="trophy-outline"
+                  actionLabel={error ? "Retry Connection" : undefined}
+                  onAction={error ? fetchData : undefined}
+                  style={{ marginTop: 40 }}
+                />
+              )
+            : undefined
         }
         refreshControl={
           <RefreshControl

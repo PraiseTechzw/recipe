@@ -1,6 +1,7 @@
 import { ErrorState } from "@/components/feedback/ErrorState";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as StoreReview from "expo-store-review";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
@@ -269,6 +270,21 @@ export default function CookingModeScreen() {
     incrementStat("recipesCooked");
     incrementStat("daysStreak"); // Simple logic, assumes daily use
     setIsCompleted(true);
+
+    const appState = useStore.getState();
+    if (appState.userProfile.stats.recipesCooked >= 3 && !appState.hasTriggeredReviewPrompt) {
+      // Ask after the completion state settles; the operating system decides
+      // whether it can show its native review prompt.
+      setTimeout(() => {
+        void StoreReview.hasAction()
+          .then(async (available) => {
+            if (!available) return;
+            useStore.setState({ hasTriggeredReviewPrompt: true });
+            await StoreReview.requestReview();
+          })
+          .catch((error) => console.warn("In-app review prompt unavailable", error));
+      }, 2500);
+    }
   };
 
   const toggleTimer = () => {

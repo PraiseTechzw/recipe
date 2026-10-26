@@ -316,7 +316,7 @@ export default function HomeScreen() {
             </Link>
 
             <View style={styles.quickActions}>
-              <Link href="/(ai-chef)" asChild>
+              <Link href="/(ai-chef)/agent" asChild>
                 <TouchableOpacity
                   style={styles.quickActionTouch}
                   activeOpacity={0.86}

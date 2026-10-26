@@ -1,249 +1,122 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import Constants from "expo-constants";
+import { Stack, useRouter } from "expo-router";
+import { Alert, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
 import { useStore } from "../store/useStore";
+import { useTheme } from "../theme/useTheme";
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const { locale, setLocale, isDarkMode, toggleDarkMode } = useStore();
-  // const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      i18n.t("deleteAccount"),
-      "Are you sure you want to delete your account? This action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            // Logic to delete account
-            router.replace("/onboarding");
-          },
-        },
-      ],
-    );
-  };
+  const appVersion = Constants.expoConfig?.version || "2.0.2";
 
   const changeLanguage = () => {
-    const options = [
+    Alert.alert(i18n.t("language"), "Select your app language", [
       { text: "English", onPress: () => setLocale("en") },
       { text: "Shona", onPress: () => setLocale("sn") },
       { text: "Ndebele", onPress: () => setLocale("nd") },
       { text: "Cancel", style: "cancel" },
-    ];
-
-    Alert.alert(
-      i18n.t("language"),
-      "Select Language / Sarudza Mutauro / Khetha Ulimi",
-      options as any,
-    );
+    ]);
   };
 
-  const getLanguageName = () => {
-    switch (locale) {
-      case "en":
-        return "English";
-      case "sn":
-        return "Shona";
-      case "nd":
-        return "Ndebele";
-      default:
-        return "English";
-    }
-  };
+  const languageName = locale === "sn" ? "Shona" : locale === "nd" ? "Ndebele" : "English";
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
+      <Stack.Screen options={{ headerShown: false }} />
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: colors.surfaceVariant }]} accessibilityRole="button" accessibilityLabel="Go back">
+          <Ionicons name="arrow-back" size={21} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{i18n.t("settingsTitle")}</Text>
-        <View style={{ width: 24 }} />
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{i18n.t("settingsTitle")}</Text>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{i18n.t("appPreferences")}</Text>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={[styles.intro, { color: colors.textSecondary }]}>Make Zimbabwe Traditional Recipes work the way you like.</Text>
 
+        <SettingsSection title={i18n.t("appPreferences")} colors={colors}>
           <View style={styles.item}>
-            <View style={styles.itemLeft}>
-              <Ionicons name="moon-outline" size={22} color="#666" />
-              <Text style={styles.itemText}>{i18n.t("darkMode")}</Text>
-            </View>
-            <Switch
-              value={isDarkMode}
-              onValueChange={toggleDarkMode}
-              trackColor={{ false: "#eee", true: "#E65100" }}
-              thumbColor="#fff"
-            />
+            <SettingLabel icon="moon-outline" label={i18n.t("darkMode")} colors={colors} />
+            <Switch value={isDarkMode} onValueChange={toggleDarkMode} trackColor={{ false: colors.border, true: colors.primary }} thumbColor="#FFFFFF" />
           </View>
+          <SettingsLink icon="notifications-outline" label={i18n.t("notifications")} colors={colors} onPress={() => router.push("/notification-settings")} />
+        </SettingsSection>
 
-          <TouchableOpacity
-            style={styles.item}
-            onPress={() => router.push("/notification-settings")}
-          >
-            <View style={styles.itemLeft}>
-              <Ionicons name="notifications-outline" size={22} color="#666" />
-              <Text style={styles.itemText}>{i18n.t("notifications")}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
-          </TouchableOpacity>
+        <SettingsSection title={i18n.t("content")} colors={colors}>
+          <SettingsLink icon="language-outline" label={i18n.t("language")} value={languageName} colors={colors} onPress={changeLanguage} />
+          <SettingsLink icon="cloud-download-outline" label={i18n.t("offlineData")} colors={colors} onPress={() => router.push("/offline-data")} last />
+        </SettingsSection>
+
+        <SettingsSection title={i18n.t("about")} colors={colors}>
+          <View style={styles.item}>
+            <SettingLabel icon="information-circle-outline" label={i18n.t("version")} colors={colors} />
+            <Text style={[styles.valueText, { color: colors.textSecondary }]}>v{appVersion}</Text>
+          </View>
+          <SettingsLink icon="document-text-outline" label={i18n.t("terms")} colors={colors} onPress={() => router.push({ pathname: "/legal/[document]", params: { document: "terms" } })} />
+          <SettingsLink icon="shield-checkmark-outline" label={i18n.t("privacy")} colors={colors} onPress={() => router.push({ pathname: "/legal/[document]", params: { document: "privacy" } })} last />
+        </SettingsSection>
+
+        <View style={[styles.brandNote, { backgroundColor: isDark ? colors.surfaceVariant : "#FFF0E4" }]}>
+          <Ionicons name="restaurant-outline" size={18} color={colors.primary} />
+          <Text style={[styles.brandText, { color: colors.textSecondary }]}>Celebrating Zimbabwean food, one recipe at a time.</Text>
         </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{i18n.t("content")}</Text>
-
-          <TouchableOpacity style={styles.item} onPress={changeLanguage}>
-            <View style={styles.itemLeft}>
-              <Ionicons name="language-outline" size={22} color="#666" />
-              <Text style={styles.itemText}>{i18n.t("language")}</Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={{ color: "#999", marginRight: 8 }}>
-                {getLanguageName()}
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color="#ccc" />
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.item}>
-            <View style={styles.itemLeft}>
-              <Ionicons name="download-outline" size={22} color="#666" />
-              <Text style={styles.itemText}>{i18n.t("offlineData")}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{i18n.t("about")}</Text>
-
-          <TouchableOpacity style={styles.item}>
-            <View style={styles.itemLeft}>
-              <Ionicons
-                name="information-circle-outline"
-                size={22}
-                color="#666"
-              />
-              <Text style={styles.itemText}>{i18n.t("version")}</Text>
-            </View>
-            <Text style={{ color: "#999" }}>2.0.0</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.item}>
-            <View style={styles.itemLeft}>
-              <Ionicons name="document-text-outline" size={22} color="#666" />
-              <Text style={styles.itemText}>{i18n.t("terms")}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.item}>
-            <View style={styles.itemLeft}>
-              <Ionicons
-                name="shield-checkmark-outline"
-                size={22}
-                color="#666"
-              />
-              <Text style={styles.itemText}>{i18n.t("privacy")}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#ccc" />
-          </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={handleDeleteAccount}
-        >
-          <Text style={styles.deleteText}>{i18n.t("deleteAccount")}</Text>
-        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+function SettingsSection({ title, colors, children }: { title: string; colors: ReturnType<typeof useTheme>["colors"]; children: React.ReactNode }) {
+  return (
+    <View style={styles.sectionWrap}>
+      <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{title}</Text>
+      <View style={[styles.section, { backgroundColor: colors.surface, borderColor: colors.border }]}>{children}</View>
+    </View>
+  );
+}
+
+function SettingLabel({ icon, label, colors }: { icon: keyof typeof Ionicons.glyphMap; label: string; colors: ReturnType<typeof useTheme>["colors"] }) {
+  return (
+    <View style={styles.itemLeft}>
+      <View style={[styles.itemIcon, { backgroundColor: colors.surfaceVariant }]}>
+        <Ionicons name={icon} size={19} color={colors.primary} />
+      </View>
+      <Text style={[styles.itemText, { color: colors.text }]}>{label}</Text>
+    </View>
+  );
+}
+
+function SettingsLink({ icon, label, value, colors, onPress, last = false }: { icon: keyof typeof Ionicons.glyphMap; label: string; value?: string; colors: ReturnType<typeof useTheme>["colors"]; onPress: () => void; last?: boolean }) {
+  return (
+    <TouchableOpacity style={[styles.item, !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border }]} onPress={onPress} activeOpacity={0.72} accessibilityRole="button">
+      <SettingLabel icon={icon} label={label} colors={colors} />
+      <View style={styles.itemRight}>
+        {value ? <Text style={[styles.valueText, { color: colors.textSecondary }]}>{value}</Text> : null}
+        <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FAFAFA",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  backButton: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  content: {
-    padding: 20,
-  },
-  section: {
-    marginBottom: 24,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    overflow: "hidden",
-    paddingVertical: 8,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#999",
-    marginLeft: 16,
-    marginBottom: 8,
-    marginTop: 8,
-    textTransform: "uppercase",
-  },
-  item: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f9f9f9",
-  },
-  itemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  itemText: {
-    fontSize: 16,
-    color: "#333",
-    marginLeft: 12,
-  },
-  deleteButton: {
-    alignItems: "center",
-    padding: 16,
-    marginTop: 20,
-  },
-  deleteText: {
-    color: "#D32F2F",
-    fontWeight: "600",
-  },
+  container: { flex: 1 },
+  header: { minHeight: 60, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 18, borderBottomWidth: StyleSheet.hairlineWidth },
+  backButton: { width: 40, height: 40, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  headerTitle: { fontSize: 18, fontWeight: "900" },
+  content: { padding: 20, paddingBottom: 42 },
+  intro: { fontSize: 14, lineHeight: 20, marginBottom: 22, marginTop: 2 },
+  sectionWrap: { marginBottom: 22 },
+  sectionTitle: { marginLeft: 4, marginBottom: 9, fontSize: 11, fontWeight: "900", letterSpacing: 1, textTransform: "uppercase" },
+  section: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 18, overflow: "hidden" },
+  item: { minHeight: 62, paddingVertical: 10, paddingHorizontal: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  itemLeft: { flexDirection: "row", alignItems: "center", gap: 11 },
+  itemIcon: { width: 36, height: 36, borderRadius: 13, alignItems: "center", justifyContent: "center" },
+  itemText: { fontSize: 14, fontWeight: "700" },
+  itemRight: { flexDirection: "row", alignItems: "center", gap: 7 },
+  valueText: { fontSize: 12, fontWeight: "700" },
+  brandNote: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 16 },
+  brandText: { flex: 1, fontSize: 12, lineHeight: 18, fontWeight: "600" },
 });

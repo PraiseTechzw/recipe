@@ -11,19 +11,31 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { BADGES, getLevel } from "../constants/gamification";
+import { BADGES, getLevel, getNextLevel } from "../constants/gamification";
 import { useStore } from "../store/useStore";
+import { useTheme } from "../theme/useTheme";
 
 type FilterType = "All" | "Unlocked" | "Locked";
+
+const CATEGORY_COLORS: Record<string, string> = {
+  cooking: "#E57A2E",
+  social: "#4D8C80",
+  collection: "#7A6AB0",
+  streak: "#D75B44",
+};
+
+const getCategoryColor = (category: string) => CATEGORY_COLORS[category] || "#6B8D65";
 
 export default function AchievementsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { colors, shadows } = useTheme();
   const [filter, setFilter] = useState<FilterType>("All");
 
   const { userProfile } = useStore();
   const { xp, badges: unlockedIds } = userProfile;
   const levelInfo = getLevel(xp);
+  const nextLevel = getNextLevel(xp);
   const level = levelInfo.level;
 
   // -------------------------------------------------------------------------
@@ -31,12 +43,12 @@ export default function AchievementsScreen() {
   // -------------------------------------------------------------------------
 
   // Calculate Progress to Next Level
-  const nextLevelXP = levelInfo.nextLevelXP || levelInfo.minXP + 1000;
+  const nextLevelXP = nextLevel?.minXP ?? levelInfo.minXP;
   const currentLevelXP = levelInfo.minXP;
 
   const progressPercent = Math.min(
-    100,
-    Math.max(0, ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100),
+    nextLevel ? 100 : 100,
+    Math.max(0, nextLevel ? ((xp - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100 : 100),
   );
 
   // -------------------------------------------------------------------------
@@ -63,18 +75,18 @@ export default function AchievementsScreen() {
   const totalCount = BADGES.length;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => router.back()}
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: colors.surfaceVariant }]}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Achievements</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Achievements</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -98,7 +110,7 @@ export default function AchievementsScreen() {
             <View style={styles.xpInfo}>
               <Text style={styles.xpTotalText}>{xp.toLocaleString()} XP</Text>
               <Text style={styles.xpNextText}>
-                Next Level: {nextLevelXP.toLocaleString()} XP
+                {nextLevel ? `${nextLevel.title} · ${nextLevelXP.toLocaleString()} XP` : "Maximum level reached"}
               </Text>
 
               <View style={styles.progressBarBg}>
@@ -110,7 +122,7 @@ export default function AchievementsScreen() {
                 />
               </View>
               <Text style={styles.progressText}>
-                {Math.floor(nextLevelXP - xp)} XP to go
+                {nextLevel ? `${Math.max(0, nextLevelXP - xp)} XP to go` : "Level complete"}
               </Text>
             </View>
           </View>
@@ -119,15 +131,15 @@ export default function AchievementsScreen() {
         {/* Badges Grid (Preview of Unlocked) */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Badges</Text>
-            <Text style={styles.sectionSubtitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Badges</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
               {unlockedCount}/{totalCount}
             </Text>
           </View>
 
           <View style={styles.badgesGrid}>
             {unlockedIds.length === 0 ? (
-              <Text style={styles.emptyText}>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 No badges unlocked yet. Get cooking!
               </Text>
             ) : (
@@ -148,15 +160,15 @@ export default function AchievementsScreen() {
         </View>
 
         {/* Filter Tabs */}
-        <View style={styles.tabsContainer}>
+        <View style={[styles.tabsContainer, { backgroundColor: colors.surfaceVariant }]}>
           {(["All", "Unlocked", "Locked"] as FilterType[]).map((t) => (
             <TouchableOpacity
               key={t}
-              style={[styles.tabButton, filter === t && styles.tabActive]}
+              style={[styles.tabButton, { backgroundColor: filter === t ? colors.surface : "transparent" }, filter === t && shadows.small]}
               onPress={() => setFilter(t)}
             >
               <Text
-                style={[styles.tabText, filter === t && styles.tabTextActive]}
+                style={[styles.tabText, { color: filter === t ? colors.primary : colors.textSecondary }]}
               >
                 {t}
               </Text>
@@ -171,30 +183,30 @@ export default function AchievementsScreen() {
             return (
               <View
                 key={item.id}
-                style={[styles.achievementRow, !isUnlocked && styles.rowLocked]}
+                style={[styles.achievementRow, { backgroundColor: colors.surface, borderColor: colors.border, opacity: isUnlocked ? 1 : 0.78 }]}
               >
                 <View
                   style={[
                     styles.iconCircle,
                     isUnlocked
                       ? { backgroundColor: getCategoryColor(item.category) }
-                      : styles.iconLocked,
+                      : { backgroundColor: colors.surfaceVariant },
                   ]}
                 >
                   {isUnlocked ? (
                     <Text style={{ fontSize: 24 }}>{item.icon}</Text>
                   ) : (
-                    <Ionicons name="lock-closed" size={24} color="#999" />
+                    <Ionicons name="lock-closed" size={22} color={colors.textSecondary} />
                   )}
                 </View>
 
                 <View style={styles.rowContent}>
                   <Text
-                    style={[styles.rowTitle, !isUnlocked && styles.textLocked]}
+                    style={[styles.rowTitle, { color: colors.text }]}
                   >
                     {item.name}
                   </Text>
-                  <Text style={styles.rowDesc} numberOfLines={2}>
+                  <Text style={[styles.rowDesc, { color: colors.textSecondary }]} numberOfLines={2}>
                     {item.description}
                   </Text>
                   {!isUnlocked && (
@@ -217,7 +229,6 @@ export default function AchievementsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
   },
   header: {
     flexDirection: "row",
@@ -225,9 +236,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#EEE",
   },
   backButton: {
     padding: 8,
@@ -236,7 +245,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
   },
   scrollContent: {
     paddingBottom: 40,
@@ -355,7 +363,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginHorizontal: 20,
     marginBottom: 15,
-    backgroundColor: "#EEE",
     borderRadius: 12,
     padding: 4,
   },
@@ -366,7 +373,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   tabActive: {
-    backgroundColor: "#FFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -376,7 +382,6 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#757575",
   },
   tabTextActive: {
     color: "#E65100",
@@ -387,20 +392,12 @@ const styles = StyleSheet.create({
   achievementRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF",
     padding: 16,
     borderRadius: 16,
     marginBottom: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   rowLocked: {
-    backgroundColor: "#F5F5F5",
-    shadowOpacity: 0,
-    elevation: 0,
   },
   iconCircle: {
     width: 50,
@@ -421,9 +418,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333",
     marginBottom: 4,
-  },
-  textLocked: {
-    color: "#757575",
   },
   rowDesc: {
     fontSize: 13,

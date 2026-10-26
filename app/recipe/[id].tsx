@@ -23,6 +23,7 @@ import i18n from "../../i18n";
 import { supabase } from "../../lib/supabase";
 import { IngredientSection } from "../../models/recipe";
 import { useStore } from "../../store/useStore";
+import { useTheme } from "../../theme/useTheme";
 
 const getAdjustedQuantity = (qty: string, mult: number) => {
   if (mult === 1 || !qty) return qty;
@@ -54,6 +55,7 @@ export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { colors, isDark } = useTheme();
 
   const [recipe, setRecipe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,7 @@ export default function RecipeDetailScreen() {
     logRecipeView,
     addToShoppingList,
     recipes,
+    myRecipes,
   } = useStore();
 
   const scrollY = useSharedValue(0);
@@ -108,7 +111,8 @@ export default function RecipeDetailScreen() {
       setLoading(true);
       const recipeId = Array.isArray(id) ? id[0] : id;
 
-      const localRecipe = recipes.find((r) => r.id === recipeId);
+      const localRecipe = recipes.find((r) => r.id === recipeId)
+        || myRecipes.find((r) => r.id === recipeId);
       if (localRecipe) {
         setRecipe(localRecipe);
         setLoading(false);
@@ -127,7 +131,7 @@ export default function RecipeDetailScreen() {
           setRecipe({
             id: data.id,
             title: data.title,
-            image: data.image,
+            image: data.image_url || data.image || "",
             time: data.time,
             category: data.category,
             description: data.description,
@@ -148,7 +152,7 @@ export default function RecipeDetailScreen() {
     };
 
     loadRecipe();
-  }, [id, recipes]);
+  }, [id, recipes, myRecipes]);
 
   const favorite = recipe ? isFavorite(recipe.id) : false;
 
@@ -180,13 +184,16 @@ export default function RecipeDetailScreen() {
 
   const handleAddToShoppingList = () => {
     if (!recipe) return;
-    const allIngredients = recipe.ingredients.flatMap((s: any) => {
+    const allIngredients = (recipe.ingredients || []).flatMap((s: any) => {
       // Normalize ingredients if they are just strings
-      return s.data.map((item: any) => {
+      return (s.data || []).map((item: any) => {
         if (typeof item === "string") {
           return { name: item, quantity: "1" };
         }
-        return item;
+        return {
+          ...item,
+          quantity: getAdjustedQuantity(item.quantity || "1", multiplier),
+        };
       });
     });
     addToShoppingList(allIngredients);
@@ -212,7 +219,7 @@ export default function RecipeDetailScreen() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
         <Skeleton
           height={400}
           style={{ borderBottomLeftRadius: 32, borderBottomRightRadius: 32 }}
@@ -234,7 +241,7 @@ export default function RecipeDetailScreen() {
             onPress={() => router.back()}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color="#333" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
         <ErrorState
@@ -246,8 +253,15 @@ export default function RecipeDetailScreen() {
     );
   }
 
+  const recipeImage = typeof recipe.image === "string"
+    ? (recipe.image ? { uri: recipe.image } : undefined)
+    : recipe.image;
+  const recipeTags = Array.isArray(recipe.tags) && recipe.tags.length > 0
+    ? recipe.tags
+    : recipe.isTraditional ? ["Traditional"] : [recipe.category].filter(Boolean);
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <Animated.ScrollView
@@ -260,12 +274,13 @@ export default function RecipeDetailScreen() {
         {/* Header Image */}
         <View style={styles.headerImageContainer}>
           <Animated.View style={[StyleSheet.absoluteFill, headerAnimatedStyle]}>
-            <Image
-              source={{ uri: recipe.image }}
-              style={styles.headerImage}
-              contentFit="cover"
-              transition={500}
-            />
+            {recipeImage ? (
+              <Image source={recipeImage} style={styles.headerImage} contentFit="cover" transition={500} />
+            ) : (
+              <View style={[styles.headerImage, styles.imageFallback, { backgroundColor: colors.surfaceVariant }]}>
+                <Ionicons name="restaurant-outline" size={54} color={colors.textSecondary} />
+              </View>
+            )}
             <LinearGradient
               colors={["rgba(0,0,0,0.3)", "transparent", "rgba(0,0,0,0.8)"]}
               style={styles.gradient}
@@ -277,7 +292,7 @@ export default function RecipeDetailScreen() {
             style={styles.headerContent}
           >
             <View style={styles.tagsRow}>
-              {recipe.tags.map((tag: string, i: number) => (
+              {recipeTags.map((tag: string, i: number) => (
                 <View
                   key={i}
                   style={[
@@ -355,33 +370,35 @@ export default function RecipeDetailScreen() {
           </Animated.View>
         </View>
 
-        <View style={styles.stickyHeader}>
+        <View style={[styles.stickyHeader, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
           <View style={styles.stickyLeft}>
-            <Image
-              source={{ uri: recipe.image }}
-              style={styles.stickyImage}
-              contentFit="cover"
-            />
-            <Text style={styles.stickyTitle} numberOfLines={1}>
+            {recipeImage ? (
+              <Image source={recipeImage} style={styles.stickyImage} contentFit="cover" />
+            ) : (
+              <View style={[styles.stickyImage, { backgroundColor: colors.surfaceVariant, alignItems: "center", justifyContent: "center" }]}>
+                <Ionicons name="restaurant-outline" size={18} color={colors.textSecondary} />
+              </View>
+            )}
+            <Text style={[styles.stickyTitle, { color: colors.text }]} numberOfLines={1}>
               {recipe.title}
             </Text>
           </View>
           <View style={styles.stickyRight}>
             <TouchableOpacity
               onPress={handleToggleFavorite}
-              style={styles.stickyIconButton}
+              style={[styles.stickyIconButton, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}
             >
               <Ionicons
                 name={favorite ? "bookmark" : "bookmark-outline"}
                 size={20}
-                color="#1a1a1a"
+                color={colors.text}
               />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={handleAddToShoppingList}
-              style={styles.stickyIconButton}
+                style={[styles.stickyIconButton, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}
             >
-              <Ionicons name="cart-outline" size={20} color="#1a1a1a" />
+            <Ionicons name="cart-outline" size={20} color={colors.text} />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={async () => {
@@ -390,34 +407,30 @@ export default function RecipeDetailScreen() {
                 });
                 ToastService.success(i18n.t("success"), i18n.t("shared"));
               }}
-              style={styles.stickyIconButton}
+                style={[styles.stickyIconButton, { backgroundColor: colors.surfaceVariant, borderColor: colors.border }]}
             >
-              <Ionicons name="share-social-outline" size={20} color="#1a1a1a" />
+            <Ionicons name="share-social-outline" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.actionsRow}>
+        <View style={[styles.actionsRow, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
           <TouchableOpacity
-            style={styles.actionItem}
+            style={[styles.actionItem, { backgroundColor: isDark ? "#3B2A1F" : "#FFF0E4" }]}
             onPress={handleToggleFavorite}
           >
-            <Ionicons
-              name={favorite ? "heart" : "heart-outline"}
-              size={20}
-              color="#E65100"
-            />
-            <Text style={styles.actionText}>{i18n.t("favorite")}</Text>
+              <Ionicons name={favorite ? "heart" : "heart-outline"} size={20} color={colors.primary} />
+            <Text style={[styles.actionText, { color: colors.primary }]}>{i18n.t("favorite")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.actionItem}
+            style={[styles.actionItem, { backgroundColor: isDark ? "#3B2A1F" : "#FFF0E4" }]}
             onPress={handleAddToShoppingList}
           >
-            <Ionicons name="cart-outline" size={20} color="#E65100" />
-            <Text style={styles.actionText}>{i18n.t("addToShoppingList")}</Text>
+            <Ionicons name="cart-outline" size={20} color={colors.primary} />
+            <Text style={[styles.actionText, { color: colors.primary }]}>{i18n.t("addToShoppingList")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.actionItem}
+            style={[styles.actionItem, { backgroundColor: isDark ? "#3B2A1F" : "#FFF0E4" }]}
             onPress={async () => {
               await Share.share({
                 message: recipe.title + " • " + (recipe.description || ""),
@@ -425,15 +438,22 @@ export default function RecipeDetailScreen() {
               ToastService.success(i18n.t("success"), i18n.t("shared"));
             }}
           >
-            <Ionicons name="share-social-outline" size={20} color="#E65100" />
-            <Text style={styles.actionText}>{i18n.t("share")}</Text>
+            <Ionicons name="share-social-outline" size={20} color={colors.primary} />
+            <Text style={[styles.actionText, { color: colors.primary }]}>{i18n.t("share")}</Text>
           </TouchableOpacity>
         </View>
+
+        {recipe.description ? (
+          <View style={[styles.descriptionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.descriptionEyebrow, { color: colors.primary }]}>{recipe.category || "Zimbabwean recipe"}</Text>
+            <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>{recipe.description}</Text>
+          </View>
+        ) : null}
 
         {/* Content Tabs */}
         <Animated.View
           entering={FadeInDown.duration(600).delay(400)}
-          style={styles.tabsContainer}
+          style={[styles.tabsContainer, { backgroundColor: colors.background, borderBottomColor: colors.border }]}
         >
           <TouchableOpacity
             style={[
@@ -445,7 +465,7 @@ export default function RecipeDetailScreen() {
             <Text
               style={[
                 styles.tabText,
-                activeTab === "ingredients" && styles.activeTabText,
+                { color: activeTab === "ingredients" ? colors.primary : colors.textSecondary },
               ]}
             >
               {i18n.t("ingredients")}
@@ -453,7 +473,7 @@ export default function RecipeDetailScreen() {
             {activeTab === "ingredients" && (
               <Animated.View
                 entering={FadeInDown}
-                style={styles.activeIndicator}
+                style={[styles.activeIndicator, { backgroundColor: colors.primary }]}
               />
             )}
           </TouchableOpacity>
@@ -464,7 +484,7 @@ export default function RecipeDetailScreen() {
             <Text
               style={[
                 styles.tabText,
-                activeTab === "steps" && styles.activeTabText,
+                { color: activeTab === "steps" ? colors.primary : colors.textSecondary },
               ]}
             >
               {i18n.t("steps")}
@@ -472,7 +492,7 @@ export default function RecipeDetailScreen() {
             {activeTab === "steps" && (
               <Animated.View
                 entering={FadeInDown}
-                style={styles.activeIndicator}
+                style={[styles.activeIndicator, { backgroundColor: colors.primary }]}
               />
             )}
           </TouchableOpacity>
@@ -484,11 +504,11 @@ export default function RecipeDetailScreen() {
         >
           {activeTab === "ingredients" ? (
             <View>
-              {recipe.ingredients.map(
+              {(recipe.ingredients || []).map(
                 (section: IngredientSection, index: number) => (
                   <View key={index} style={styles.section}>
-                    <Text style={styles.sectionTitle}>{section.title}</Text>
-                    {section.data.map((item: any, i: number) => {
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>{section.title}</Text>
+                    {(section.data || []).map((item: any, i: number) => {
                       const name = typeof item === "string" ? item : item.name;
                       const quantity =
                         typeof item === "object" && item.quantity
@@ -499,14 +519,14 @@ export default function RecipeDetailScreen() {
                       return (
                         <TouchableOpacity
                           key={i}
-                          style={styles.ingredientRow}
+                          style={[styles.ingredientRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
                           onPress={() => toggleIngredient(name)}
                           activeOpacity={0.7}
                         >
                           <View
                             style={[
                               styles.checkbox,
-                              isChecked && styles.checkboxChecked,
+                              { backgroundColor: isChecked ? colors.primary : colors.surfaceVariant, borderColor: isChecked ? colors.primary : colors.border },
                             ]}
                           >
                             {isChecked && (
@@ -521,13 +541,14 @@ export default function RecipeDetailScreen() {
                             <Text
                               style={[
                                 styles.ingredientText,
-                                isChecked && styles.ingredientTextChecked,
+                                { color: isChecked ? colors.textSecondary : colors.text },
+                                isChecked && { textDecorationLine: "line-through" },
                               ]}
                             >
                               {name}
                             </Text>
                             {quantity ? (
-                              <Text style={styles.ingredientQuantity}>
+                              <Text style={[styles.ingredientQuantity, { color: colors.textSecondary }]}>
                                 {quantity}
                               </Text>
                             ) : null}
@@ -540,7 +561,7 @@ export default function RecipeDetailScreen() {
               )}
 
               <TouchableOpacity
-                style={styles.shoppingButton}
+                style={[styles.shoppingButton, { backgroundColor: colors.primary }]}
                 onPress={handleAddToShoppingList}
               >
                 <Ionicons name="cart-outline" size={20} color="#fff" />
@@ -551,7 +572,7 @@ export default function RecipeDetailScreen() {
             </View>
           ) : (
             <View>
-              {recipe.steps.map((item: any, index: number) => {
+              {(recipe.steps || []).map((item: any, index: number) => {
                 const instruction =
                   typeof item === "string" ? item : item.instruction;
                 const description =
@@ -560,15 +581,15 @@ export default function RecipeDetailScreen() {
                 return (
                   <View key={index} style={styles.stepItem}>
                     <View style={styles.stepNumberContainer}>
-                      <Text style={styles.stepNumber}>{index + 1}</Text>
+                      <Text style={[styles.stepNumber, { backgroundColor: colors.primary }]}>{index + 1}</Text>
                       {index < recipe.steps.length - 1 && (
-                        <View style={styles.stepLine} />
+                        <View style={[styles.stepLine, { backgroundColor: colors.border }]} />
                       )}
                     </View>
                     <View style={styles.stepContent}>
-                      <Text style={styles.stepText}>{instruction}</Text>
+                      <Text style={[styles.stepText, { color: colors.text }]}>{instruction}</Text>
                       {description && (
-                        <Text style={styles.stepDescription}>
+                        <Text style={[styles.stepDescription, { color: colors.textSecondary }]}>
                           {description}
                         </Text>
                       )}
@@ -607,7 +628,7 @@ export default function RecipeDetailScreen() {
         style={styles.fabContainer}
       >
         <TouchableOpacity
-          style={styles.fab}
+          style={[styles.fab, { backgroundColor: colors.primary }]}
           onPress={() => router.push(`/cooking/${recipe.id}`)}
         >
           <Ionicons name="play" size={24} color="#fff" />
@@ -619,10 +640,20 @@ export default function RecipeDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
+  header: {
+    height: 56,
+    justifyContent: "center",
+    paddingHorizontal: 16,
   },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  container: { flex: 1 },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -637,6 +668,10 @@ const styles = StyleSheet.create({
   headerImage: {
     width: "100%",
     height: "100%",
+  },
+  imageFallback: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   gradient: {
     position: "absolute",
@@ -663,11 +698,9 @@ const styles = StyleSheet.create({
     backdropFilter: "blur(10px)",
   },
   stickyHeader: {
-    backgroundColor: "#fff",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -687,7 +720,6 @@ const styles = StyleSheet.create({
   stickyTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1a1a1a",
     flex: 1,
   },
   stickyRight: {
@@ -700,7 +732,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: "#FAFAFA",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -712,9 +743,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f5f5f5",
   },
   actionItem: {
     flexDirection: "row",
@@ -728,7 +757,25 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#E65100",
+  },
+  descriptionCard: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 4,
+    padding: 17,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  descriptionEyebrow: {
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
+    marginBottom: 7,
+  },
+  descriptionText: {
+    fontSize: 14,
+    lineHeight: 21,
   },
   headerContent: {
     position: "absolute",
@@ -791,9 +838,7 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: "row",
-    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
     paddingTop: 8,
     zIndex: 100,
   },
@@ -833,7 +878,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1a1a1a",
     marginBottom: 16,
   },
   ingredientRow: {
@@ -842,10 +886,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: "#FAFAFA",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#F5F5F5",
   },
   checkbox: {
     width: 24,
@@ -864,20 +906,16 @@ const styles = StyleSheet.create({
   },
   ingredientText: {
     fontSize: 16,
-    color: "#333",
     fontWeight: "500",
   },
   ingredientQuantity: {
     fontSize: 14,
-    color: "#888",
     marginTop: 2,
   },
   ingredientTextChecked: {
-    color: "#999",
     textDecorationLine: "line-through",
   },
   shoppingButton: {
-    backgroundColor: "#1a1a1a",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -955,7 +993,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     flexDirection: "row",
-    backgroundColor: "#E65100",
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 32,

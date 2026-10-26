@@ -106,6 +106,7 @@ interface AppState {
   setPantry: (ingredients: string[]) => void;
   hasOnboarded: boolean;
   setHasOnboarded: (val: boolean) => void;
+  hasTriggeredReviewPrompt: boolean;
 
   // User Profile & Gamification
   userProfile: {
@@ -347,6 +348,7 @@ export const useStore = create<AppState>()(
       setPantry: (ingredients: string[]) => set({ pantry: ingredients }),
       hasOnboarded: false,
       setHasOnboarded: (val: boolean) => set({ hasOnboarded: val }),
+      hasTriggeredReviewPrompt: false,
 
       // User Profile & Gamification
       userProfile: {
@@ -512,7 +514,7 @@ export const useStore = create<AppState>()(
 
       // Notifications
       notificationPreferences: {
-        dailyReminder: true,
+        dailyReminder: false,
         weeklyLeaderboard: true,
         newBadges: true,
         newRecipes: true,

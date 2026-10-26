@@ -1,12 +1,13 @@
 import { Input } from "@/components/ui/Input";
+import { Chip } from "@/components/ui/Chip";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -22,15 +23,18 @@ import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
+import { useTheme } from "../../theme/useTheme";
 
 export default function CreateScreen() {
   const router = useRouter();
-  const { addXP, addRecipe, userProfile } = useStore();
+  const { addXP, addRecipe, userProfile, categories } = useStore();
+  const { colors, isDark } = useTheme();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [time, setTime] = useState("");
   const [servings, setServings] = useState("");
+  const [category, setCategory] = useState("Traditional");
 
   // Dynamic lists
   const [ingredients, setIngredients] = useState<string[]>([""]);
@@ -89,91 +93,9 @@ export default function CreateScreen() {
     return isValid;
   };
 
-  const performScan = async (useCamera: boolean) => {
-    try {
-      let result;
-      const options: ImagePicker.ImagePickerOptions = {
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.5,
-        base64: true,
-      };
-
-      if (useCamera) {
-        const perm = await ImagePicker.requestCameraPermissionsAsync();
-        if (!perm.granted) {
-          Alert.alert("Permission needed", "Camera permission is required.");
-          return;
-        }
-        result = await ImagePicker.launchCameraAsync(options);
-      } else {
-        result = await ImagePicker.launchImageLibraryAsync(options);
-      }
-
-      if (result.canceled || !result.assets[0].base64) return;
-
-      setIsGenerating(true);
-      const asset = result.assets[0];
-
-      // Call AI
-      const recipe = await generateRecipeFromImage(asset.base64);
-
-      // Populate
-      setTitle(recipe.title);
-      setDescription(recipe.description);
-      setTime(recipe.time);
-
-      const s = parseInt(recipe.servings) || 2;
-      setServings(s.toString());
-
-      // Ingredients: API {name, quantity} -> UI string
-      setIngredients(
-        recipe.ingredients.map((i: any) => `${i.quantity} ${i.name}`),
-      );
-
-      // Steps: API string[] -> UI string[]
-      setSteps(recipe.steps);
-
-      // Image
-      setImage(asset.uri);
-
-      ToastService.success("Magic Chef", "Recipe generated successfully!");
-      HapticService.success();
-    } catch (e) {
-      console.error(e);
-      Alert.alert("AI Error", "Could not generate recipe. Please try again.");
-      HapticService.error();
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleAIScan = async () => {
-    // Check offline
-    const isOnline = await SyncService.checkConnectivity();
-    if (!isOnline) {
-      Alert.alert("Offline", "AI Chef requires an internet connection.");
-      return;
-    }
-
+  const openAIChef = () => {
     HapticService.selection();
-
-    // Ask: Camera or Gallery?
-    Alert.alert(
-      "Magic AI Chef",
-      "Take a photo of your ingredients to generate a recipe!",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Camera",
-          onPress: () => performScan(true),
-        },
-        {
-          text: "Gallery",
-          onPress: () => performScan(false),
-        },
-      ],
-    );
+    router.push("/(ai-chef)/agent");
   };
 
   const pickImage = async () => {
@@ -259,10 +181,8 @@ export default function CreateScreen() {
         id: Date.now().toString(),
         title,
         description,
-        image: image
-          ? { uri: image }
-          : { uri: "https://via.placeholder.com/400x200?text=No+Image" },
-        category: "User Recipe",
+        image: image ? { uri: image } : "",
+        category,
         tags: [],
         time,
         servings: parseInt(servings) || 2,
@@ -274,7 +194,7 @@ export default function CreateScreen() {
           },
         ],
         steps: steps.filter((s) => s.trim()).map((s) => ({ instruction: s })),
-        isTraditional: false,
+        isTraditional: category === "Traditional",
         author: {
           name: userProfile.name,
           avatar: userProfile.avatar || "",
@@ -301,16 +221,7 @@ export default function CreateScreen() {
 
       addXP(50);
 
-      setTimeout(() => {
-        setTitle("");
-        setDescription("");
-        setTime("");
-        setServings("");
-        setIngredients([""]);
-        setSteps([""]);
-        setImage(null);
-        router.push("/(tabs)/profile");
-      }, 1500);
+      router.replace(`/recipe/${newRecipe.id}`);
     } catch (error) {
       console.error(error);
       ToastService.error(i18n.t("error"), i18n.t("createError"));
@@ -320,7 +231,7 @@ export default function CreateScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -330,36 +241,36 @@ export default function CreateScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.header}>
-            <Text style={styles.headerTitle}>{i18n.t("createTitle")}</Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>{i18n.t("createTitle")}</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
               {i18n.t("createSubtitle")}
             </Text>
           </View>
 
           {/* AI Magic Button */}
           <TouchableOpacity
-            style={[styles.aiButton, isGenerating && { opacity: 0.7 }]}
-            onPress={handleAIScan}
-            disabled={isGenerating || isSubmitting}
+            style={styles.aiButton}
+            onPress={openAIChef}
+            disabled={isSubmitting}
           >
-            {isGenerating ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <>
-                <Ionicons
-                  name="sparkles"
-                  size={20}
-                  color="#fff"
-                  style={{ marginRight: 8 }}
-                />
-                <Text style={styles.aiButtonText}>Magic AI Chef</Text>
-              </>
-            )}
+            <LinearGradient
+              colors={isDark ? ["#B94E16", "#704B24"] : ["#E65100", "#A85B14"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.aiButtonGradient}
+            >
+              <View style={styles.aiButtonIcon}><Ionicons name="sparkles" size={19} color="#FFFFFF" /></View>
+              <View style={styles.aiButtonCopy}>
+                <Text style={styles.aiButtonText}>Create with AI</Text>
+                <Text style={styles.aiButtonSubtext}>Use a photo of your ingredients</Text>
+              </View>
+              <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+            </LinearGradient>
           </TouchableOpacity>
 
           {/* Image Upload */}
           <View>
-            <TouchableOpacity style={styles.imageUpload} onPress={pickImage}>
+            <TouchableOpacity style={[styles.imageUpload, { backgroundColor: isDark ? colors.surface : "#FFF4E8", borderColor: colors.primary }]} onPress={pickImage}>
               {image ? (
                 <Image
                   source={{ uri: image }}
@@ -368,11 +279,11 @@ export default function CreateScreen() {
                 />
               ) : (
                 <View style={styles.uploadIconContainer}>
-                  <Ionicons name="camera" size={32} color="#E65100" />
+                  <Ionicons name="camera" size={32} color={colors.primary} />
                 </View>
               )}
               {!image && (
-                <Text style={styles.uploadText}>{i18n.t("addPhoto")}</Text>
+                <Text style={[styles.uploadText, { color: colors.primary }]}>{i18n.t("addPhoto")}</Text>
               )}
               {image && (
                 <View style={styles.editBadge}>
@@ -390,7 +301,7 @@ export default function CreateScreen() {
                 </Text>
               </TouchableOpacity>
             )}
-            <Text style={styles.hintText}>
+            <Text style={[styles.hintText, { color: colors.textSecondary }]}>
               {i18n.t("imageUploadHint") ||
                 "Tap to upload (Images will be compressed)"}
             </Text>
@@ -457,10 +368,24 @@ export default function CreateScreen() {
             />
           </View>
 
+          <View style={styles.categorySection}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{i18n.t("categories")}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryChips}>
+              {categories.map((item) => (
+                <Chip
+                  key={item.id}
+                  label={item.name}
+                  selected={category === item.name}
+                  onPress={() => setCategory(item.name)}
+                />
+              ))}
+            </ScrollView>
+          </View>
+
           {/* Ingredients */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{i18n.t("ingredients")}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{i18n.t("ingredients")}</Text>
             </View>
             {ingredients.map((ingredient, index) => (
               <View key={index} style={styles.dynamicRow}>
@@ -483,22 +408,22 @@ export default function CreateScreen() {
             ))}
             <TouchableOpacity
               onPress={handleAddIngredient}
-              style={styles.addButton}
+              style={[styles.addButton, { borderColor: colors.primary }]}
             >
-              <Ionicons name="add-circle-outline" size={20} color="#E65100" />
-              <Text style={styles.addButtonText}>
+              <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+              <Text style={[styles.addButtonText, { color: colors.primary }]}>
                 {i18n.t("addIngredient") || "Add Ingredient"}
               </Text>
             </TouchableOpacity>
             {errors.ingredients && (
-              <Text style={styles.errorText}>{errors.ingredients}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.ingredients}</Text>
             )}
           </View>
 
           {/* Steps */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{i18n.t("steps")}</Text>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>{i18n.t("steps")}</Text>
             </View>
             {steps.map((step, index) => (
               <View key={index} style={styles.dynamicRow}>
@@ -520,14 +445,14 @@ export default function CreateScreen() {
                 )}
               </View>
             ))}
-            <TouchableOpacity onPress={handleAddStep} style={styles.addButton}>
-              <Ionicons name="add-circle-outline" size={20} color="#E65100" />
-              <Text style={styles.addButtonText}>
+            <TouchableOpacity onPress={handleAddStep} style={[styles.addButton, { borderColor: colors.primary }]}>
+              <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+              <Text style={[styles.addButtonText, { color: colors.primary }]}>
                 {i18n.t("addStep") || "Add Step"}
               </Text>
             </TouchableOpacity>
             {errors.steps && (
-              <Text style={styles.errorText}>{errors.steps}</Text>
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.steps}</Text>
             )}
           </View>
 
@@ -535,6 +460,7 @@ export default function CreateScreen() {
           <TouchableOpacity
             style={[
               styles.submitButton,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
               isSubmitting && styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
@@ -555,7 +481,6 @@ export default function CreateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
   },
   scrollContent: {
     padding: 20,
@@ -567,23 +492,20 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
   },
   headerSubtitle: {
     fontSize: 16,
-    color: "#666",
     marginTop: 4,
   },
   imageUpload: {
-    height: 200,
-    backgroundColor: "#FFF3E0",
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#E65100",
+    height: 190,
+    borderRadius: 22,
+    borderWidth: 1.5,
     borderStyle: "dashed",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
+    overflow: "hidden",
   },
   uploadIconContainer: {
     width: 60,
@@ -595,7 +517,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   uploadText: {
-    color: "#E65100",
     fontWeight: "600",
     fontSize: 16,
   },
@@ -636,8 +557,39 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
   },
+  categorySection: {
+    marginBottom: 22,
+    gap: 10,
+  },
+  categoryChips: {
+    gap: 8,
+    paddingRight: 20,
+  },
+  aiButton: {
+    marginBottom: 18,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  aiButtonGradient: {
+    minHeight: 68,
+    borderRadius: 18,
+    paddingHorizontal: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+  aiButtonIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.18)",
+  },
+  aiButtonCopy: { flex: 1 },
+  aiButtonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },
+  aiButtonSubtext: { color: "rgba(255,255,255,0.82)", fontSize: 11, marginTop: 3 },
   submitButton: {
     backgroundColor: "#E65100",
     paddingVertical: 16,
@@ -652,7 +604,6 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     opacity: 0.7,
-    backgroundColor: "#ffccbc",
     shadowOpacity: 0.1,
   },
   submitButtonText: {
@@ -686,7 +637,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   addButtonText: {
-    color: "#E65100",
     fontWeight: "600",
     marginLeft: 8,
     fontSize: 16,

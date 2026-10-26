@@ -17,7 +17,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -108,7 +107,7 @@ export default function ExploreScreen() {
 
   const handleScanIngredients = () => {
     HapticService.selection();
-    router.push("/(ai-chef)");
+    router.push("/(ai-chef)/agent");
   };
 
   const renderRecipeList = (
@@ -242,7 +241,7 @@ export default function ExploreScreen() {
           style={{ paddingTop: 16 }}
         >
           <View style={[styles.sectionHeader, { marginTop: 0 }]}>
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
               {filteredRecipes.length} {i18n.t("results")}
             </Text>
             <TouchableOpacity
@@ -266,13 +265,13 @@ export default function ExploreScreen() {
           entering={FadeInDown.delay(100).duration(500)}
           style={styles.sectionHeader}
         >
-          <Text style={styles.sectionTitle}>{i18n.t("trending")}</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{i18n.t("trending")}</Text>
           <TouchableOpacity>
-            <Text style={styles.seeAll}>{i18n.t("seeAll")}</Text>
+            <Text style={[styles.seeAll, { color: colors.primary }]}>{i18n.t("seeAll")}</Text>
           </TouchableOpacity>
         </Animated.View>
 
-        {recipes.length > 0 && trendingRecipe && otherTrending ? (
+        {recipes.length > 0 && trendingRecipe ? (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -324,7 +323,7 @@ export default function ExploreScreen() {
               </TouchableOpacity>
             </Link>
 
-            <Link href={`/recipe/${otherTrending.id}`} asChild>
+            {otherTrending && <Link href={`/recipe/${otherTrending.id}`} asChild>
               <TouchableOpacity activeOpacity={0.9}>
                 <Animated.View
                   entering={FadeInRight.delay(300).springify()}
@@ -350,9 +349,9 @@ export default function ExploreScreen() {
                         { backgroundColor: isDark ? colors.surfaceVariant : "#E8F5E9" },
                       ]}
                     >
-                      <Ionicons name="leaf" size={12} color="#2E7D32" />
+                      <Ionicons name="restaurant-outline" size={12} color={isDark ? colors.primary : "#2E7D32"} />
                       <Text style={[styles.trendingTagText, { color: isDark ? colors.success : "#2E7D32" }]}>
-                        {i18n.t("healthy")}
+                        {otherTrending.category}
                       </Text>
                     </View>
                     <Text style={styles.trendingTitle}>
@@ -364,7 +363,7 @@ export default function ExploreScreen() {
                   </LinearGradient>
                 </Animated.View>
               </TouchableOpacity>
-            </Link>
+            </Link>}
           </ScrollView>
         ) : (
           <View style={{ paddingHorizontal: 20 }}>
@@ -375,7 +374,7 @@ export default function ExploreScreen() {
         {/* Popular Recipes List */}
         <Animated.View entering={FadeInDown.delay(600).duration(500)}>
           <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-            <Text style={styles.sectionTitle}>{i18n.t("popularRecipes")}</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{i18n.t("popularRecipes")}</Text>
             <TouchableOpacity
               onPress={() => {
                 HapticService.selection();
