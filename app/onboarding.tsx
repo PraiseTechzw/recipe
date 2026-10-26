@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
+import { captureAnalytics } from "../lib/posthog";
 import { useStore } from "../store/useStore";
 import { useTheme } from "../theme/useTheme";
 import { getChefAvatarUri } from "../utils/chefIdentity";
@@ -104,6 +105,12 @@ export default function UserInfoScreen() {
       chefLevel: level,
       dietaryPreferences: diet,
       avatar: avatar || undefined,
+    });
+    captureAnalytics("onboarding_profile_completed", {
+      locale: selectedLocale,
+      chef_level: level,
+      dietary_preference_count: diet.length,
+      has_avatar: Boolean(avatar),
     });
 
     // Go to Pantry Check next, instead of straight to tabs

@@ -17,8 +17,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { BADGES, getLevel, getNextLevel } from "../../constants/gamification";
 import i18n from "../../i18n";
-import { SyncService } from "../../services/syncService";
+import { captureAnalytics } from "../../lib/posthog";
 import { supabase } from "../../lib/supabase";
+import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
 import { useTheme } from "../../theme/useTheme";
@@ -79,6 +80,7 @@ export default function ProfileScreen() {
             ToastService.error(i18n.t("logOut"), "Could not end this session. Please try again.");
             return;
           }
+          captureAnalytics("account_logged_out");
           resetForLogout();
           router.replace("/onboarding");
         },

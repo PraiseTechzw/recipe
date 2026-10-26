@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
+import { captureAnalytics } from "../lib/posthog";
 import { SyncService } from "../services/syncService";
 import { ToastService } from "../services/toast";
 import { useStore } from "../store/useStore";
@@ -35,6 +36,10 @@ export default function EditProfileScreen() {
       chefLevel,
       avatar,
       bio,
+    });
+    captureAnalytics("profile_updated", {
+      has_avatar: Boolean(avatar),
+      has_bio: Boolean(bio.trim()),
     });
 
     const isOnline = await SyncService.checkConnectivity();

@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
+import { captureAnalytics } from "../lib/posthog";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { SyncService } from "../services/syncService";
 import { useStore } from "../store/useStore";
@@ -75,12 +76,18 @@ export default function AccountAccessScreen() {
           setNotice(i18n.t("emailVerificationNotice"));
           return;
         }
+        captureAnalytics("account_signed_up");
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
           email: cleanEmail,
           password,
         });
         if (signInError) throw signInError;
+
+        if (!data.session) {
+          throw new Error(i18n.t("authError"));
+        }
+        captureAnalytics("account_signed_in");
       }
 
       await SyncService.restoreSignedInAccountState();

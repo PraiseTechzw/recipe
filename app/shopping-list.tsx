@@ -19,6 +19,7 @@ import Animated, { FadeIn, FadeOut, Layout } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import i18n from "../i18n";
+import { captureAnalytics } from "../lib/posthog";
 import { HapticService } from "../services/haptics";
 import { ToastService } from "../services/toast";
 import { useStore } from "../store/useStore";
@@ -45,6 +46,7 @@ export default function ShoppingListScreen() {
 
     HapticService.medium();
     addToShoppingList([{ name: newItemName.trim(), quantity: "1" }]);
+    captureAnalytics("shopping_list_item_added");
     setNewItemName("");
     ToastService.success(
       i18n.t("addedTo") + " " + i18n.t("shoppingList"),
@@ -53,8 +55,12 @@ export default function ShoppingListScreen() {
   };
 
   const handleToggle = (id: string) => {
+    const item = shoppingList.find((shoppingItem) => shoppingItem.id === id);
     HapticService.light();
     toggleShoppingItem(id);
+    captureAnalytics("shopping_list_item_checked", {
+      is_completed: !item?.checked,
+    });
   };
 
   const handleDelete = (item: {

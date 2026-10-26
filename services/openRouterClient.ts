@@ -1,7 +1,10 @@
+import { captureAnalytics } from "../lib/posthog";
 import { supabase } from "../lib/supabase";
+import { useStore } from "../store/useStore";
 
 const MODEL = "openrouter/free";
 const TIMEOUT_MS = 45_000;
+
 
 type OpenRouterContent = string | { type?: string; text?: string }[] | null;
 
@@ -49,6 +52,21 @@ type AgentMessage = {
   tool_calls?: OpenRouterToolCall[];
 };
 
+type AIObservabilityContext = {
+  traceId: string;
+  sessionId: string;
+  analyticsConsent: boolean;
+};
+
+function createAIObservabilityContext(): AIObservabilityContext {
+  const traceId = crypto.randomUUID();
+  return {
+    traceId,
+    sessionId: `ai-recipe-${traceId}`,
+    analyticsConsent: useStore.getState().analyticsEnabled,
+  };
+}
+
 function getMessageText(content?: OpenRouterContent): string {
   if (Array.isArray(content)) {
     return content
@@ -59,6 +77,16 @@ function getMessageText(content?: OpenRouterContent): string {
       .trim();
   }
   return typeof content === "string" ? content.trim() : "";
+}
+
+function getCompletionKind(completion: Record<string, unknown>) {
+  return Array.isArray(completion.tools) ? "recipe_agent" : "ingredient_extraction";
+}
+
+function getCompletionErrorType(error: unknown) {
+  if (error instanceof Error && error.name === "AbortError") return "timeout";
+  if (error instanceof TypeError) return "network";
+  return "completion_failed";
 }
 
 function logOpenRouterResponse(
@@ -87,7 +115,10 @@ function logOpenRouterResponse(
 }
 
 export class OpenRouterClient {
-  private async requestCompletion(completion: Record<string, unknown>) {
+  private async requestCompletion(
+    completion: Record<string, unknown>,
+    observability: AIObservabilityContext,
+  ) {
     const { data: current } = await supabase.auth.getSession();
     if (!current.session) {
       const { error: authError } = await supabase.auth.signInAnonymously();
@@ -97,7 +128,7 @@ export class OpenRouterClient {
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
       const { data, error } = await supabase.functions.invoke("openrouter-completion", {
-        body: { completion },
+        body: { completion, observability },
         signal: controller.signal,
       });
       if (error) {
@@ -106,8 +137,16 @@ export class OpenRouterClient {
         if (status === 429) throw new Error("AI Chef is receiving many requests. Please try again shortly.");
         throw new Error("AI Chef is temporarily unavailable. Please try again shortly.");
       }
+      captureAnalytics("ai_completion_completed", {
+        completion_kind: getCompletionKind(completion),
+        model: MODEL,
+      });
       return data as OpenRouterResponse;
     } catch (error) {
+      captureAnalytics("ai_completion_failed", {
+        completion_kind: getCompletionKind(completion),
+        error_type: getCompletionErrorType(error),
+      });
       if (error instanceof Error && error.name === "AbortError") {
         throw new Error("The AI request took too long. Check your connection and try again.");
       }
@@ -125,6 +164,7 @@ export class OpenRouterClient {
     imageBase64?: string,
     maxTokens = 1800,
     retryEmptyResponse = true,
+    observability = createAIObservabilityContext(),
   ): Promise<string> {
     const content = imageBase64
       ? [
@@ -137,20 +177,23 @@ export class OpenRouterClient {
       : prompt;
 
     try {
-      const payload = await this.requestCompletion({
+      const payload = await this.requestCompletion(
+        {
           model: MODEL,
           messages: [{ role: "user", content }],
           response_format: { type: "json_object" },
           temperature: 0.4,
           max_tokens: maxTokens,
-      });
+        },
+        observability,
+      );
       logOpenRouterResponse(imageBase64 ? "vision" : "completion", 200, payload);
 
       const choice = payload.choices?.[0];
       if (choice?.finish_reason === "length") {
         if (retryEmptyResponse) {
           console.warn("[OpenRouter] Completion reached its output limit; retrying once.");
-          return this.generateContent(prompt, imageBase64, Math.min(maxTokens * 2, 3200), false);
+          return this.generateContent(prompt, imageBase64, Math.min(maxTokens * 2, 3200), false, observability);
         }
         throw new Error("The AI response was cut off. Please try again.");
       }
@@ -159,7 +202,7 @@ export class OpenRouterClient {
       if (!text) {
         if (retryEmptyResponse) {
           console.warn("[OpenRouter] Empty completion; retrying once.");
-          return this.generateContent(prompt, imageBase64, maxTokens, false);
+          return this.generateContent(prompt, imageBase64, maxTokens, false, observability);
         }
         throw new Error("The AI provider returned no text after a retry. Please try again in a moment.");
       }
@@ -189,6 +232,7 @@ export class OpenRouterClient {
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
     ];
+    const observability = createAIObservabilityContext();
     let toolRounds = 0;
     let recoveryAttempts = 0;
 
@@ -209,7 +253,8 @@ export class OpenRouterClient {
       console.log("[OpenRouter] request", { stage, model: MODEL, toolRound: toolRounds, messages: messages.length, toolsAvailable });
       let payload: OpenRouterResponse;
       try {
-        payload = await this.requestCompletion({
+        payload = await this.requestCompletion(
+          {
             model: MODEL,
             messages,
             ...(toolsAvailable
@@ -217,7 +262,9 @@ export class OpenRouterClient {
               : { response_format: { type: "json_object" } }),
             temperature: 0.35,
             max_tokens: toolsAvailable ? 700 : 1800,
-        });
+          },
+          observability,
+        );
         logOpenRouterResponse(stage, 200, payload);
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
@@ -245,16 +292,32 @@ export class OpenRouterClient {
         messages.push({ role: "assistant", content: getMessageText(message.content), tool_calls: calls });
         for (const call of calls) {
           let output: unknown;
+          let args: Record<string, unknown> = {};
+          let toolError: unknown;
           const toolStartedAt = Date.now();
           try {
-            const args = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
+            args = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
             output = await executeTool(call.function.name, args);
           } catch (error) {
+            toolError = error;
             output = { error: error instanceof Error ? error.message : "Tool could not complete." };
           }
+          const elapsedMs = Date.now() - toolStartedAt;
+          if (observability.analyticsConsent) captureAnalytics("$ai_span", {
+            $ai_trace_id: observability.traceId,
+            $ai_session_id: observability.sessionId,
+            $ai_span_id: crypto.randomUUID(),
+            $ai_parent_id: observability.traceId,
+            $ai_span_name: call.function.name,
+            $ai_input_state: JSON.stringify({ argument_count: Object.keys(args).length }),
+            $ai_output_state: JSON.stringify({ result_count: typeof output === "object" && output !== null && "count" in output ? (output as { count: unknown }).count : null }),
+            $ai_latency: elapsedMs / 1_000,
+            $ai_is_error: Boolean(toolError),
+            ...(toolError ? { $ai_error: "Tool could not complete." } : {}),
+          });
           console.log("[OpenRouter] tool completed", {
             name: call.function.name,
-            elapsedMs: Date.now() - toolStartedAt,
+            elapsedMs,
             resultCount: typeof output === "object" && output !== null && "count" in output ? (output as { count: unknown }).count : null,
             failed: typeof output === "object" && output !== null && "error" in output,
           });

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import i18n from "../i18n";
+import { captureAnalytics } from "../lib/posthog";
 import { useStore } from "../store/useStore";
 import { useTheme } from "../theme/useTheme";
 
@@ -51,6 +52,10 @@ export default function PantryCheckScreen() {
 
   const savePantry = () => {
     setPantry(Array.from(selected));
+    captureAnalytics("pantry_saved", {
+      selected_ingredient_count: selected.size,
+      from_onboarding: !hasOnboarded,
+    });
     if (hasOnboarded) {
       router.back();
       return;

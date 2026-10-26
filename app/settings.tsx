@@ -10,7 +10,7 @@ import { useTheme } from "../theme/useTheme";
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
-  const { locale, setLocale, isDarkMode, toggleDarkMode } = useStore();
+  const { locale, setLocale, isDarkMode, toggleDarkMode, analyticsEnabled, setAnalyticsEnabled } = useStore();
   const appVersion = Constants.expoConfig?.version || "2.0.2";
 
   const changeLanguage = () => {
@@ -49,6 +49,14 @@ export default function SettingsScreen() {
         <SettingsSection title={i18n.t("content")} colors={colors}>
           <SettingsLink icon="language-outline" label={i18n.t("language")} value={languageName} colors={colors} onPress={changeLanguage} />
           <SettingsLink icon="cloud-download-outline" label={i18n.t("offlineData")} colors={colors} onPress={() => router.push("/offline-data")} last />
+        </SettingsSection>
+
+        <SettingsSection title="Privacy" colors={colors}>
+          <View style={styles.item}>
+            <SettingLabel icon="analytics-outline" label="Share app usage data" colors={colors} />
+            <Switch value={analyticsEnabled} onValueChange={setAnalyticsEnabled} trackColor={{ false: colors.border, true: colors.primary }} thumbColor="#FFFFFF" accessibilityLabel="Share app usage data with PostHog" />
+          </View>
+          <Text style={[styles.privacyNote, { color: colors.textSecondary }]}>Optional, anonymous screen and feature counts help improve the app. Recipe details, ingredients, AI prompts, email, and touch recordings are not sent. Change this any time.</Text>
         </SettingsSection>
 
         <SettingsSection title={i18n.t("about")} colors={colors}>
@@ -119,4 +127,5 @@ const styles = StyleSheet.create({
   valueText: { fontSize: 12, fontWeight: "700" },
   brandNote: { flexDirection: "row", alignItems: "center", gap: 10, padding: 14, borderRadius: 16 },
   brandText: { flex: 1, fontSize: 12, lineHeight: 18, fontWeight: "600" },
+  privacyNote: { fontSize: 12, lineHeight: 18, paddingHorizontal: 14, paddingBottom: 14, marginTop: -3 },
 });

@@ -21,6 +21,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import i18n from "../../i18n";
+import { captureAnalytics } from "../../lib/posthog";
 import { supabase } from "../../lib/supabase";
 import { IngredientSection } from "../../models/recipe";
 import { useStore } from "../../store/useStore";
@@ -173,6 +174,10 @@ export default function RecipeDetailScreen() {
   const handleToggleFavorite = async () => {
     if (!recipe) return;
     const xpAwarded = toggleFavorite(recipe.id);
+    captureAnalytics("recipe_favorite_changed", {
+      category: recipe.category,
+      is_favorited: !favorite,
+    });
     if (!favorite) {
       ToastService.success(
         i18n.t("success"),
@@ -196,6 +201,7 @@ export default function RecipeDetailScreen() {
     });
     if (result.action === Share.sharedAction) {
       incrementStat("sharedRecipes");
+      captureAnalytics("recipe_shared", { category: recipe.category });
       ToastService.success(i18n.t("success"), i18n.t("shared"));
     }
   };
@@ -215,6 +221,10 @@ export default function RecipeDetailScreen() {
       });
     });
     addToShoppingList(allIngredients);
+    captureAnalytics("recipe_added_to_shopping_list", {
+      category: recipe.category,
+      ingredient_count: allIngredients.length,
+    });
     ToastService.success(
       i18n.t("success"),
       i18n.t("ingredients") +
@@ -223,6 +233,15 @@ export default function RecipeDetailScreen() {
         " " +
         i18n.t("shoppingList"),
     );
+  };
+
+  const handleStartCooking = () => {
+    captureAnalytics("cooking_started", {
+      category: recipe.category,
+      recipe_source: "recipe_detail",
+      step_count: recipe.steps.length,
+    });
+    router.push(`/cooking/${recipe.id}`);
   };
 
   const toggleIngredient = (name: string) => {
@@ -637,7 +656,7 @@ export default function RecipeDetailScreen() {
       >
         <TouchableOpacity
           style={[styles.fab, { backgroundColor: colors.primary }]}
-          onPress={() => router.push(`/cooking/${recipe.id}`)}
+          onPress={handleStartCooking}
         >
           <Ionicons name="play" size={24} color="#fff" />
           <Text style={styles.fabText}>{i18n.t("startCooking")}</Text>

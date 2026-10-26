@@ -21,6 +21,7 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HapticService } from "../../services/haptics";
 import { AIMascot } from "../../components/ai/AIMascot";
+import { captureAnalytics } from "../../lib/posthog";
 import { SyncService } from "../../services/syncService";
 import { ToastService } from "../../services/toast";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
@@ -68,6 +69,12 @@ export default function ResultScreen() {
 
     try {
       saveGeneratedRecipeToLocalStore();
+      captureAnalytics("ai_recipe_saved", {
+        category: recipe.category,
+        ingredient_count: recipe.ingredients.length,
+        step_count: recipe.steps.length,
+        source: recipe.source ?? null,
+      });
 
       // Trigger Success Animation
       setShowSuccess(true);
@@ -124,6 +131,11 @@ export default function ResultScreen() {
 
   const handleCookNow = () => {
     HapticService.selection();
+    captureAnalytics("cooking_started", {
+      category: recipe.category,
+      recipe_source: "ai",
+      step_count: recipe.steps.length,
+    });
 
     // Create a temporary recipe object for cooking mode
     const cookingRecipe = {

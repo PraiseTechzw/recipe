@@ -28,6 +28,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Chip } from "../../components/ui/Chip";
 import { AIMascot } from "../../components/ai/AIMascot";
 import { OfflineBanner } from "../../components/ui/OfflineBanner";
+import { captureAnalytics } from "../../lib/posthog";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
 import { useAICaptureStore } from "../../stores/aiCaptureStore";
@@ -174,6 +175,10 @@ export default function ReviewScreen() {
     }
 
     HapticService.selection();
+    captureAnalytics("ai_recipe_generation_requested", {
+      ingredient_count: editedIngredients.length,
+      pantry_ingredient_count: pantry.length,
+    });
     generateRecipe();
   };
 

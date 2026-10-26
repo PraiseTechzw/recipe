@@ -19,6 +19,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
+import { captureAnalytics } from "../../lib/posthog";
 import { Recipe } from "../../models/recipe";
 import { HapticService } from "../../services/haptics";
 import { SyncService } from "../../services/syncService";
@@ -206,6 +207,12 @@ export default function CreateScreen() {
 
       // Save to local store
       addRecipe(newRecipe);
+      captureAnalytics("recipe_created", {
+        category,
+        ingredient_count: newRecipe.ingredients[0].data.length,
+        step_count: newRecipe.steps.length,
+        has_image: Boolean(image),
+      });
 
       // Check connectivity for feedback
       const isOnline = await SyncService.checkConnectivity();

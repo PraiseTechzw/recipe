@@ -168,6 +168,8 @@ interface AppState {
   // Settings
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  analyticsEnabled: boolean;
+  setAnalyticsEnabled: (enabled: boolean) => void;
   locale: string;
   setLocale: (locale: string) => void;
 
@@ -648,6 +650,10 @@ export const useStore = create<AppState>()(
       // Settings
       isDarkMode: false,
       toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
+      // Explicit, device-local consent. This setting is intentionally excluded
+      // from getSyncableAppState so it never follows an account to another device.
+      analyticsEnabled: false,
+      setAnalyticsEnabled: (enabled: boolean) => set({ analyticsEnabled: enabled }),
       locale: "en",
       setLocale: (locale: string) => set({ locale }),
 

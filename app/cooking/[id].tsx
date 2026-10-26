@@ -30,6 +30,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../../i18n";
+import { captureAnalytics } from "../../lib/posthog";
 import { supabase } from "../../lib/supabase";
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
@@ -271,6 +272,11 @@ export default function CookingModeScreen() {
   const finishRecipe = () => {
     if (!id || completionAwardedForId.current === id) return;
     completionAwardedForId.current = id;
+    captureAnalytics("recipe_cooked", {
+      category: recipe?.category,
+      step_count: recipe?.steps?.length ?? 0,
+      recipe_source: recipeParams ? "ai" : "recipe_detail",
+    });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     addXP(XP_REWARD_PER_RECIPE);
     recordCookedRecipe(recipe);

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Zimbabwe Traditional Recipes",
     "slug": "tasteofzimbabwe",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tasteofzimbabwe",
@@ -56,8 +56,7 @@
       "expo-sharing",
       "expo-status-bar",
       "expo-web-browser",
-      "expo-sqlite",
-      "posthog-react-native/expo"
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

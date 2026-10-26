@@ -11,6 +11,7 @@ import { AppState, View } from "react-native";
 import "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import { GlobalErrorBoundary } from "../components/feedback/GlobalErrorBoundary";
+import { PostHogProvider } from "../components/PostHogProvider";
 import { LoadingOverlay } from "../components/feedback/LoadingOverlay";
 import { OfflineBanner } from "../components/feedback/OfflineBanner";
 import { useOfflineStatus } from "../hooks/useOfflineStatus";
@@ -112,51 +113,53 @@ function RootLayout() {
   return (
     <GlobalErrorBoundary>
       <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>
-        <View style={{ flex: 1 }}>
-          <OfflineBanner isOffline={isOffline} />
-          <Stack>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="cooking/[id]"
-              options={{ presentation: "fullScreenModal", headerShown: false }}
-            />
-            <Stack.Screen
-              name="shopping-list"
-              options={{ presentation: "modal", headerShown: false }}
-            />
-            <Stack.Screen
-              name="onboarding"
-              options={{ headerShown: false, gestureEnabled: false }}
-            />
-            <Stack.Screen
-              name="pantry-check"
-              options={{
-                presentation: "fullScreenModal",
-                headerShown: false,
-                gestureEnabled: false,
-              }}
-            />
-            <Stack.Screen
-              name="account-choice"
-              options={{ headerShown: false, gestureEnabled: false }}
-            />
-            <Stack.Screen
-              name="account-access"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="(ai-chef)"
-              options={{
-                presentation: "fullScreenModal",
-                headerShown: false,
-                gestureEnabled: false,
-              }}
-            />
-          </Stack>
-        </View>
-        <StatusBar style={isDarkMode ? "light" : "dark"} />
-        <LoadingOverlay />
-        <Toast config={toastConfig} />
+        <PostHogProvider>
+          <View style={{ flex: 1 }}>
+            <OfflineBanner isOffline={isOffline} />
+            <Stack>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="cooking/[id]"
+                options={{ presentation: "fullScreenModal", headerShown: false }}
+              />
+              <Stack.Screen
+                name="shopping-list"
+                options={{ presentation: "modal", headerShown: false }}
+              />
+              <Stack.Screen
+                name="onboarding"
+                options={{ headerShown: false, gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="pantry-check"
+                options={{
+                  presentation: "fullScreenModal",
+                  headerShown: false,
+                  gestureEnabled: false,
+                }}
+              />
+              <Stack.Screen
+                name="account-choice"
+                options={{ headerShown: false, gestureEnabled: false }}
+              />
+              <Stack.Screen
+                name="account-access"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
+                name="(ai-chef)"
+                options={{
+                  presentation: "fullScreenModal",
+                  headerShown: false,
+                  gestureEnabled: false,
+                }}
+              />
+            </Stack>
+          </View>
+          <StatusBar style={isDarkMode ? "light" : "dark"} />
+          <LoadingOverlay />
+          <Toast config={toastConfig} />
+        </PostHogProvider>
       </ThemeProvider>
     </GlobalErrorBoundary>
   );
