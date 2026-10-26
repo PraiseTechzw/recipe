@@ -13,7 +13,7 @@ export const SeedService = {
         id: PRAISETECH_ID,
         name: 'Praise Masunga',
         avatar_url: 'https://github.com/PraiseTechzw.png',
-        bio: 'Official account for Taste of Zimbabwe recipes.',
+        bio: 'Official account for Zimbabwe Traditional Recipes.',
         chef_level: 'Master Chef',
         xp: 99999,
         badges: ['Verified', 'Admin'],

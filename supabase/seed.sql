@@ -4,7 +4,7 @@ VALUES (
     'praisetechzw',
     'Praise Masunga',
     'https://github.com/PraiseTechzw.png',
-    'Official account for Taste of Zimbabwe recipes.',
+    'Official account for Zimbabwe Traditional Recipes.',
     'Master Chef',
     99999,
     '["Verified", "Admin"]'::jsonb

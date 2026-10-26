@@ -1,10 +1,9 @@
-import i18n from "@/i18n";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStore } from "../store/useStore";
+import Logo from "../components/Logo";
 
 export default function AnimatedSplashScreen() {
   const router = useRouter();
@@ -52,16 +51,9 @@ export default function AnimatedSplashScreen() {
           { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
         ]}
       >
-        <View style={styles.iconContainer}>
-          <Ionicons name="restaurant" size={80} color="#E65100" />
-        </View>
-        <Text style={styles.title}>TASTE OF ZIMBABWE</Text>
-        <Text style={styles.subtitle}>{i18n.t("slogan")}</Text>
+        <Logo size="large" color="#203A2E" mutedColor="#68766B" />
       </Animated.View>
 
-      <View style={styles.footer}>
-        <Text style={styles.version}>v2.0.0</Text>
-      </View>
     </View>
   );
 }
@@ -69,45 +61,11 @@ export default function AnimatedSplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5EBD8",
     justifyContent: "center",
     alignItems: "center",
   },
   content: {
     alignItems: "center",
-  },
-  iconContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#FFF3E0",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-    shadowColor: "#E65100",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1a1a1a",
-    marginBottom: 8,
-    letterSpacing: 1,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#757575",
-    fontStyle: "italic",
-  },
-  footer: {
-    position: "absolute",
-    bottom: 40,
-  },
-  version: {
-    color: "#ccc",
-    fontSize: 12,
   },
 });

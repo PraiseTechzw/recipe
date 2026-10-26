@@ -46,13 +46,13 @@ export default function PantryCheckScreen() {
   const finishOnboarding = () => {
     setPantry(Array.from(selected));
     setHasOnboarded(true);
-    router.replace("/(tabs)");
+    router.replace("/account-choice");
   };
 
   const handleSkip = () => {
     setPantry([]);
     setHasOnboarded(true);
-    router.replace("/(tabs)");
+    router.replace("/account-choice");
   };
 
   return (
@@ -96,7 +96,10 @@ export default function PantryCheckScreen() {
             color={selected.size > 0 ? selectedColor : colors.textSecondary}
           />
           <Text style={[styles.selectionText, { color: colors.textSecondary }]}>
-            {i18n.t("ingredients")}: {selected.size}
+            {i18n.t("pantrySelectionCount", {
+              selected: selected.size,
+              total: commonIngredients.length,
+            })}
           </Text>
         </View>
       </View>
@@ -106,6 +109,14 @@ export default function PantryCheckScreen() {
         contentContainerStyle={[styles.grid, { width: gridWidth }]}
         showsVerticalScrollIndicator={false}
       >
+        <View style={styles.gridIntro}>
+          <Text style={[styles.gridTitle, { color: colors.text }]}>
+            {i18n.t("pantryIngredientHeading")}
+          </Text>
+          <Text style={[styles.gridHint, { color: colors.textSecondary }]}>
+            {i18n.t("pantryIngredientHint", { total: commonIngredients.length })}
+          </Text>
+        </View>
         {commonIngredients.map((item) => {
           const isSelected = selected.has(item.id);
           return (
@@ -203,7 +214,7 @@ export default function PantryCheckScreen() {
           accessibilityRole="button"
         >
           <Text style={styles.continueText} numberOfLines={1}>
-            {i18n.t("showRecipes")} ({selected.size})
+            {i18n.t("continue")}
           </Text>
           <Ionicons name="arrow-forward" size={19} color="#FFFFFF" />
         </TouchableOpacity>
@@ -279,6 +290,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: GRID_PADDING,
     paddingTop: 4,
     paddingBottom: 20,
+  },
+  gridIntro: {
+    width: "100%",
+    paddingHorizontal: 2,
+    paddingBottom: 2,
+    gap: 3,
+  },
+  gridTitle: {
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: "800",
+  },
+  gridHint: {
+    fontSize: 12,
+    lineHeight: 18,
   },
   card: {
     aspectRatio: 1,

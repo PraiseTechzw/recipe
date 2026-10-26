@@ -56,7 +56,7 @@ const { error: profileError } = await supabase
       id: profileId,
       auth_user_id: authUser.id,
       name,
-      bio: "Official account for Taste of Zimbabwe recipes.",
+      bio: "Official account for Zimbabwe Traditional Recipes.",
       chef_level: "Master Chef",
       xp: 99999,
       badges: ["Verified", "Admin"],

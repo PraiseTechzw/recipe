@@ -27,6 +27,71 @@ function getSyncableAppState() {
   };
 }
 
+function mergeSignedInState(remoteState: any) {
+  const local = getSyncableAppState();
+  const remote = remoteState ?? {};
+  const mergeUnique = (left: string[] = [], right: string[] = []) =>
+    Array.from(new Set([...left, ...right]));
+  const mergeShoppingList = (left: any[] = [], right: any[] = []) => {
+    const items = new Map<string, any>();
+    for (const item of [...left, ...right]) {
+      const key = `${String(item.name ?? "").trim().toLowerCase()}|${String(item.quantity ?? "").trim().toLowerCase()}`;
+      const existing = items.get(key);
+      items.set(key, existing ? { ...existing, ...item, checked: existing.checked || item.checked } : item);
+    }
+    return Array.from(items.values());
+  };
+
+  const localProfile = local.userProfile;
+  const remoteProfile = remote.userProfile ?? {};
+  const categories = new Set([
+    ...Object.keys(local.categoryScores),
+    ...Object.keys(remote.categoryScores ?? {}),
+  ]);
+
+  return {
+    ...local,
+    ...remote,
+    favorites: mergeUnique(remote.favorites, local.favorites),
+    pantry: mergeUnique(remote.pantry, local.pantry),
+    shoppingList: mergeShoppingList(remote.shoppingList, local.shoppingList),
+    hasOnboarded: true,
+    userProfile: {
+      ...localProfile,
+      ...remoteProfile,
+      name: remoteProfile.name && remoteProfile.name !== "Guest"
+        ? remoteProfile.name
+        : localProfile.name,
+      badges: mergeUnique(remoteProfile.badges, localProfile.badges),
+      dietaryPreferences: mergeUnique(
+        remoteProfile.dietaryPreferences,
+        localProfile.dietaryPreferences,
+      ),
+      stats: { ...localProfile.stats, ...remoteProfile.stats },
+    },
+    viewHistory: mergeUnique(local.viewHistory, remote.viewHistory).slice(0, 20),
+    categoryScores: Object.fromEntries(
+      Array.from(categories, (category) => [
+        category,
+        Math.max(local.categoryScores[category] ?? 0, remote.categoryScores?.[category] ?? 0),
+      ]),
+    ),
+    locale: remote.locale ?? local.locale,
+    isDarkMode: remote.isDarkMode ?? local.isDarkMode,
+    notificationPreferences: {
+      ...local.notificationPreferences,
+      ...remote.notificationPreferences,
+    },
+    notifications: mergeUnique(
+      (remote.notifications ?? []).map((notification: any) => notification.id),
+      local.notifications.map((notification) => notification.id),
+    ).map((id) =>
+      local.notifications.find((notification) => notification.id === id) ??
+      remote.notifications.find((notification: any) => notification.id === id),
+    ),
+  };
+}
+
 async function ensureSupabaseSession() {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;
@@ -264,6 +329,29 @@ export const SyncService = {
       console.warn('Could not initialize Supabase app state sync:', error);
       // Keep trying on later state changes if configuration becomes available.
       stateSyncStarted = false;
+    }
+  },
+
+  async restoreSignedInAccountState() {
+    if (!isSupabaseConfigured) return;
+    try {
+      await waitForLocalStateHydration();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      const userId = sessionData.session?.user.id;
+      if (!userId) return;
+
+      const { data, error } = await supabase
+        .from('chef_app_state')
+        .select('state')
+        .eq('auth_user_id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      if (data?.state) useStore.setState(mergeSignedInState(data.state));
+      await writeAppState();
+    } catch (error) {
+      // Account sign-in should still complete if state sync is temporarily unavailable.
+      console.warn('Could not restore cloud app state after sign-in:', error);
     }
   }
 };

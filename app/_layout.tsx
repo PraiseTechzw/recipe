@@ -99,6 +99,14 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="account-choice"
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="account-access"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
               name="(ai-chef)"
               options={{
                 presentation: "fullScreenModal",

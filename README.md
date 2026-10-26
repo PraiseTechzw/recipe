@@ -1,8 +1,8 @@
-# Taste of Zimbabwe (Traditional Recipes)
+# Zimbabwe Traditional Recipes
 
-![Project Banner](https://via.placeholder.com/1200x300?text=Taste+of+Zimbabwe)
+![Project Banner](https://via.placeholder.com/1200x300?text=Zimbabwe+Traditional+Recipes)
 
-Welcome to **Taste of Zimbabwe**, a premium culinary application dedicated to preserving and sharing the rich heritage of Zimbabwean cuisine. This app connects users with authentic traditional recipes, powered by modern technology including AI ingredient scanning, real-time community sharing, and multi-language support.
+Welcome to **Zimbabwe Traditional Recipes**, a culinary application dedicated to preserving and sharing the rich heritage of Zimbabwean cuisine. It connects users with traditional recipes through AI ingredient scanning, community sharing, and multi-language support.
 
 **Created by:** Praise Masunga (PraiseTechzw)
 

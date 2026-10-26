@@ -1,12 +1,12 @@
-# Contributing to Taste of Zimbabwe
+# Contributing to Zimbabwe Traditional Recipes
 
-First off, thank you for considering contributing to Taste of Zimbabwe! It's people like you that make this community such a great place to learn, inspire, and create.
+First off, thank you for considering contributing to Zimbabwe Traditional Recipes! It's people like you that make this community such a great place to learn, inspire, and create.
 
 ## How Can I Contribute?
 
 ### Reporting Bugs
 
-This section guides you through submitting a bug report for Taste of Zimbabwe. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
+This section guides you through submitting a bug report for Zimbabwe Traditional Recipes. Following these guidelines helps maintainers and the community understand your report, reproduce the behavior, and find related reports.
 
 - **Use a clear and descriptive title** for the issue to identify the problem.
 - **Describe the exact steps which reproduce the problem** in as many details as possible.
@@ -14,19 +14,19 @@ This section guides you through submitting a bug report for Taste of Zimbabwe. F
 
 ### Suggesting Enhancements
 
-This section guides you through submitting an enhancement suggestion for Taste of Zimbabwe, including completely new features and minor improvements to existing functionality.
+This section guides you through submitting an enhancement suggestion for Zimbabwe Traditional Recipes, including completely new features and minor improvements to existing functionality.
 
 - **Use a clear and descriptive title** for the issue to identify the suggestion.
 - **Provide a step-by-step description of the suggested enhancement** in as many details as possible.
-- **Explain why this enhancement would be useful** to most Taste of Zimbabwe users.
+- **Explain why this enhancement would be useful** to most Zimbabwe Traditional Recipes users.
 
 ### Pull Requests
 
 The process described here has several goals:
 
-- Maintain Taste of Zimbabwe's quality
+- Maintain Zimbabwe Traditional Recipes' quality
 - Fix problems that are important to users
-- Engage the community in working toward the best possible Taste of Zimbabwe
+- Engage the community in working toward the best possible Zimbabwe Traditional Recipes
 
 1.  Fork the repo and create your branch from `main`.
 2.  If you've added code that should be tested, add tests.

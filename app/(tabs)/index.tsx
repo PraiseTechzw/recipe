@@ -145,19 +145,24 @@ export default function HomeScreen() {
       <View style={styles.contentContainer}>
         {/* Header */}
         <View style={styles.header}>
-          <Logo size="medium" />
+          <Logo
+            size="medium"
+            color={colors.text}
+            mutedColor={colors.textSecondary}
+          />
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={[
                 styles.iconButton,
-                { backgroundColor: colors.surface },
+                { backgroundColor: colors.surface, borderColor: colors.border },
                 shadows.small,
               ]}
               onPress={() => {
                 HapticService.selection();
                 router.push("/shopping-list");
               }}
-              accessibilityLabel="Shopping List"
+              accessibilityRole="button"
+              accessibilityLabel={i18n.t("shoppingList")}
             >
               <Ionicons name="basket-outline" size={24} color={colors.text} />
               {shoppingList.length > 0 && (
@@ -169,7 +174,11 @@ export default function HomeScreen() {
                       borderColor: colors.surface,
                     },
                   ]}
-                />
+                >
+                  <Text style={styles.badgeText}>
+                    {shoppingList.length > 9 ? "9+" : shoppingList.length}
+                  </Text>
+                </View>
               )}
             </TouchableOpacity>
 
@@ -178,7 +187,8 @@ export default function HomeScreen() {
                 HapticService.selection();
                 router.push("/(tabs)/profile");
               }}
-              accessibilityLabel="Profile"
+              accessibilityRole="button"
+              accessibilityLabel={i18n.t("profile")}
             >
               <View style={styles.avatarContainer}>
                 {userProfile.avatar ? (
@@ -192,13 +202,13 @@ export default function HomeScreen() {
                       styles.avatar,
                       {
                         borderColor: colors.surface,
-                        backgroundColor: colors.primary,
+                        backgroundColor: colors.surfaceVariant,
                         justifyContent: "center",
                         alignItems: "center",
                       },
                     ]}
                   >
-                    <Ionicons name="person" size={20} color="#fff" />
+                    <Ionicons name="person" size={20} color={colors.textSecondary} />
                   </View>
                 )}
                 <View
@@ -222,7 +232,7 @@ export default function HomeScreen() {
         <ScrollView
           style={{ flex: 1 }}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 132 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -254,11 +264,9 @@ export default function HomeScreen() {
                   style={StyleSheet.flatten([
                     styles.searchBar,
                     {
-                      backgroundColor: colors.surfaceVariant,
+                      backgroundColor: colors.surface,
                       borderColor: colors.border,
                       flex: 1,
-                      flexDirection: "row",
-                      alignItems: "center",
                     },
                   ])}
                 >
@@ -284,12 +292,16 @@ export default function HomeScreen() {
               </Link>
 
               <Link href="/(ai-chef)" asChild>
-                <TouchableOpacity activeOpacity={0.8}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={i18n.t("aiGenerate")}
+                >
                   <LinearGradient
                     colors={[colors.primary, colors.secondary]}
                     style={styles.aiButtonHome}
                   >
-                    <Ionicons name="scan-outline" size={24} color="#fff" />
+                  <Ionicons name="sparkles" size={21} color="#fff" />
                   </LinearGradient>
                 </TouchableOpacity>
               </Link>
@@ -322,7 +334,7 @@ export default function HomeScreen() {
                     key={recipe.id}
                     style={[
                       styles.featuredCard,
-                      { backgroundColor: colors.surface },
+                      { backgroundColor: colors.surface, borderColor: colors.border },
                     ]}
                     onPress={() => handleRecipePress(recipe.id)}
                     activeOpacity={0.9}
@@ -423,7 +435,7 @@ export default function HomeScreen() {
                     style={styles.dailyOverlay}
                   >
                     <View style={styles.dailyHeader}>
-                      <View style={styles.dailyBadge}>
+                      <View style={[styles.dailyBadge, { backgroundColor: colors.primary }]}>
                         <Text style={styles.dailyBadgeText}>DAILY PICK</Text>
                       </View>
                       <View style={styles.authorContainer}>
@@ -542,23 +554,31 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
   },
   badge: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: "#E65100",
-    borderWidth: 1,
-    borderColor: "#fff",
+    top: -3,
+    right: -3,
+    minWidth: 18,
+    height: 18,
+    paddingHorizontal: 4,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: "800",
   },
   avatarContainer: {
     position: "relative",
@@ -588,34 +608,37 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   greetingSection: {
-    marginBottom: 24,
+    marginBottom: 28,
     paddingHorizontal: 20,
   },
   mainGreeting: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 4,
+    fontSize: 30,
+    lineHeight: 37,
+    fontWeight: "800",
+    letterSpacing: -0.6,
+    marginBottom: 5,
   },
   subGreeting: {
-    fontSize: 16,
-    marginBottom: 20,
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 18,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    height: 52,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    height: 54,
+    borderRadius: 18,
+    borderWidth: 1,
   },
   placeholderText: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
   },
   aiButtonHome: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
+    width: 54,
+    height: 54,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -628,6 +651,7 @@ const styles = StyleSheet.create({
     width: 280,
     borderRadius: 20,
     padding: 12,
+    borderWidth: StyleSheet.hairlineWidth,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -653,7 +677,7 @@ const styles = StyleSheet.create({
     left: 12,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.96)",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -726,7 +750,7 @@ const styles = StyleSheet.create({
   dailyBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   dailyBadgeText: {
     color: "#fff",
