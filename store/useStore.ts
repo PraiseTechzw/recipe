@@ -196,6 +196,7 @@ interface AppState {
   userRank: number | null;
   isLeaderboardLoading: boolean;
   leaderboardError: string | null;
+  leaderboardChefId: string | null;
   isLeaderboardLive: boolean;
   leaderboardLastUpdated: number;
   setTopWeekly: (entries: LeaderboardEntry[]) => void;
@@ -205,6 +206,7 @@ interface AppState {
   upsertLeaderboardEntry: (entry: LeaderboardEntry) => void;
   setLeaderboardLoading: (loading: boolean) => void;
   setLeaderboardError: (error: string | null) => void;
+  setLeaderboardChefId: (id: string | null) => void;
   setLeaderboardLive: (live: boolean) => void;
   setLeaderboardLastUpdated: (time: number) => void;
 }
@@ -433,6 +435,7 @@ export const useStore = create<AppState>()(
         neighbors: [],
         userRank: null,
         leaderboardError: null,
+        leaderboardChefId: null,
         isLeaderboardLive: false,
       }),
       hasTriggeredReviewPrompt: false,
@@ -705,6 +708,7 @@ export const useStore = create<AppState>()(
       userRank: null,
       isLeaderboardLoading: false,
       leaderboardError: null,
+      leaderboardChefId: null,
       isLeaderboardLive: false,
       leaderboardLastUpdated: 0,
       setTopWeekly: (entries: LeaderboardEntry[]) =>
@@ -743,6 +747,7 @@ export const useStore = create<AppState>()(
         set({ isLeaderboardLoading: loading }),
       setLeaderboardError: (error: string | null) =>
         set({ leaderboardError: error }),
+      setLeaderboardChefId: (id: string | null) => set({ leaderboardChefId: id }),
       setLeaderboardLive: (live: boolean) => set({ isLeaderboardLive: live }),
       setLeaderboardLastUpdated: (time: number) =>
         set({ leaderboardLastUpdated: time }),

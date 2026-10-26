@@ -31,7 +31,6 @@ export default function LeaderboardScreen() {
 
   // Local State
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("weekly");
-  const [currentChefId, setCurrentChefId] = useState<string | null>(null);
   // const [refreshing, setRefreshing] = useState(false);
 
   // Store Selectors
@@ -41,6 +40,7 @@ export default function LeaderboardScreen() {
   const userRank = useStore((state) => state.userRank);
   const isLoading = useStore((state) => state.isLeaderboardLoading);
   const error = useStore((state) => state.leaderboardError);
+  const currentChefId = useStore((state) => state.leaderboardChefId);
   const isLive = useStore((state) => state.isLeaderboardLive);
 
   // Derived Data
@@ -58,7 +58,7 @@ export default function LeaderboardScreen() {
     leaderboardService.fetchGlobalLeaderboards();
     const { data: { session } } = await supabase.auth.getSession();
     const chefId = session?.user.id ?? null;
-    setCurrentChefId(chefId);
+    useStore.getState().setLeaderboardChefId(chefId);
     if (chefId) {
       const sortBy = activeTab === "weekly" ? "weekly_xp" : "total_xp";
       leaderboardService.fetchAroundMe(chefId, sortBy);
