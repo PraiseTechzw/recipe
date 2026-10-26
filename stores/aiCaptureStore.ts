@@ -281,6 +281,7 @@ export const useAICaptureStore = create<AICaptureState>((set, get) => ({
     // But I should check models/recipe.ts to be sure about the mapping
 
     useStore.getState().addRecipe(newRecipe as any);
+    useStore.getState().toggleFavorite(newRecipe.id);
   },
 
   resetFlow: () => {

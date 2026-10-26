@@ -63,6 +63,7 @@ const GenerateRecipeResponseSchema = z.object({
   steps: z.array(RecipeStepSchema),
   nutrition: NutritionSchema.optional(),
   safety_warnings: z.array(z.string()).optional(),
+  source: z.enum(["ai", "cookbook"]).optional(),
 });
 
 export type ExtractedIngredientsResult = z.infer<
@@ -158,6 +159,8 @@ export class AIRecipeService {
     ];
     const prompt = `Use these inputs to create one Zimbabwean or African-inspired recipe.\n\nMAIN INGREDIENTS: ${ingredients.join(", ")}\n${pantryString}\n\nPREFERENCES:\n${prefsString}\n\nIf the cookbook search returns a suitable recipe, adapt that recipe to these ingredients and preferences; otherwise create a new dish. Use the main ingredients where practical, clearly include pantry ingredients, and do not claim the user has ingredients outside these lists. Make quantities and cooking steps useful and realistic. Return only a JSON object with title, description, time_minutes, servings, category, ingredients [{name, quantity}], steps [{text, timer_minutes, tip}], optional nutrition {calories, protein_g, carbs_g, fat_g}, and optional safety_warnings. No markdown.`;
 
+    const initialCookbookMatches = getPantryMatches([...pantryItems, ...ingredients], recipeLibrary);
+    let cookbookMatches = initialCookbookMatches;
     try {
       const rawText = await openRouterClient.runToolAgent(
         "You are a careful Zimbabwean cooking agent. Use the search_cookbook tool before drafting. Treat pantry and dietary preferences as the source of truth. Never alter saved data or claim that you saved anything. Final output must be the requested recipe JSON only.",
@@ -166,7 +169,7 @@ export class AIRecipeService {
         async (name, args) => {
           if (name !== "search_cookbook") return { error: "Unknown tool." };
           const query = typeof args.query === "string" ? args.query.toLowerCase().trim() : "";
-          const pantryMatches = getPantryMatches(pantryItems, recipeLibrary);
+          const pantryMatches = getPantryMatches([...pantryItems, ...ingredients], recipeLibrary);
           const queryMatches = query
             ? recipeLibrary.filter((recipe) => {
                 const searchable = [recipe.title, recipe.category, recipe.description, ...recipe.tags, ...recipe.ingredients.flatMap((section) => section.data.map((item) => item.name))].join(" ").toLowerCase();
@@ -174,13 +177,17 @@ export class AIRecipeService {
               }).slice(0, 4)
             : [];
           const matched = Array.from(new Map([...pantryMatches, ...queryMatches].map((recipe) => [recipe.id, recipe])).values()).slice(0, 5);
+          cookbookMatches = matched;
           return {
             count: matched.length,
             recipes: matched.map((recipe) => ({
               title: recipe.title,
+              description: recipe.description.slice(0, 180),
               category: recipe.category,
               time: recipe.time,
-              ingredients: recipe.ingredients.flatMap((section) => section.data.map((item) => item.name)).slice(0, 12),
+              servings: recipe.servings,
+              ingredients: recipe.ingredients.flatMap((section) => section.data.map((item) => ({ name: item.name, quantity: item.quantity ?? "" }))).slice(0, 8),
+              steps: recipe.steps.map((step) => step.instruction || step.description || "").filter(Boolean).slice(0, 6),
             })),
           };
         },
@@ -192,28 +199,63 @@ export class AIRecipeService {
       try {
         const recipe = GenerateRecipeResponseSchema.parse(JSON.parse(cleanedJson));
         onAgentStage?.("complete");
-        return recipe;
+        return { ...recipe, source: "ai" };
       } catch {
-        // The model can occasionally stop mid-object. Retry once with stricter
-        // JSON output and a larger completion budget before surfacing an error.
-        onAgentStage?.("writing");
-        const retryText = await openRouterClient.generateContent(
-          `${prompt}\n\nThe previous attempt was incomplete or invalid JSON. Regenerate a compact but complete recipe now. Limit it to 6 ingredients and 5 concise steps. Return one valid JSON object with every opening brace, bracket, and quote closed. Do not include markdown or commentary.`,
-          undefined,
-          3200,
-        );
-        try {
-          onAgentStage?.("checking");
-          const recipe = GenerateRecipeResponseSchema.parse(JSON.parse(this.cleanJson(retryText)));
-          onAgentStage?.("complete");
-          return recipe;
-        } catch {
-          throw new Error("AI Chef couldn’t finish the recipe this time. Please try again in a moment.");
-        }
+        throw new Error("AI Chef couldn’t finish the recipe this time. Please try again in a moment.");
       }
     } catch (error) {
-      // Propagate error for UI handling
+      const fallback = this.toCookbookRecipe(
+        cookbookMatches.find((recipe) => this.canUseCookbookFallback(recipe, preferences)) ??
+          initialCookbookMatches.find((recipe) => this.canUseCookbookFallback(recipe, preferences)),
+      );
+      if (fallback) {
+        console.warn("[AI Chef] Model response unavailable; returning a validated cookbook recipe.");
+        onAgentStage?.("checking");
+        onAgentStage?.("complete");
+        return fallback;
+      }
       throw error;
+    }
+  }
+
+  private canUseCookbookFallback(recipe: Recipe, preferences?: RecipePreferences) {
+    // Do not bypass an explicit dietary or allergy constraint.
+    if (preferences?.diet || preferences?.allergies?.length) return false;
+    if (preferences?.timeLimit) {
+      const requestedMinutes = Number.parseInt(preferences.timeLimit, 10);
+      const recipeMinutes = Number.parseInt(recipe.time, 10);
+      if (Number.isFinite(requestedMinutes) && Number.isFinite(recipeMinutes) && recipeMinutes > requestedMinutes) return false;
+    }
+    return true;
+  }
+
+  private toCookbookRecipe(recipe?: Recipe): GeneratedRecipeResult | null {
+    if (!recipe) return null;
+    const timeMinutes = Number.parseInt(recipe.time, 10);
+    const ingredients = recipe.ingredients.flatMap((section) => section.data)
+      .filter((ingredient) => ingredient.name.trim())
+      .map((ingredient) => ({ name: ingredient.name, quantity: ingredient.quantity ?? "" }));
+    const steps = recipe.steps
+      .map((step) => ({ text: step.instruction || step.description || "", tip: step.tip }))
+      .filter((step) => step.text.trim());
+
+    if (!Number.isFinite(timeMinutes) || timeMinutes < 1 || recipe.servings < 1 || ingredients.length === 0 || steps.length === 0) {
+      return null;
+    }
+
+    try {
+      return GenerateRecipeResponseSchema.parse({
+        title: recipe.title,
+        description: recipe.description,
+        time_minutes: timeMinutes,
+        servings: recipe.servings,
+        category: recipe.category,
+        ingredients,
+        steps,
+        source: "cookbook",
+      });
+    } catch {
+      return null;
     }
   }
 

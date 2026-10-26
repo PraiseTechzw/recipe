@@ -6,6 +6,7 @@ import { Chip } from "@/components/ui/Chip";
 import { AIMascot } from "@/components/ai/AIMascot";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { HapticService } from "@/services/haptics";
+import { ToastService } from "@/services/toast";
 import { useStore } from "@/store/useStore";
 import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
@@ -146,7 +147,8 @@ export default function ExploreScreen() {
                       onPress={(event) => {
                         event.stopPropagation();
                         HapticService.selection();
-                        toggleFavorite(recipe.id);
+                        const xpAwarded = toggleFavorite(recipe.id);
+                        if (xpAwarded > 0) ToastService.success("Recipe saved", `+${xpAwarded} XP earned`);
                       }}
                     >
                       <Ionicons

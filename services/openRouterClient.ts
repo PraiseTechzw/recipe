@@ -49,7 +49,14 @@ type AgentMessage = {
 };
 
 function getMessageText(content?: OpenRouterContent): string {
-  if (Array.isArray(content)) return content.map((part) => part.text ?? "").join("\n").trim();
+  if (Array.isArray(content)) {
+    return content
+      .filter((part) => part.type === undefined || part.type === "text" || part.type === "output_text")
+      .map((part) => typeof part.text === "string" ? part.text : "")
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+  }
   return typeof content === "string" ? content.trim() : "";
 }
 
@@ -131,7 +138,15 @@ export class OpenRouterClient {
         throw this.toFriendlyError(response.status, payload.error?.message);
       }
 
-      const text = getMessageText(payload.choices?.[0]?.message?.content);
+      const choice = payload.choices?.[0];
+      if (choice?.finish_reason === "length") {
+        if (retryEmptyResponse) {
+          console.warn("[OpenRouter] Completion reached its output limit; retrying once.");
+          return this.generateContent(prompt, imageBase64, Math.min(maxTokens * 2, 3200), false);
+        }
+        throw new Error("The AI response was cut off. Please try again.");
+      }
+      const text = getMessageText(choice?.message?.content);
 
       if (!text) {
         if (retryEmptyResponse) {
@@ -173,7 +188,18 @@ export class OpenRouterClient {
       { role: "user", content: userPrompt },
     ];
     let toolRounds = 0;
-    let emptyResponseRetries = 0;
+    let recoveryAttempts = 0;
+
+    const recoverWithCompactFinal = () => {
+      if (recoveryAttempts >= 1) return false;
+      recoveryAttempts += 1;
+      toolRounds = maxToolRounds;
+      messages.push({
+        role: "user",
+        content: "Return the complete requested JSON now. Keep it concise and use the original request and any cookbook results already present above. Do not call tools again. If there are no cookbook results, create a recipe only from the listed ingredients and preferences.",
+      });
+      return true;
+    };
 
     while (true) {
       const controller = new AbortController();
@@ -197,7 +223,7 @@ export class OpenRouterClient {
               ? { tools, tool_choice: toolRounds === 0 ? "required" : "auto" }
               : { response_format: { type: "json_object" } }),
             temperature: 0.35,
-            max_tokens: toolsAvailable ? 900 : 3200,
+            max_tokens: toolsAvailable ? 700 : 1800,
           }),
           signal: controller.signal,
         });
@@ -217,13 +243,11 @@ export class OpenRouterClient {
       logOpenRouterResponse(stage, response.status, payload, response.headers.get("x-request-id"));
       if (!response.ok) throw this.toFriendlyError(response.status, payload.error?.message);
 
-      const message = payload.choices?.[0]?.message;
+      const choice = payload.choices?.[0];
+      const message = choice?.message;
       if (!message) {
-        if (emptyResponseRetries < 1) {
-          emptyResponseRetries += 1;
-          console.warn("[OpenRouter] Successful response had no assistant message; retrying once.");
-          messages.push({ role: "user", content: "Please return the requested result as a complete response." });
-          if (toolRounds > 0) toolRounds = maxToolRounds;
+        if (recoverWithCompactFinal()) {
+          console.warn("[OpenRouter] Successful response had no assistant message; trying one compact final response.");
           continue;
         }
         throw new Error("The model returned no assistant message after a retry. Please try again in a moment.");
@@ -232,7 +256,7 @@ export class OpenRouterClient {
       if (calls.length > 0 && toolRounds < maxToolRounds) {
         onStage?.("searching");
         console.log("[OpenRouter] tool calls", { names: calls.map((call) => call.function.name), count: calls.length });
-        messages.push({ role: "assistant", content: typeof message.content === "string" ? message.content : "", tool_calls: calls });
+        messages.push({ role: "assistant", content: getMessageText(message.content), tool_calls: calls });
         for (const call of calls) {
           let output: unknown;
           const toolStartedAt = Date.now();
@@ -257,12 +281,16 @@ export class OpenRouterClient {
       onStage?.("writing");
 
       const text = getMessageText(message.content);
+      if (choice?.finish_reason === "length") {
+        if (recoverWithCompactFinal()) {
+          console.warn("[OpenRouter] Final response reached its output limit; retrying once with a compact response.");
+          continue;
+        }
+        throw new Error("The AI response was cut off. Please try again.");
+      }
       if (!text) {
-        if (emptyResponseRetries < 1) {
-          emptyResponseRetries += 1;
-          console.warn("[OpenRouter] Successful response had no assistant text; retrying once.");
-          messages.push({ role: "user", content: "The previous response had no text. Return the requested complete recipe JSON now." });
-          toolRounds = maxToolRounds;
+        if (recoverWithCompactFinal()) {
+          console.warn("[OpenRouter] Successful response had no assistant text; trying one compact final response.");
           continue;
         }
         throw new Error("The model returned no recipe text after a retry. Please try again in a moment.");

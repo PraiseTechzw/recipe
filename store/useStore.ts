@@ -75,7 +75,8 @@ export interface LeaderboardEntry {
 
 interface AppState {
   favorites: string[];
-  toggleFavorite: (id: string) => void;
+  xpRewardedFavoriteIds: string[];
+  toggleFavorite: (id: string) => number;
   isFavorite: (id: string) => boolean;
 
   // Configuration
@@ -187,16 +188,32 @@ export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
       favorites: [],
+      xpRewardedFavoriteIds: [],
       toggleFavorite: (id: string) => {
+        let awardedXP = 0;
         set((state) => {
           const isFav = state.favorites.includes(id);
+          if (isFav) return { favorites: state.favorites.filter((favId) => favId !== id) };
+
+          const rewardedIds = state.xpRewardedFavoriteIds ?? [];
+          if (rewardedIds.includes(id)) return { favorites: [...state.favorites, id] };
+
+          awardedXP = 5;
+          const xp = state.userProfile.xp + awardedXP;
+          const stats = state.userProfile.stats ?? { recipesCooked: 0, savedRecipes: 0, sharedRecipes: 0, daysStreak: 0 };
           return {
-            favorites: isFav
-              ? state.favorites.filter((favId) => favId !== id)
-              : [...state.favorites, id],
+            favorites: [...state.favorites, id],
+            xpRewardedFavoriteIds: [...rewardedIds, id],
+            userProfile: {
+              ...state.userProfile,
+              xp,
+              chefLevel: getLevel(xp).title,
+              stats: { ...stats, savedRecipes: (stats.savedRecipes ?? 0) + 1 },
+            },
           };
         });
         get().checkBadges();
+        return awardedXP;
       },
       isFavorite: (id: string) => get().favorites.includes(id),
 

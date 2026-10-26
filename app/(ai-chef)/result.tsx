@@ -62,6 +62,7 @@ export default function ResultScreen() {
   }
 
   const handleSave = async () => {
+    if (isSaving) return;
     setIsSaving(true);
     HapticService.selection();
 
@@ -74,7 +75,7 @@ export default function ResultScreen() {
 
       // Delay navigation to show animation
       setTimeout(() => {
-        ToastService.success("Saved!", "Recipe added to your cookbook.");
+        ToastService.success("Saved!", "Recipe added to your cookbook · +5 XP.");
         resetFlow();
         router.push("/(tabs)/saved");
       }, 1500);
@@ -149,7 +150,7 @@ export default function ResultScreen() {
       calories: recipe.nutrition?.calories
         ? `${recipe.nutrition.calories} kcal`
         : undefined,
-      tags: ["AI Generated"],
+      tags: [recipe.source === "cookbook" ? "Cookbook recipe" : "AI Generated"],
       servings: recipe.servings,
     };
 
@@ -220,7 +221,7 @@ export default function ResultScreen() {
           <View style={styles.infoSection}>
             <View style={[styles.aiBadge, { backgroundColor: `${colors.primary}18` }]}>
               <AIMascot size={30} animated={false} />
-              <Text style={[styles.aiBadgeText, { color: colors.primary }]}>MADE FOR YOUR PANTRY</Text>
+              <Text style={[styles.aiBadgeText, { color: colors.primary }]}>{recipe.source === "cookbook" ? "FROM YOUR COOKBOOK" : "MADE FOR YOUR PANTRY"}</Text>
             </View>
             <Text style={[styles.title, { color: colors.text }]}>{recipe.title}</Text>
             <Text style={[styles.description, { color: colors.textSecondary }]}>{recipe.description}</Text>
@@ -269,8 +270,9 @@ export default function ResultScreen() {
               <Animated.View entering={FadeIn.duration(300)}>
                 <Text style={[styles.sectionHeader, { color: colors.text }]}>Why this recipe?</Text>
                 <Text style={[styles.bodyText, { color: colors.textSecondary }]}>
-                  Based on your ingredients ({recipe.ingredients.length}), we
-                  created this {recipe.category} dish.
+                  {recipe.source === "cookbook"
+                    ? "This is a saved cookbook recipe selected for your request. Its original quantities and servings are preserved."
+                    : `Based on your ingredients (${recipe.ingredients.length}), we created this ${recipe.category} dish.`}
                 </Text>
                 <View style={{ height: 10 }} />
                 <Text style={[styles.sectionHeader, { color: colors.text }]}>Tags</Text>
@@ -283,7 +285,7 @@ export default function ResultScreen() {
                   }}
                 >
                   <View style={[styles.tag, { backgroundColor: colors.surfaceVariant }]}>
-                    <Text style={[styles.tagText, { color: colors.textSecondary }]}>AI Generated</Text>
+                    <Text style={[styles.tagText, { color: colors.textSecondary }]}>{recipe.source === "cookbook" ? "Cookbook recipe" : "AI generated"}</Text>
                   </View>
                   <View style={[styles.tag, { backgroundColor: colors.surfaceVariant }]}>
                     <Text style={[styles.tagText, { color: colors.textSecondary }]}>{recipe.category}</Text>
@@ -315,7 +317,7 @@ export default function ResultScreen() {
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.stepText, { color: colors.text }]}>{step.text}</Text>
-                      {step.timer_minutes && (
+                      {typeof step.timer_minutes === "number" && step.timer_minutes > 0 ? (
                         <View style={[styles.timerBadge, { backgroundColor: colors.surfaceVariant }]}>
                           <Ionicons
                             name="timer-outline"
@@ -326,7 +328,7 @@ export default function ResultScreen() {
                             {step.timer_minutes}m timer
                           </Text>
                         </View>
-                      )}
+                      ) : null}
                       {step.tip && (
                         <View style={[styles.tipBox, { backgroundColor: colors.surfaceVariant }]}>
                           <Ionicons

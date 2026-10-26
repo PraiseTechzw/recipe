@@ -165,11 +165,11 @@ export default function RecipeDetailScreen() {
 
   const handleToggleFavorite = async () => {
     if (!recipe) return;
-    toggleFavorite(recipe.id);
+    const xpAwarded = toggleFavorite(recipe.id);
     if (!favorite) {
       ToastService.success(
         i18n.t("success"),
-        i18n.t("addedTo") + " " + i18n.t("favorites"),
+        `${i18n.t("addedTo")} ${i18n.t("favorites")}${xpAwarded ? ` · +${xpAwarded} XP` : ""}`,
       );
       if (await StoreReview.hasAction()) {
         console.log("Requesting review...");
