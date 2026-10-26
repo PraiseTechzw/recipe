@@ -5,7 +5,6 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -244,14 +243,9 @@ const styles = StyleSheet.create({
   headerContainer: {
     paddingHorizontal: 20,
     paddingTop: 10,
-    backgroundColor: "#fff",
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 5,
     marginBottom: 10,
     paddingBottom: 20,
   },
@@ -280,10 +274,12 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     marginRight: 4,
   },
-  iconButton: {
-    padding: 8,
-    backgroundColor: "#f5f5f5",
-    borderRadius: 20,
+  headerTrophy: {
+    width: 46,
+    height: 46,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   controlsContainer: {
     marginBottom: 20,
@@ -291,15 +287,19 @@ const styles = StyleSheet.create({
   segmentedControl: {
     marginBottom: 12,
   },
-  filterChips: {
+  globalLabel: {
     flexDirection: "row",
+    alignItems: "center",
+    gap: 7,
+    paddingTop: 10,
+    paddingHorizontal: 2,
   },
   errorBanner: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffebee",
-    padding: 8,
-    borderRadius: 8,
+    backgroundColor: "#B0002012",
+    padding: 10,
+    borderRadius: 12,
     marginBottom: 16,
   },
   podiumSkeleton: {

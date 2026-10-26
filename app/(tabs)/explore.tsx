@@ -282,10 +282,10 @@ export default function ExploreScreen() {
               <TouchableOpacity activeOpacity={0.9}>
                 <Animated.View
                   entering={FadeInRight.delay(200).springify()}
-                  style={styles.trendingCard}
+                  style={[styles.trendingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 >
                   <Image
-                    source={{ uri: trendingRecipe.image }}
+                    source={typeof trendingRecipe.image === "string" ? { uri: trendingRecipe.image } : trendingRecipe.image}
                     style={styles.trendingImage}
                     contentFit="cover"
                     transition={300}
@@ -328,10 +328,10 @@ export default function ExploreScreen() {
               <TouchableOpacity activeOpacity={0.9}>
                 <Animated.View
                   entering={FadeInRight.delay(300).springify()}
-                  style={styles.trendingCard}
+                  style={[styles.trendingCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 >
                   <Image
-                    source={{ uri: otherTrending.image }}
+                    source={typeof otherTrending.image === "string" ? { uri: otherTrending.image } : otherTrending.image}
                     style={styles.trendingImage}
                     contentFit="cover"
                     transition={300}
@@ -347,13 +347,11 @@ export default function ExploreScreen() {
                     <View
                       style={[
                         styles.trendingTag,
-                        { backgroundColor: "#E8F5E9" },
+                        { backgroundColor: isDark ? colors.surfaceVariant : "#E8F5E9" },
                       ]}
                     >
                       <Ionicons name="leaf" size={12} color="#2E7D32" />
-                      <Text
-                        style={[styles.trendingTagText, { color: "#2E7D32" }]}
-                      >
+                      <Text style={[styles.trendingTagText, { color: isDark ? colors.success : "#2E7D32" }]}>
                         {i18n.t("healthy")}
                       </Text>
                     </View>
@@ -674,6 +672,14 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
     lineHeight: 32,
   },
+  headerEyebrow: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 1.1,
+    textTransform: "uppercase",
+    fontWeight: "800",
+    marginBottom: 2,
+  },
   aiScanButton: {
     width: 44,
     height: 44,
@@ -785,20 +791,20 @@ const styles = StyleSheet.create({
   },
   trendingContainer: {
     paddingLeft: 16,
-    paddingRight: 8,
+    paddingRight: 16,
+    gap: 12,
   },
   trendingCard: {
-    width: width * 0.85, // Wider card
-    height: 240, // Taller for more impact
-    marginRight: 20,
-    borderRadius: 28,
+    width: width * 0.82,
+    height: 250,
+    borderRadius: 24,
     overflow: "hidden",
     backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowOpacity: 0.1,
+    shadowRadius: 14,
+    elevation: 4,
     borderWidth: 1,
     borderColor: "#F0F0F0",
   },
@@ -882,7 +888,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginBottom: 16,
     overflow: "hidden",
-    height: 120,
+    minHeight: 132,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
@@ -892,7 +898,7 @@ const styles = StyleSheet.create({
     borderColor: "#F0F0F0",
   },
   listImage: {
-    width: 120,
+    width: 112,
     height: "100%",
   },
   listContent: {
@@ -929,7 +935,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   favoriteButtonSmall: {
-    padding: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
   metaItem: {
     flexDirection: "row",

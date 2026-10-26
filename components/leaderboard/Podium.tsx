@@ -1,7 +1,7 @@
-import { LeaderboardEntry } from "@/store/useStore";
-import { useTheme } from "@/theme/useTheme";
 import { Ionicons } from "@expo/vector-icons";
 import { getChefAvatarUri } from "@/utils/chefIdentity";
+import { LeaderboardEntry } from "@/store/useStore";
+import { useTheme } from "@/theme/useTheme";
 import React from "react";
 import { Image, StyleSheet, Text, View, ViewStyle } from "react-native";
 import Animated, { FadeInDown, ZoomIn } from "react-native-reanimated";
@@ -14,93 +14,74 @@ interface PodiumProps {
 
 export function Podium({ topThree, mode, style }: PodiumProps) {
   const { colors, typography, spacing } = useTheme();
+  const [first, second, third] = topThree;
 
-  // Helper to get correct item for position (1st, 2nd, 3rd)
-  // Input array is sorted by rank (0=1st, 1=2nd, 2=3rd)
-  const first = topThree[0];
-  const second = topThree[1];
-  const third = topThree[2];
-
-  const renderPodiumStep = (
-    entry: LeaderboardEntry | undefined,
-    rank: number,
-  ) => {
+  const renderPodiumStep = (entry: LeaderboardEntry | undefined, rank: number) => {
     if (!entry) return <View style={styles.emptyStep} />;
 
     const isFirst = rank === 1;
     const isSecond = rank === 2;
-
-    const avatarSize = isFirst ? 80 : 60;
-    const borderColor = isFirst ? "#FFD700" : isSecond ? "#C0C0C0" : "#CD7F32";
-    const rankColor = isFirst ? "#FFD700" : isSecond ? "#C0C0C0" : "#CD7F32";
-
+    const avatarSize = isFirst ? 76 : 60;
+    const medal = isFirst ? "#E9B949" : isSecond ? "#AEB8C4" : "#C47A4A";
     const score = (mode === "weekly" ? entry.weekly_xp : entry.total_xp) || 0;
 
     return (
-      <Animated.View
-        entering={FadeInDown.delay(rank * 100).springify()}
-        style={[styles.stepContainer, { zIndex: isFirst ? 10 : 1 }]}
-      >
-        {/* Avatar Section */}
+      <Animated.View entering={FadeInDown.delay(rank * 100).springify()} style={styles.stepContainer}>
         <View style={[styles.avatarWrapper, { marginBottom: spacing.s }]}>
           {isFirst && (
-            <Animated.View entering={ZoomIn.delay(400).springify()}>
-              <Ionicons
-                name="trophy"
-                size={24}
-                color="#FFD700"
-                style={styles.crown}
-              />
+            <Animated.View entering={ZoomIn.delay(400).springify()} style={styles.crownWrap}>
+              <Ionicons name="trophy" size={20} color="#E9B949" />
             </Animated.View>
           )}
           <View
             style={[
               styles.avatarBorder,
               {
-                width: avatarSize + 6,
-                height: avatarSize + 6,
-                borderRadius: (avatarSize + 6) / 2,
-                borderColor: borderColor,
+                width: avatarSize + 8,
+                height: avatarSize + 8,
+                borderRadius: (avatarSize + 8) / 2,
+                borderColor: medal,
+                backgroundColor: colors.surface,
               },
             ]}
           >
             <Image
-              source={{
-                uri: getChefAvatarUri(entry.chefs?.avatar_seed || entry.chef_id),
-              }}
-              style={{
-                width: avatarSize,
-                height: avatarSize,
-                borderRadius: avatarSize / 2,
-                backgroundColor: "#fff",
-              }}
+              source={{ uri: getChefAvatarUri(entry.chefs?.avatar_seed || entry.chef_id) }}
+              style={{ width: avatarSize, height: avatarSize, borderRadius: avatarSize / 2, backgroundColor: colors.surfaceVariant }}
             />
-            <View style={[styles.rankBadge, { backgroundColor: rankColor }]}>
-              <Text style={styles.rankText}>{rank}</Text>
+            <View style={[styles.rankBadge, { backgroundColor: medal, borderColor: colors.surface }]}>
+              <Text style={[styles.rankText, { color: isSecond ? "#26313A" : "#FFFFFF" }]}>{rank}</Text>
             </View>
           </View>
         </View>
-
-        {/* Info Section */}
-        <Text style={[typography.bodySmall, styles.nameText]} numberOfLines={1}>
+        <Text style={[typography.bodySmall, styles.nameText, { color: colors.text }]} numberOfLines={1}>
           {entry.chefs?.chef_name || "Chef"}
         </Text>
         <Text style={[typography.caption, { color: colors.textSecondary }]}>
           {score.toLocaleString()} XP
         </Text>
+        <View
+          style={[
+            styles.platform,
+            {
+              height: isFirst ? 40 : isSecond ? 31 : 24,
+              backgroundColor: isFirst ? colors.primary + "22" : colors.surfaceVariant,
+              borderTopColor: medal,
+            },
+          ]}
+        >
+          <Text style={[styles.platformLabel, { color: isFirst ? colors.primary : colors.textSecondary }]}>
+            {isFirst ? "CHAMPION" : `#${rank}`}
+          </Text>
+        </View>
       </Animated.View>
     );
   };
 
   return (
     <View style={[styles.container, style]}>
-      {/* 2nd Place (Left) */}
       <View style={styles.sideColumn}>{renderPodiumStep(second, 2)}</View>
-
-      {/* 1st Place (Center) */}
       <View style={styles.centerColumn}>{renderPodiumStep(first, 1)}</View>
-
-      {/* 3rd Place (Right) */}
       <View style={styles.sideColumn}>{renderPodiumStep(third, 3)}</View>
     </View>
   );
@@ -111,41 +92,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "flex-end",
-    paddingVertical: 20,
-    marginBottom: 10,
+    paddingTop: 18,
+    paddingBottom: 4,
+    marginBottom: 8,
   },
-  centerColumn: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    marginHorizontal: 10,
-    paddingBottom: 20, // Push up slightly
-  },
-  sideColumn: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    marginHorizontal: 4,
-  },
-  stepContainer: {
-    alignItems: "center",
-  },
-  emptyStep: {
-    width: 80,
-  },
-  avatarWrapper: {
-    alignItems: "center",
-    position: "relative",
-  },
-  avatarBorder: {
-    borderWidth: 3,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-  crown: {
-    position: "absolute",
-    top: -24,
-    zIndex: 20,
-  },
+  centerColumn: { alignItems: "center", justifyContent: "flex-end", width: 112, marginHorizontal: 2 },
+  sideColumn: { alignItems: "center", justifyContent: "flex-end", width: 100, marginHorizontal: 1 },
+  stepContainer: { alignItems: "center", width: "100%" },
+  emptyStep: { width: 100 },
+  avatarWrapper: { alignItems: "center", position: "relative" },
+  avatarBorder: { borderWidth: 3, justifyContent: "center", alignItems: "center" },
+  crownWrap: { position: "absolute", top: -23, zIndex: 20 },
   rankBadge: {
     position: "absolute",
     bottom: -8,
@@ -155,16 +112,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#fff",
   },
-  rankText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
+  rankText: { fontSize: 11, fontWeight: "900" },
+  nameText: { fontWeight: "800", maxWidth: 98, textAlign: "center" },
+  platform: {
+    width: "92%",
+    marginTop: 8,
+    borderTopWidth: 3,
+    borderTopLeftRadius: 9,
+    borderTopRightRadius: 9,
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  nameText: {
-    fontWeight: "600",
-    maxWidth: 90,
-    textAlign: "center",
-  },
+  platformLabel: { fontSize: 9, fontWeight: "900", letterSpacing: 0.7 },
 });

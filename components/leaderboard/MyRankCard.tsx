@@ -21,7 +21,7 @@ export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
   return (
     <View style={[
       styles.container,
-      { 
+      {
         paddingBottom: insets.bottom + spacing.s,
         backgroundColor: colors.surface,
         borderTopColor: colors.border,
@@ -30,7 +30,7 @@ export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
       {/* Header pill */}
       <View style={styles.headerPillContainer}>
         <View style={[styles.headerPill, { backgroundColor: colors.surfaceVariant }]}>
-          <Text style={[typography.caption, { color: colors.textSecondary, fontWeight: "600" }]}>
+          <Text style={[typography.caption, { color: colors.textSecondary, fontWeight: "800" }]}>
             YOUR RANKING
           </Text>
         </View>
@@ -44,7 +44,7 @@ export function MyRankCard({ userRank, entry, mode }: MyRankCardProps) {
 
         {/* Info */}
         <View style={styles.info}>
-          <Text style={[typography.body, { fontWeight: "bold" }]}>
+          <Text style={[typography.body, { color: colors.text, fontWeight: "800" }]}>
             {entry?.chefs?.chef_name || "You"}
           </Text>
           <Text style={[typography.caption, { color: colors.textSecondary }]}>
