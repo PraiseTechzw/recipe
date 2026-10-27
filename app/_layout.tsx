@@ -12,6 +12,7 @@ import "react-native-reanimated";
 import Toast from "react-native-toast-message";
 import { GlobalErrorBoundary } from "../components/feedback/GlobalErrorBoundary";
 import { PostHogProvider } from "../components/PostHogProvider";
+import { AdsProvider } from "../components/ads/AdsProvider";
 import { LoadingOverlay } from "../components/feedback/LoadingOverlay";
 import { OfflineBanner } from "../components/feedback/OfflineBanner";
 import { useOfflineStatus } from "../hooks/useOfflineStatus";
@@ -114,9 +115,10 @@ function RootLayout() {
     <GlobalErrorBoundary>
       <ThemeProvider value={isDarkMode ? DarkTheme : DefaultTheme}>
         <PostHogProvider>
-          <View style={{ flex: 1 }}>
-            <OfflineBanner isOffline={isOffline} />
-            <Stack>
+          <AdsProvider>
+            <View style={{ flex: 1 }}>
+              <OfflineBanner isOffline={isOffline} />
+              <Stack>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen
                 name="cooking/[id]"
@@ -154,11 +156,12 @@ function RootLayout() {
                   gestureEnabled: false,
                 }}
               />
-            </Stack>
-          </View>
-          <StatusBar style={isDarkMode ? "light" : "dark"} />
-          <LoadingOverlay />
-          <Toast config={toastConfig} />
+              </Stack>
+            </View>
+            <StatusBar style={isDarkMode ? "light" : "dark"} />
+            <LoadingOverlay />
+            <Toast config={toastConfig} />
+          </AdsProvider>
         </PostHogProvider>
       </ThemeProvider>
     </GlobalErrorBoundary>

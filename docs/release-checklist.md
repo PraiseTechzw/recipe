@@ -17,6 +17,9 @@ Use this checklist before each public release. Repository checks cannot confirm 
 - [ ] Confirm the store title and developer name, screenshots, support email and privacy-policy URL.
 - [ ] Replace stale Gemini release notes and review all listing claims against shipped features.
 - [ ] Reconcile the Play Data safety form with actual account data, public content, Supabase synchronization, AI image/prompt processing and service-provider practices. The repository cannot update the Play Console declaration.
+- [ ] Confirm Play Console’s “contains ads” declaration matches the shipped build. Android now uses Google Mobile Ads for a native Home placement; confirm Data safety, advertising ID, consent, target-age and UMP disclosures in Play Console and AdMob before rollout.
+- [ ] Publish the exact AdMob seller record from `docs/app-ads.txt` at `https://www.appixia.co.zw/app-ads.txt`. Google Play currently lists `www.appixia.co.zw` as the developer website, and AdMob checks the host root. This recipe repository's GitHub Pages project site is a different host, so publishing under `/recipe/` will not satisfy verification. Verify the public file and request an AdMob recrawl after publishing.
+- [ ] Confirm the UMP privacy message is published in AdMob and test required consent/privacy-options flows on a physical device in each relevant geography before shipping.
 - [ ] Confirm the target age/audience and complete the applicable content rating, data safety, app-access and policy declarations.
 - [ ] Assess the current lack of in-app account deletion/export and user-generated-content reporting/blocking against Google Play requirements before public rollout.
 - [ ] Publish the Play build and verify its listing/install availability before announcing a GitHub Release for the update prompt.
@@ -44,8 +47,10 @@ Use this checklist before each public release. Repository checks cannot confirm 
 
 ## Current known gaps from repository inspection
 
-- No self-service account deletion, full data export or formal consent-preferences UI is present.
+- No self-service account deletion or full data export is present. Optional PostHog analytics now has a device-local consent toggle in Settings → Privacy; it is off by default and is not synchronized across accounts/devices.
 - No in-app user-content report, block or moderation appeal flow is present.
 - Leaderboard reads are public, while direct client writes were removed for security; a trusted write path is not present in the inspected repo.
 - The emulator's current home screen had missing remote recipe-card imagery; verify image URLs, storage/network access and empty-image fallbacks in a production build.
-- The live Play Store Data safety and release-note copy must be reviewed in Play Console; a code change cannot update those fields.
+- Google Mobile Ads is enabled for Android only; the configured iOS identifier is Google's sample app ID and no iOS ad requests are made. Create/configure a real iOS AdMob app before enabling iOS ads.
+- Google publisher record is staged at `https://www.appixia.co.zw/app-ads.txt`; website deployment and AdMob crawler verification are external steps.
+- The live Play Store ads declaration, Data safety and release-note copy must be reviewed in Play Console; a code change cannot update those fields.

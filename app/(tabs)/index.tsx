@@ -30,6 +30,7 @@ import {
 import { ToastService } from "../../services/toast";
 import { useStore } from "../../store/useStore";
 import { useTheme } from "../../theme/useTheme";
+import { NativeRecipeAd } from "../../components/ads/NativeRecipeAd";
 
 export default function HomeScreen() {
   const { markInteractive } = useObserve();
@@ -466,6 +467,8 @@ export default function HomeScreen() {
               />
             )}
           </Animated.View>
+
+          <NativeRecipeAd />
 
           {/* Featured Section */}
           <Animated.View style={{ opacity: fadeAnim, marginTop: 30 }}>

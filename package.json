@@ -1,7 +1,7 @@
 {
   "name": "recipe",
   "main": "expo-router/entry",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -64,6 +64,7 @@
     "react-dom": "19.3.0",
     "react-native": "0.88.0",
     "react-native-gesture-handler": "~3.3.0",
+    "react-native-google-mobile-ads": "^17.4.0",
     "react-native-reanimated": "4.7.1",
     "react-native-safe-area-context": "~5.10.1",
     "react-native-screens": "~4.30.0",

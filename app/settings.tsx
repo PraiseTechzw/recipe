@@ -6,10 +6,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import i18n from "../i18n";
 import { useStore } from "../store/useStore";
 import { useTheme } from "../theme/useTheme";
+import { useAds } from "../components/ads/AdsProvider";
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { colors, isDark } = useTheme();
+  const { privacyOptionsRequired, showPrivacyOptions } = useAds();
   const { locale, setLocale, isDarkMode, toggleDarkMode, analyticsEnabled, setAnalyticsEnabled } = useStore();
   const appVersion = Constants.expoConfig?.version || "2.0.2";
 
@@ -57,6 +59,7 @@ export default function SettingsScreen() {
             <Switch value={analyticsEnabled} onValueChange={setAnalyticsEnabled} trackColor={{ false: colors.border, true: colors.primary }} thumbColor="#FFFFFF" accessibilityLabel="Share app usage data with PostHog" />
           </View>
           <Text style={[styles.privacyNote, { color: colors.textSecondary }]}>Optional, anonymous screen and feature counts help improve the app. Recipe details, ingredients, AI prompts, email, and touch recordings are not sent. Change this any time.</Text>
+          {privacyOptionsRequired ? <SettingsLink icon="options-outline" label="Manage ad privacy choices" colors={colors} onPress={() => void showPrivacyOptions()} last /> : null}
         </SettingsSection>
 
         <SettingsSection title={i18n.t("about")} colors={colors}>

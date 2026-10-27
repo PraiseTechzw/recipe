@@ -11,3 +11,7 @@ The policy describes local and synced app data, account and community informatio
 ## PostHog analytics
 
 Optional PostHog product analytics is disabled unless the user enables it in Settings → Privacy. Screen names and feature events use pseudonymous identifiers and limited metadata; recipe names, ingredient names, account email, prompts, and generated recipe text are not included. AI performance telemetry is gated by the same device-local preference and excludes prompt/response content. Session replay and touch autocapture are disabled. The current app sends no PostHog analytics while this preference is off.
+
+## Android advertising
+
+Android uses Google Mobile Ads for native advertising and Google's User Messaging Platform (UMP) for consent/privacy choices. Ad requests begin only after UMP reports that requests are allowed. Google may process device or advertising identifiers, ad requests, approximate location or other device signals, and ad impressions/interactions for ad selection and measurement. If UMP indicates that privacy options are required, the app exposes “Manage ad privacy choices” in Settings → Privacy. Ads are Android-only in this release; iOS ad requests are disabled. See Google's [Privacy Policy](https://policies.google.com/privacy).

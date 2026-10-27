@@ -2,7 +2,7 @@
   "expo": {
     "name": "Zimbabwe Traditional Recipes",
     "slug": "tasteofzimbabwe",
-    "version": "2.0.4",
+    "version": "2.0.5",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "tasteofzimbabwe",
@@ -22,7 +22,8 @@
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "com.google.android.gms.permission.AD_ID"
       ]
     },
     "web": {
